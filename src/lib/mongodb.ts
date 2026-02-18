@@ -45,11 +45,26 @@ async function connectToDatabase(): Promise<Db> {
 export interface Message {
   role: "user" | "assistant";
   content: string;
+  createdAt?: Date; // backward compatible
 }
+
+export type ProjectType =
+  | "Superstructure"
+  | "Pot Shell"
+  | "Structural Frame"
+  | "Welding Procedure"
+  | "Cost Estimate"
+  | "General";
 
 export interface Conversation {
   conversationId: string;
   userId: string;
+
+  // NEW ENGINEERING FIELDS
+  title: string;
+  projectType: ProjectType;
+  isoMode: boolean;
+
   messages: Message[];
   createdAt: Date;
   updatedAt: Date;
@@ -94,7 +109,10 @@ export async function getUserUsage(userId: string) {
 export async function saveConversation(
   conversationId: string,
   userId: string,
-  messages: Message[]
+  messages: Message[],
+  title: string = "New Project",
+  projectType: ProjectType = "General",
+  isoMode: boolean = false
 ) {
   const db = await connectToDatabase();
   const collection = db.collection<Conversation>('conversations');
@@ -104,6 +122,9 @@ export async function saveConversation(
     {
       $set: {
         messages,
+        title,
+        projectType,
+        isoMode,
         updatedAt: new Date(),
       },
       $setOnInsert: {
@@ -127,12 +148,22 @@ export async function appendMessageToConversation(
   return collection.findOneAndUpdate(
     { conversationId, userId },
     {
-      $push: { messages: { $each: newMessages } },
+      $push: {
+        messages: {
+          $each: newMessages.map((m) => ({
+            ...m,
+            createdAt: new Date(),
+          })),
+        },
+      },
       $set: { updatedAt: new Date() },
       $setOnInsert: {
         createdAt: new Date(),
         conversationId,
         userId,
+        title: "New Project",
+        projectType: "General",
+        isoMode: false,
       },
     },
     { upsert: true, returnDocument: 'after' }
