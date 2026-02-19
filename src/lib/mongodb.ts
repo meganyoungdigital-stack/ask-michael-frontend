@@ -33,7 +33,7 @@ clientPromise = global._mongoClientPromise;
    CONNECT
 ========================= */
 
-async function connectToDatabase(): Promise<Db> {
+export async function connectToDatabase(): Promise<Db> {
   const client = await clientPromise;
   return client.db('askmichael');
 }
@@ -45,7 +45,7 @@ async function connectToDatabase(): Promise<Db> {
 export interface Message {
   role: "user" | "assistant";
   content: string;
-  createdAt?: Date; // backward compatible
+  createdAt?: Date;
 }
 
 export type ProjectType =
@@ -59,12 +59,9 @@ export type ProjectType =
 export interface Conversation {
   conversationId: string;
   userId: string;
-
-  // NEW ENGINEERING FIELDS
   title: string;
   projectType: ProjectType;
   isoMode: boolean;
-
   messages: Message[];
   createdAt: Date;
   updatedAt: Date;
