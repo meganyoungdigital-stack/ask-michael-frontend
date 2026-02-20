@@ -3,42 +3,23 @@ import { connectToDatabase } from "@/lib/mongodb";
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { conversationId: string } }
+  context: { params: Promise<{ conversationId: string }> }
 ) {
-  const { title } = await req.json();
-  const { conversationId } = params;
-  const userId = req.headers.get("x-user-id");
-
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { conversationId } = await context.params;
 
   const db = await connectToDatabase();
   const collection = db.collection("conversations");
+
+  const conversation = await collection.findOne({ conversationId });
+
+  if (!conversation) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
 
   await collection.updateOne(
-    { conversationId, userId },
-    { $set: { title, updatedAt: new Date() } }
+    { conversationId },
+    { $set: { starred: !conversation.starred } }
   );
-
-  return NextResponse.json({ success: true });
-}
-
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { conversationId: string } }
-) {
-  const { conversationId } = params;
-  const userId = req.headers.get("x-user-id");
-
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const db = await connectToDatabase();
-  const collection = db.collection("conversations");
-
-  await collection.deleteOne({ conversationId, userId });
 
   return NextResponse.json({ success: true });
 }
