@@ -1,13 +1,13 @@
-import { MongoClient, Db } from 'mongodb';
+import { MongoClient, Db } from "mongodb";
 
 /* =========================
    ENV
 ========================= */
 
-const uri = process.env.MONGODB_URI as string;
+const uri = process.env.MONGODB_URI;
 
 if (!uri) {
-  throw new Error('MONGODB_URI is not defined');
+  throw new Error("MONGODB_URI is not defined");
 }
 
 /* =========================
@@ -15,7 +15,7 @@ if (!uri) {
 ========================= */
 
 declare global {
-  // eslint-disable-next-line no-var
+  // Prevent multiple connections in dev (Next.js hot reload)
   var _mongoClientPromise: Promise<MongoClient> | undefined;
 }
 
@@ -35,7 +35,7 @@ clientPromise = global._mongoClientPromise;
 
 export async function connectToDatabase(): Promise<Db> {
   const client = await clientPromise;
-  return client.db('askmichael');
+  return client.db("askmichael");
 }
 
 /* =========================
@@ -62,7 +62,7 @@ export interface Conversation {
   title: string;
   projectType: ProjectType;
   isoMode: boolean;
-  starred: boolean; // ✅ ADDED
+  starred: boolean; // ⭐ Pin support
   messages: Message[];
   createdAt: Date;
   updatedAt: Date;
@@ -82,7 +82,7 @@ export interface UserUsage {
 
 export async function recordUserUsage(userId: string) {
   const db = await connectToDatabase();
-  const collection = db.collection<UserUsage>('user_usage');
+  const collection = db.collection<UserUsage>("user_usage");
 
   return collection.findOneAndUpdate(
     { userId },
@@ -91,13 +91,13 @@ export async function recordUserUsage(userId: string) {
       $set: { updatedAt: new Date() },
       $setOnInsert: { createdAt: new Date() },
     },
-    { upsert: true, returnDocument: 'after' }
+    { upsert: true, returnDocument: "after" }
   );
 }
 
 export async function getUserUsage(userId: string) {
   const db = await connectToDatabase();
-  return db.collection<UserUsage>('user_usage').findOne({ userId });
+  return db.collection<UserUsage>("user_usage").findOne({ userId });
 }
 
 /* =========================
@@ -113,7 +113,7 @@ export async function saveConversation(
   isoMode: boolean = false
 ) {
   const db = await connectToDatabase();
-  const collection = db.collection<Conversation>('conversations');
+  const collection = db.collection<Conversation>("conversations");
 
   return collection.findOneAndUpdate(
     { conversationId, userId },
@@ -129,10 +129,10 @@ export async function saveConversation(
         createdAt: new Date(),
         conversationId,
         userId,
-        starred: false, // ✅ ENSURES DEFAULT
+        starred: false, // ⭐ default pinned state
       },
     },
-    { upsert: true, returnDocument: 'after' }
+    { upsert: true, returnDocument: "after" }
   );
 }
 
@@ -142,7 +142,7 @@ export async function appendMessageToConversation(
   newMessages: Message[]
 ) {
   const db = await connectToDatabase();
-  const collection = db.collection<Conversation>('conversations');
+  const collection = db.collection<Conversation>("conversations");
 
   return collection.findOneAndUpdate(
     { conversationId, userId },
@@ -155,7 +155,9 @@ export async function appendMessageToConversation(
           })),
         },
       },
-      $set: { updatedAt: new Date() },
+      $set: {
+        updatedAt: new Date(),
+      },
       $setOnInsert: {
         createdAt: new Date(),
         conversationId,
@@ -163,10 +165,10 @@ export async function appendMessageToConversation(
         title: "New Project",
         projectType: "General",
         isoMode: false,
-        starred: false, // ✅ ENSURES DEFAULT
+        starred: false, // ⭐ default pinned state
       },
     },
-    { upsert: true, returnDocument: 'after' }
+    { upsert: true, returnDocument: "after" }
   );
 }
 
@@ -176,15 +178,19 @@ export async function getConversation(
 ) {
   const db = await connectToDatabase();
   return db
-    .collection<Conversation>('conversations')
+    .collection<Conversation>("conversations")
     .findOne({ conversationId, userId });
 }
 
 export async function getConversationsForUser(userId: string) {
   const db = await connectToDatabase();
+
   return db
-    .collection<Conversation>('conversations')
+    .collection<Conversation>("conversations")
     .find({ userId })
-    .sort({ starred: -1, updatedAt: -1 }) // ✅ PINNED FIRST
+    .sort({
+      starred: -1,      // ⭐ pinned first
+      updatedAt: -1,    // newest next
+    })
     .toArray();
 }
