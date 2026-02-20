@@ -62,6 +62,7 @@ export interface Conversation {
   title: string;
   projectType: ProjectType;
   isoMode: boolean;
+  starred: boolean; // ✅ ADDED
   messages: Message[];
   createdAt: Date;
   updatedAt: Date;
@@ -128,6 +129,7 @@ export async function saveConversation(
         createdAt: new Date(),
         conversationId,
         userId,
+        starred: false, // ✅ ENSURES DEFAULT
       },
     },
     { upsert: true, returnDocument: 'after' }
@@ -161,6 +163,7 @@ export async function appendMessageToConversation(
         title: "New Project",
         projectType: "General",
         isoMode: false,
+        starred: false, // ✅ ENSURES DEFAULT
       },
     },
     { upsert: true, returnDocument: 'after' }
@@ -182,6 +185,6 @@ export async function getConversationsForUser(userId: string) {
   return db
     .collection<Conversation>('conversations')
     .find({ userId })
-    .sort({ updatedAt: -1 })
+    .sort({ starred: -1, updatedAt: -1 }) // ✅ PINNED FIRST
     .toArray();
 }

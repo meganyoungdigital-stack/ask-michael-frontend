@@ -1,23 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { connectToDatabase } from "../../../../lib/mongodb";
-import { ObjectId } from "mongodb";
+import { connectToDatabase } from "@/lib/mongodb";
 
 export async function PATCH(
   req: NextRequest,
-  context: { params: Promise<{ conversationId: string }> }
+  { params }: { params: { conversationId: string } }
 ) {
   try {
-    const { conversationId } = await context.params;
+    const { conversationId } = params;
     const body = await req.json();
-
-    if (!ObjectId.isValid(conversationId)) {
-      return NextResponse.json({ error: "Invalid project ID" }, { status: 400 });
-    }
 
     const db = await connectToDatabase();
 
     await db.collection("projects").updateOne(
-      { _id: new ObjectId(conversationId) },
+      { conversationId: conversationId },
       { $set: body }
     );
 
@@ -29,19 +24,15 @@ export async function PATCH(
 
 export async function DELETE(
   req: NextRequest,
-  context: { params: Promise<{ conversationId: string }> }
+  { params }: { params: { conversationId: string } }
 ) {
   try {
-    const { conversationId } = await context.params;
-
-    if (!ObjectId.isValid(conversationId)) {
-      return NextResponse.json({ error: "Invalid project ID" }, { status: 400 });
-    }
+    const { conversationId } = params;
 
     const db = await connectToDatabase();
 
     await db.collection("projects").deleteOne({
-      _id: new ObjectId(conversationId),
+      conversationId: conversationId,
     });
 
     return NextResponse.json({ success: true });
