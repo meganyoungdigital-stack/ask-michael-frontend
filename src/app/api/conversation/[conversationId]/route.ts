@@ -1,19 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
+import { auth } from "@clerk/nextjs/server";
 
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { conversationId: string } }
 ) {
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { conversationId } = params;
     const body = await req.json();
 
     const db = await connectToDatabase();
 
-    await db.collection("projects").updateOne(
-      { conversationId: conversationId },
-      { $set: body }
+    await db.collection("conversations").updateOne(
+      { conversationId, userId },
+      { $set: { ...body, updatedAt: new Date() } }
     );
 
     return NextResponse.json({ success: true });
@@ -27,12 +33,18 @@ export async function DELETE(
   { params }: { params: { conversationId: string } }
 ) {
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { conversationId } = params;
 
     const db = await connectToDatabase();
 
-    await db.collection("projects").deleteOne({
-      conversationId: conversationId,
+    await db.collection("conversations").deleteOne({
+      conversationId,
+      userId,
     });
 
     return NextResponse.json({ success: true });
