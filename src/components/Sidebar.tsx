@@ -1,39 +1,46 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 interface Conversation {
   conversationId: string;
   title: string;
-  starred: boolean;
+  starred?: boolean;
 }
 
 export default function Sidebar() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const router = useRouter();
 
   async function loadConversations() {
-    const res = await fetch("/api/projects");
+    const res = await fetch("/api/conversation");
     const data = await res.json();
     setConversations(data);
-  }
-
-  async function toggleStar(conversationId: string) {
-    await fetch(`/api/projects/${conversationId}/star`, {
-      method: "PATCH",
-    });
-
-    loadConversations(); // refresh list
   }
 
   useEffect(() => {
     loadConversations();
   }, []);
 
+  async function toggleStar(id: string) {
+    await fetch(`/api/projects/${id}/star`, {
+      method: "PATCH",
+    });
+
+    loadConversations(); // refresh after toggle
+  }
+
   return (
-    <div style={{ width: "280px", background: "#111", color: "white", padding: "10px" }}>
-      <h3>Projects</h3>
+    <div
+      style={{
+        width: "260px",
+        background: "#111",
+        color: "white",
+        padding: "20px",
+        borderRight: "1px solid #222",
+      }}
+    >
+      <h2 style={{ marginBottom: "20px" }}>Projects</h2>
 
       {conversations.map((conv) => (
         <div
@@ -41,16 +48,20 @@ export default function Sidebar() {
           style={{
             display: "flex",
             justifyContent: "space-between",
-            padding: "8px",
-            marginBottom: "6px",
-            background: "#1e1e1e",
-            borderRadius: "6px",
-            cursor: "pointer",
+            alignItems: "center",
+            marginBottom: "12px",
           }}
         >
-          <span onClick={() => router.push(`/conversation/${conv.conversationId}`)}>
+          <Link
+            href={`/conversation/${conv.conversationId}`}
+            style={{
+              color: "white",
+              textDecoration: "none",
+              flex: 1,
+            }}
+          >
             {conv.title}
-          </span>
+          </Link>
 
           <button
             onClick={() => toggleStar(conv.conversationId)}
@@ -58,8 +69,8 @@ export default function Sidebar() {
               background: "none",
               border: "none",
               color: conv.starred ? "gold" : "gray",
-              fontSize: "16px",
               cursor: "pointer",
+              fontSize: "18px",
             }}
           >
             ★
