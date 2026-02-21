@@ -64,8 +64,8 @@ export default function Sidebar() {
       }}
     >
       <h2 style={{ marginBottom: "20px", color: "red" }}>
-  SIDEBAR LIVE
-</h2>
+        SIDEBAR LIVE
+      </h2>
 
       {conversations.map((conv) => (
         <div
@@ -82,7 +82,6 @@ export default function Sidebar() {
               hoveredId === conv.conversationId ? "#1a1a1a" : "transparent",
           }}
         >
-          {/* Title */}
           <Link
             href={`/conversation/${conv.conversationId}`}
             style={{
@@ -97,7 +96,6 @@ export default function Sidebar() {
             {conv.title}
           </Link>
 
-          {/* Buttons */}
           {hoveredId === conv.conversationId && (
             <div
               style={{
