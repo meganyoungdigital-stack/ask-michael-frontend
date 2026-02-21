@@ -11,6 +11,7 @@ interface Conversation {
 
 export default function Sidebar() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   async function loadConversations() {
     const res = await fetch("/api/conversation");
@@ -26,8 +27,30 @@ export default function Sidebar() {
     await fetch(`/api/projects/${id}/star`, {
       method: "PATCH",
     });
+    loadConversations();
+  }
 
-    loadConversations(); // refresh after toggle
+  async function deleteConversation(id: string) {
+    if (!confirm("Delete this project?")) return;
+
+    await fetch(`/api/conversation/${id}`, {
+      method: "DELETE",
+    });
+
+    loadConversations();
+  }
+
+  async function renameConversation(id: string, currentTitle: string) {
+    const newTitle = prompt("Enter new name:", currentTitle);
+    if (!newTitle || newTitle.trim() === "") return;
+
+    await fetch(`/api/conversation/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: newTitle }),
+    });
+
+    loadConversations();
   }
 
   return (
@@ -40,43 +63,96 @@ export default function Sidebar() {
         borderRight: "1px solid #222",
       }}
     >
-      <h2 style={{ marginBottom: "20px" }}>Projects</h2>
+      <h2 style={{ marginBottom: "20px", color: "red" }}>
+  SIDEBAR LIVE
+</h2>
 
       {conversations.map((conv) => (
         <div
           key={conv.conversationId}
+          onMouseEnter={() => setHoveredId(conv.conversationId)}
+          onMouseLeave={() => setHoveredId(null)}
           style={{
             display: "flex",
-            justifyContent: "space-between",
             alignItems: "center",
             marginBottom: "12px",
+            padding: "8px",
+            borderRadius: "6px",
+            background:
+              hoveredId === conv.conversationId ? "#1a1a1a" : "transparent",
           }}
         >
+          {/* Title */}
           <Link
             href={`/conversation/${conv.conversationId}`}
             style={{
               color: "white",
               textDecoration: "none",
-              flex: 1,
+              flexGrow: 1,
+              overflow: "hidden",
+              whiteSpace: "nowrap",
+              textOverflow: "ellipsis",
             }}
           >
             {conv.title}
           </Link>
 
-          <button
-            onClick={() => toggleStar(conv.conversationId)}
-            style={{
-              background: "none",
-              border: "none",
-              color: conv.starred ? "gold" : "gray",
-              cursor: "pointer",
-              fontSize: "18px",
-            }}
-          >
-            ★
-          </button>
+          {/* Buttons */}
+          {hoveredId === conv.conversationId && (
+            <div
+              style={{
+                display: "flex",
+                gap: "6px",
+                marginLeft: "8px",
+              }}
+            >
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  renameConversation(conv.conversationId, conv.title);
+                }}
+                style={iconStyle}
+              >
+                ✏
+              </button>
+
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  deleteConversation(conv.conversationId);
+                }}
+                style={iconStyle}
+              >
+                🗑
+              </button>
+
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  toggleStar(conv.conversationId);
+                }}
+                style={{
+                  ...iconStyle,
+                  color: conv.starred ? "gold" : "gray",
+                }}
+              >
+                ★
+              </button>
+            </div>
+          )}
         </div>
       ))}
     </div>
   );
 }
+
+const iconStyle: React.CSSProperties = {
+  background: "none",
+  border: "none",
+  cursor: "pointer",
+  fontSize: "14px",
+  color: "gray",
+};
