@@ -21,8 +21,9 @@ export default function Sidebar() {
       const res = await fetch("/api/conversation");
       const data = await res.json();
 
+      // 🔥 CRITICAL FIX — ensure it's always an array
       if (!Array.isArray(data)) {
-        console.error("API did not return an array:", data);
+        console.error("Sidebar API did not return array:", data);
         setConversations([]);
         return;
       }
@@ -47,7 +48,7 @@ export default function Sidebar() {
       });
       loadConversations();
     } catch (error) {
-      console.error("Star toggle failed:", error);
+      console.error("Star failed:", error);
     }
   }
 
@@ -94,13 +95,14 @@ export default function Sidebar() {
         SIDEBAR LIVE
       </h2>
 
-      {loading && <div>Loading...</div>}
+      {loading && <p style={{ color: "gray" }}>Loading...</p>}
 
       {!loading && conversations.length === 0 && (
-        <div style={{ opacity: 0.6 }}>No projects found</div>
+        <p style={{ color: "gray" }}>No conversations found</p>
       )}
 
       {!loading &&
+        Array.isArray(conversations) &&
         conversations.map((conv) => (
           <div
             key={conv.conversationId}
