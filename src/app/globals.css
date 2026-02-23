@@ -1,3 +1,56 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ===== Ask Michael Brand Theme ===== */
+
+:root {
+  --ask-blue: #1e73ff;
+  --ask-dark: #2f2f2f;
+  --ask-light: #ffffff;
+}
+
+html, body {
+  background-color: var(--ask-light);
+  color: var(--ask-dark);
+  margin: 0;
+  padding: 0;
+}
+
+/* Links */
+a {
+  color: var(--ask-blue);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Buttons */
+button {
+  background-color: var(--ask-blue);
+  color: white;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-weight: 500;
+  transition: 0.2s ease-in-out;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+/* Scrollbar (clean modern look) */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d0d0d0;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #b5b5b5;
+}

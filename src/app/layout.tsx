@@ -7,7 +7,6 @@ import {
   SignedOut,
   SignInButton,
 } from "@clerk/nextjs";
-import Sidebar from "@/components/Sidebar";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -35,7 +34,11 @@ export default function RootLayout({
       <html lang="en">
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-          style={{ margin: 0 }}
+          style={{
+            margin: 0,
+            background: "#ffffff",
+            color: "#2f2f2f",
+          }}
         >
           {/* Top Right Auth Controls */}
           <header
@@ -45,6 +48,7 @@ export default function RootLayout({
               right: 0,
               padding: "16px",
               zIndex: 50,
+              background: "white",
             }}
           >
             <SignedOut>
@@ -55,29 +59,17 @@ export default function RootLayout({
             </SignedIn>
           </header>
 
-          {/* Main Layout */}
-          <div
+          {/* Main Content Area - Full Width */}
+          <main
             style={{
-              display: "flex",
-              height: "100vh",
+              padding: "80px 24px 24px 24px",
+              minHeight: "100vh",
+              background: "#ffffff",
+              color: "#2f2f2f",
             }}
           >
-            {/* Sidebar */}
-            <Sidebar />
-
-            {/* Main Content Area */}
-            <main
-              style={{
-                flex: 1,
-                padding: "80px 24px 24px 24px",
-                overflowY: "auto",
-                background: "#0f0f0f",
-                color: "white",
-              }}
-            >
-              {children}
-            </main>
-          </div>
+            {children}
+          </main>
         </body>
       </html>
     </ClerkProvider>
