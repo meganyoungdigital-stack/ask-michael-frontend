@@ -4,7 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { conversationId: string } }
+  { params }: { params: Promise<{ conversationId: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -12,7 +12,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { conversationId } = params;
+    const { conversationId } = await params; // ✅ Next 16 fix
     const body = await req.json();
 
     const db = await connectToDatabase();
@@ -30,7 +30,7 @@ export async function PATCH(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { conversationId: string } }
+  { params }: { params: Promise<{ conversationId: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -38,7 +38,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { conversationId } = params;
+    const { conversationId } = await params; // ✅ Next 16 fix
 
     const db = await connectToDatabase();
 

@@ -1,25 +1,37 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
+import { auth } from "@clerk/nextjs/server";
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { conversationId: string } }
+  { params }: { params: Promise<{ conversationId: string }> }
 ) {
-  const { conversationId } = params;
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-  const db = await connectToDatabase();
-  const collection = db.collection("conversations");
+    const { conversationId } = await params; // ✅ Next 16 fix
 
-  const conversation = await collection.findOne({ conversationId });
+    const db = await connectToDatabase();
 
-  if (!conversation) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    const conversation = await db.collection("conversations").findOne({
+      conversationId,
+      userId,
+    });
+
+    if (!conversation) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    await db.collection("conversations").updateOne(
+      { conversationId, userId },
+      { $set: { starred: !conversation.starred } }
+    );
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return NextResponse.json({ error: "Star toggle failed" }, { status: 500 });
   }
-
-  await collection.updateOne(
-    { conversationId },
-    { $set: { starred: !conversation.starred } }
-  );
-
-  return NextResponse.json({ success: true });
 }

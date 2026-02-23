@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, CSSProperties } from "react";
 import Link from "next/link";
 
 interface Conversation {
@@ -147,7 +147,7 @@ export default function Sidebar() {
   );
 }
 
-const iconStyle: React.CSSProperties = {
+const iconStyle: CSSProperties = {
   background: "none",
   border: "none",
   cursor: "pointer",
