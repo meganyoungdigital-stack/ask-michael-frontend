@@ -35,17 +35,27 @@ export default function RootLayout({
       <html lang="en">
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-          style={{ margin: 0, background: "#ffffff", color: "#2f2f2f" }}
+          style={{
+            margin: 0,
+            background: "#ffffff",
+            color: "#2f2f2f",
+          }}
         >
-          {/* Top Right Auth */}
+          {/* Fixed Top Bar */}
           <header
             style={{
               position: "fixed",
               top: 0,
+              left: 0,
               right: 0,
-              padding: "16px",
-              zIndex: 50,
-              background: "white",
+              height: "64px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "flex-end",
+              padding: "0 24px",
+              background: "#ffffff",
+              borderBottom: "1px solid #e5e5e5",
+              zIndex: 100,
             }}
           >
             <SignedOut>
@@ -56,19 +66,30 @@ export default function RootLayout({
             </SignedIn>
           </header>
 
-          {/* Sidebar + Main Layout */}
+          {/* Main App Layout */}
           <div
             style={{
               display: "flex",
               height: "100vh",
+              paddingTop: "64px", // prevent header overlap
             }}
           >
-            <Sidebar />
+            {/* Sidebar */}
+            <div
+              style={{
+                width: "260px",
+                borderRight: "1px solid #e5e5e5",
+                background: "#ffffff",
+              }}
+            >
+              <Sidebar />
+            </div>
 
+            {/* Main Content */}
             <main
               style={{
                 flex: 1,
-                padding: "80px 32px 32px 32px",
+                padding: "32px",
                 overflowY: "auto",
                 background: "#ffffff",
                 color: "#2f2f2f",
