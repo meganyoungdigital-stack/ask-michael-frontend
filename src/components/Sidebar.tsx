@@ -19,16 +19,23 @@ export default function Sidebar() {
       setLoading(true);
 
       const res = await fetch("/api/conversation");
-      const data = await res.json();
 
-      // 🔥 CRITICAL FIX — ensure it's always an array
-      if (!Array.isArray(data)) {
-        console.error("Sidebar API did not return array:", data);
+      if (!res.ok) {
+        console.error("Sidebar fetch failed:", res.status);
         setConversations([]);
         return;
       }
 
-      setConversations(data);
+      const data = await res.json();
+
+      // ✅ FIX: correctly read conversations from API response
+      if (!data.conversations || !Array.isArray(data.conversations)) {
+        console.error("Invalid API response:", data);
+        setConversations([]);
+        return;
+      }
+
+      setConversations(data.conversations);
     } catch (error) {
       console.error("Failed to load conversations:", error);
       setConversations([]);
@@ -43,9 +50,7 @@ export default function Sidebar() {
 
   async function toggleStar(id: string) {
     try {
-      await fetch(`/api/projects/${id}/star`, {
-        method: "PATCH",
-      });
+      await fetch(`/api/projects/${id}/star`, { method: "PATCH" });
       loadConversations();
     } catch (error) {
       console.error("Star failed:", error);
@@ -56,9 +61,7 @@ export default function Sidebar() {
     if (!confirm("Delete this project?")) return;
 
     try {
-      await fetch(`/api/conversation/${id}`, {
-        method: "DELETE",
-      });
+      await fetch(`/api/conversation/${id}`, { method: "DELETE" });
       loadConversations();
     } catch (error) {
       console.error("Delete failed:", error);
@@ -102,7 +105,6 @@ export default function Sidebar() {
       )}
 
       {!loading &&
-        Array.isArray(conversations) &&
         conversations.map((conv) => (
           <div
             key={conv.conversationId}
@@ -144,8 +146,8 @@ export default function Sidebar() {
               >
                 <button
                   onClick={(e) => {
-                    e.stopPropagation();
                     e.preventDefault();
+                    e.stopPropagation();
                     renameConversation(conv.conversationId, conv.title);
                   }}
                   style={iconStyle}
@@ -155,8 +157,8 @@ export default function Sidebar() {
 
                 <button
                   onClick={(e) => {
-                    e.stopPropagation();
                     e.preventDefault();
+                    e.stopPropagation();
                     deleteConversation(conv.conversationId);
                   }}
                   style={iconStyle}
@@ -166,8 +168,8 @@ export default function Sidebar() {
 
                 <button
                   onClick={(e) => {
-                    e.stopPropagation();
                     e.preventDefault();
+                    e.stopPropagation();
                     toggleStar(conv.conversationId);
                   }}
                   style={{
