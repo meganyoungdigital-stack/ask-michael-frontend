@@ -12,11 +12,28 @@ interface Conversation {
 export default function Sidebar() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   async function loadConversations() {
-    const res = await fetch("/api/conversation");
-    const data = await res.json();
-    setConversations(data);
+    try {
+      setLoading(true);
+
+      const res = await fetch("/api/conversation");
+      const data = await res.json();
+
+      if (!Array.isArray(data)) {
+        console.error("API did not return an array:", data);
+        setConversations([]);
+        return;
+      }
+
+      setConversations(data);
+    } catch (error) {
+      console.error("Failed to load conversations:", error);
+      setConversations([]);
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
@@ -24,33 +41,43 @@ export default function Sidebar() {
   }, []);
 
   async function toggleStar(id: string) {
-    await fetch(`/api/projects/${id}/star`, {
-      method: "PATCH",
-    });
-    loadConversations();
+    try {
+      await fetch(`/api/projects/${id}/star`, {
+        method: "PATCH",
+      });
+      loadConversations();
+    } catch (error) {
+      console.error("Star toggle failed:", error);
+    }
   }
 
   async function deleteConversation(id: string) {
     if (!confirm("Delete this project?")) return;
 
-    await fetch(`/api/conversation/${id}`, {
-      method: "DELETE",
-    });
-
-    loadConversations();
+    try {
+      await fetch(`/api/conversation/${id}`, {
+        method: "DELETE",
+      });
+      loadConversations();
+    } catch (error) {
+      console.error("Delete failed:", error);
+    }
   }
 
   async function renameConversation(id: string, currentTitle: string) {
     const newTitle = prompt("Enter new name:", currentTitle);
     if (!newTitle || newTitle.trim() === "") return;
 
-    await fetch(`/api/conversation/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: newTitle }),
-    });
-
-    loadConversations();
+    try {
+      await fetch(`/api/conversation/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: newTitle }),
+      });
+      loadConversations();
+    } catch (error) {
+      console.error("Rename failed:", error);
+    }
   }
 
   return (
@@ -67,82 +94,91 @@ export default function Sidebar() {
         SIDEBAR LIVE
       </h2>
 
-      {conversations.map((conv) => (
-        <div
-          key={conv.conversationId}
-          onMouseEnter={() => setHoveredId(conv.conversationId)}
-          onMouseLeave={() => setHoveredId(null)}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            marginBottom: "12px",
-            padding: "8px",
-            borderRadius: "6px",
-            background:
-              hoveredId === conv.conversationId ? "#1a1a1a" : "transparent",
-          }}
-        >
-          <Link
-            href={`/conversation/${conv.conversationId}`}
+      {loading && <div>Loading...</div>}
+
+      {!loading && conversations.length === 0 && (
+        <div style={{ opacity: 0.6 }}>No projects found</div>
+      )}
+
+      {!loading &&
+        conversations.map((conv) => (
+          <div
+            key={conv.conversationId}
+            onMouseEnter={() => setHoveredId(conv.conversationId)}
+            onMouseLeave={() => setHoveredId(null)}
             style={{
-              color: "white",
-              textDecoration: "none",
-              flexGrow: 1,
-              overflow: "hidden",
-              whiteSpace: "nowrap",
-              textOverflow: "ellipsis",
+              display: "flex",
+              alignItems: "center",
+              marginBottom: "12px",
+              padding: "8px",
+              borderRadius: "6px",
+              background:
+                hoveredId === conv.conversationId
+                  ? "#1a1a1a"
+                  : "transparent",
             }}
           >
-            {conv.title}
-          </Link>
-
-          {hoveredId === conv.conversationId && (
-            <div
+            <Link
+              href={`/conversation/${conv.conversationId}`}
               style={{
-                display: "flex",
-                gap: "6px",
-                marginLeft: "8px",
+                color: "white",
+                textDecoration: "none",
+                flexGrow: 1,
+                overflow: "hidden",
+                whiteSpace: "nowrap",
+                textOverflow: "ellipsis",
               }}
             >
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  renameConversation(conv.conversationId, conv.title);
-                }}
-                style={iconStyle}
-              >
-                ✏
-              </button>
+              {conv.title}
+            </Link>
 
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  deleteConversation(conv.conversationId);
-                }}
-                style={iconStyle}
-              >
-                🗑
-              </button>
-
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  toggleStar(conv.conversationId);
-                }}
+            {hoveredId === conv.conversationId && (
+              <div
                 style={{
-                  ...iconStyle,
-                  color: conv.starred ? "gold" : "gray",
+                  display: "flex",
+                  gap: "6px",
+                  marginLeft: "8px",
                 }}
               >
-                ★
-              </button>
-            </div>
-          )}
-        </div>
-      ))}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    renameConversation(conv.conversationId, conv.title);
+                  }}
+                  style={iconStyle}
+                >
+                  ✏
+                </button>
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    deleteConversation(conv.conversationId);
+                  }}
+                  style={iconStyle}
+                >
+                  🗑
+                </button>
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    toggleStar(conv.conversationId);
+                  }}
+                  style={{
+                    ...iconStyle,
+                    color: conv.starred ? "gold" : "gray",
+                  }}
+                >
+                  ★
+                </button>
+              </div>
+            )}
+          </div>
+        ))}
     </div>
   );
 }
