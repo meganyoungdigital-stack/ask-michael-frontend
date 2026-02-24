@@ -1,60 +1,85 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { ClipboardIcon } from "@heroicons/react/24/outline";
+import { ClipboardIcon, CheckIcon } from "@heroicons/react/24/outline";
+import { motion } from "framer-motion";
 
 interface ChatMessageProps {
   role: "user" | "assistant";
   content: string;
+  isTyping?: boolean;
 }
 
 export default function ChatMessage({
   role,
   content,
+  isTyping = false,
 }: ChatMessageProps) {
   const isAssistant = role === "assistant";
+  const [copied, setCopied] = useState(false);
 
   const copyToClipboard = async () => {
     await navigator.clipboard.writeText(content);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
-    <div
-      className={`flex w-full gap-4 px-4 py-6 ${
-        isAssistant ? "bg-[#1a1a1a]" : "bg-black"
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25 }}
+      className={`w-full flex px-6 py-4 ${
+        isAssistant ? "justify-start bg-gray-50" : "justify-end bg-white"
       }`}
     >
-      {/* Avatar */}
-      <div className="flex-shrink-0">
-        {isAssistant ? (
-          <div className="h-8 w-8 rounded-full bg-green-600 flex items-center justify-center text-white font-bold">
-            A
-          </div>
-        ) : (
-          <div className="h-8 w-8 rounded-full bg-gray-600 flex items-center justify-center text-white font-bold">
-            U
-          </div>
-        )}
-      </div>
-
-      {/* Message Content */}
-      <div className="flex-1 relative group">
-        <div className="prose prose-invert max-w-none">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {content}
-          </ReactMarkdown>
+      <div className="relative group max-w-2xl">
+        {/* Bubble */}
+        <div
+          className={`rounded-2xl px-5 py-4 shadow-sm border text-sm leading-relaxed ${
+            isAssistant
+              ? "bg-white border-gray-200 text-gray-800"
+              : "bg-blue-600 text-white border-blue-600"
+          }`}
+        >
+          {isTyping ? (
+            <TypingIndicator />
+          ) : (
+            <div className="prose max-w-none">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {content}
+              </ReactMarkdown>
+            </div>
+          )}
         </div>
 
         {/* Copy Button */}
-        <button
-          onClick={copyToClipboard}
-          className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition text-gray-400 hover:text-white"
-        >
-          <ClipboardIcon className="h-5 w-5" />
-        </button>
+        {!isTyping && isAssistant && (
+          <button
+            onClick={copyToClipboard}
+            className="absolute -right-10 top-2 opacity-0 group-hover:opacity-100 transition"
+          >
+            {copied ? (
+              <CheckIcon className="h-5 w-5 text-green-500" />
+            ) : (
+              <ClipboardIcon className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+            )}
+          </button>
+        )}
       </div>
+    </motion.div>
+  );
+}
+
+/* Typing Indicator Component */
+function TypingIndicator() {
+  return (
+    <div className="flex items-center gap-1">
+      <span className="h-2 w-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
+      <span className="h-2 w-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
+      <span className="h-2 w-2 bg-gray-400 rounded-full animate-bounce" />
     </div>
   );
 }
