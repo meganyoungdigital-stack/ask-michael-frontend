@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
@@ -13,7 +12,6 @@ import {
   SignedIn,
   SignedOut,
   SignInButton,
-  UserButton,
   useUser,
 } from "@clerk/nextjs";
 
@@ -137,49 +135,26 @@ export default function ChatPage() {
     setLoading(false);
   }
 
-  function handleRegenerate() {
-    if (messages.length < 2) return;
-    const trimmed = messages.slice(0, -1);
-    setMessages(trimmed);
-    sendMessage(trimmed);
-  }
-
   function copyToClipboard(text: string, index: number) {
     navigator.clipboard.writeText(text);
     setCopiedIndex(index);
     setTimeout(() => setCopiedIndex(null), 2000);
   }
 
-  function handleTextareaChange(
-    e: React.ChangeEvent<HTMLTextAreaElement>
-  ) {
-    setInput(e.target.value);
-    e.target.style.height = "auto";
-    e.target.style.height = `${e.target.scrollHeight}px`;
-  }
-
   /* ---------------- LANDING ---------------- */
 
   if (!started) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-b from-white via-white to-gray-50">
+      <div className="flex flex-col items-center justify-center h-full">
 
-        <Image
-          src="/m-logo.png"
-          alt="Ask Michael Logo"
-          width={140}
-          height={140}
-          priority
-        />
-
-        <h1 className="mt-6 text-4xl font-bold tracking-tight text-gray-900">
+        <h1 className="text-4xl font-bold">
           Ask <span className="text-blue-600">Michael</span>
         </h1>
 
         <SignedOut>
-          <div className="mt-8">
+          <div className="mt-6">
             <SignInButton mode="modal">
-              <button className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition shadow-lg">
+              <button className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition">
                 Sign In to Start
               </button>
             </SignInButton>
@@ -187,18 +162,12 @@ export default function ChatPage() {
         </SignedOut>
 
         <SignedIn>
-          <div className="mt-8 flex flex-col items-center gap-4">
-            <span className="px-4 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">
-              {tier.toUpperCase()} PLAN
-            </span>
-
-            <button
-              onClick={() => setStarted(true)}
-              className="bg-blue-600 text-white px-8 py-3 rounded-xl hover:bg-blue-700 transition shadow-lg"
-            >
-              Start Chat
-            </button>
-          </div>
+          <button
+            onClick={() => setStarted(true)}
+            className="mt-6 bg-blue-600 text-white px-8 py-3 rounded-xl hover:bg-blue-700 transition"
+          >
+            Start Chat
+          </button>
         </SignedIn>
       </div>
     );
@@ -207,26 +176,10 @@ export default function ChatPage() {
   /* ---------------- CHAT ---------------- */
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-b from-white via-white to-gray-50 text-gray-900">
-
-      {/* Header */}
-      <div className="flex justify-between items-center px-8 py-5 border-b border-gray-200 bg-white/70 backdrop-blur-md">
-        <h2 className="font-semibold text-lg">
-          Ask Michael
-        </h2>
-
-        <div className="flex items-center gap-6">
-          <div className="text-xs text-gray-500">
-            {dailyLimit === "Unlimited"
-              ? "Unlimited messages"
-              : `${dailyUsed}/${dailyLimit} messages today`}
-          </div>
-          <UserButton afterSignOutUrl="/" />
-        </div>
-      </div>
+    <div className="flex flex-col h-full">
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-8 py-10 space-y-8 scroll-smooth">
+      <div className="flex-1 overflow-y-auto space-y-8 pr-2">
 
         {messages.map((msg, index) => {
           const isAssistant = msg.role === "assistant";
@@ -242,7 +195,7 @@ export default function ChatPage() {
               }`}
             >
               <div
-                className={`relative max-w-2xl rounded-2xl px-6 py-4 text-sm shadow-md transition-all ${
+                className={`relative max-w-2xl rounded-2xl px-6 py-4 text-sm shadow-md ${
                   isAssistant
                     ? "bg-white border border-gray-200 text-gray-800"
                     : "bg-blue-600 text-white"
@@ -268,68 +221,51 @@ export default function ChatPage() {
                     )}
                   </button>
                 )}
-
-                {isAssistant &&
-                  index === messages.length - 1 && (
-                    <button
-                      onClick={handleRegenerate}
-                      className="text-xs text-gray-400 hover:text-gray-700 mt-3"
-                    >
-                      Regenerate response
-                    </button>
-                  )}
               </div>
             </motion.div>
           );
         })}
 
-        {/* Typing Indicator */}
         {loading && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex justify-start"
-          >
+          <div className="flex justify-start">
             <div className="bg-white border border-gray-200 px-6 py-4 rounded-2xl shadow-md flex gap-2">
               <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
               <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.2s]" />
               <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.4s]" />
             </div>
-          </motion.div>
+          </div>
         )}
 
         <div ref={bottomRef} />
       </div>
 
-      {/* Floating Input */}
-      <div className="sticky bottom-0 bg-white/70 backdrop-blur-md border-t border-gray-200 py-6">
-        <div className="max-w-3xl mx-auto px-6">
-          <div className="flex items-end bg-white border border-gray-200 rounded-2xl px-5 py-4 shadow-lg focus-within:ring-2 focus-within:ring-blue-500 transition">
+      {/* Input */}
+      <div className="border-t border-gray-200 pt-4">
+        <div className="flex items-end bg-white border border-gray-200 rounded-2xl px-5 py-4 shadow-md">
 
-            <textarea
-              ref={textareaRef}
-              value={input}
-              onChange={handleTextareaChange}
-              placeholder="Message Ask Michael..."
-              rows={1}
-              className="flex-1 bg-transparent resize-none outline-none text-sm"
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  sendMessage();
-                }
-              }}
-            />
+          <textarea
+            ref={textareaRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Message Ask Michael..."
+            rows={1}
+            className="flex-1 bg-transparent resize-none outline-none text-sm"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+              }
+            }}
+          />
 
-            <button
-              onClick={() => sendMessage()}
-              disabled={loading}
-              className="ml-4 bg-blue-600 text-white px-5 py-2.5 rounded-xl shadow-md transition-all duration-200 hover:bg-blue-700 active:scale-95 disabled:opacity-50"
-            >
-              Send
-            </button>
+          <button
+            onClick={() => sendMessage()}
+            disabled={loading}
+            className="ml-4 bg-blue-600 text-white px-5 py-2.5 rounded-xl hover:bg-blue-700 disabled:opacity-50"
+          >
+            Send
+          </button>
 
-          </div>
         </div>
       </div>
     </div>
