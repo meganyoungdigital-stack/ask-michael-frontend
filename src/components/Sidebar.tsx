@@ -1,49 +1,31 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 
 interface Conversation {
-  conversationId: string;
+  id: string;
   title: string;
   starred?: boolean;
 }
 
-export default function Sidebar() {
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [loading, setLoading] = useState(true);
+interface SidebarProps {
+  conversations: Conversation[];
+  activeId: string;
+}
+
+export default function Sidebar({
+  conversations,
+  activeId,
+}: SidebarProps) {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
-
-  // 🔄 FETCH CONVERSATIONS
-  async function fetchConversations() {
-    try {
-      setLoading(true);
-      const res = await fetch("/api/conversation");
-      const data = await res.json();
-
-      if (!Array.isArray(data)) {
-        console.error("Sidebar API did not return array:", data);
-        setConversations([]);
-        return;
-      }
-
-      setConversations(data);
-    } catch (err) {
-      console.error("Failed to fetch conversations:", err);
-      setConversations([]);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    fetchConversations();
-  }, []);
 
   // ⭐ TOGGLE STAR
   async function toggleStar(id: string) {
-    await fetch(`/api/projects/${id}/star`, { method: "PATCH" });
-    fetchConversations();
+    await fetch(`/api/conversation/${id}/star`, {
+      method: "PATCH",
+    });
+    window.location.reload();
   }
 
   // ✏ RENAME
@@ -57,30 +39,35 @@ export default function Sidebar() {
       body: JSON.stringify({ title: newTitle }),
     });
 
-    fetchConversations();
+    window.location.reload();
   }
 
   // 🗑 DELETE
   async function deleteConversation(id: string) {
     if (!confirm("Delete this conversation?")) return;
 
-    await fetch(`/api/conversation/${id}`, { method: "DELETE" });
-    fetchConversations();
+    await fetch(`/api/conversation/${id}`, {
+      method: "DELETE",
+    });
+
+    window.location.href = "/";
   }
 
   // ➕ NEW CHAT
   async function newConversation() {
-    const res = await fetch("/api/conversation/new", { method: "POST" });
+    const res = await fetch("/api/conversation/new", {
+      method: "POST",
+    });
+
     const data = await res.json();
 
     if (data?.conversationId) {
-      fetchConversations();
-      window.location.href = `/conversation/${data.conversationId}`;
+      window.location.href = `/chat/${data.conversationId}`;
     }
   }
 
-  const pinned = conversations.filter(c => c.starred);
-  const normal = conversations.filter(c => !c.starred);
+  const pinned = conversations.filter((c) => c.starred);
+  const normal = conversations.filter((c) => !c.starred);
 
   return (
     <aside
@@ -92,6 +79,7 @@ export default function Sidebar() {
         color: "#374151",
       }}
     >
+      {/* NEW CHAT BUTTON */}
       <button
         onClick={newConversation}
         style={{
@@ -107,29 +95,27 @@ export default function Sidebar() {
         + New Chat
       </button>
 
-      {loading && <p style={{ fontSize: "14px", color: "#6b7280" }}>Loading…</p>}
-
-      {!loading && pinned.length > 0 && (
+      {/* PINNED */}
+      {pinned.length > 0 && (
         <>
           <p style={sectionLabel}>Pinned</p>
           {pinned.map(renderConversation)}
         </>
       )}
 
-      {!loading && (
-        <>
-          <p style={sectionLabel}>All Chats</p>
-          {normal.map(renderConversation)}
-        </>
-      )}
+      {/* ALL CHATS */}
+      <p style={sectionLabel}>All Chats</p>
+      {normal.map(renderConversation)}
     </aside>
   );
 
   function renderConversation(conv: Conversation) {
+    const isActive = conv.id === activeId;
+
     return (
       <div
-        key={conv.conversationId}
-        onMouseEnter={() => setHoveredId(conv.conversationId)}
+        key={conv.id}
+        onMouseEnter={() => setHoveredId(conv.id)}
         onMouseLeave={() => setHoveredId(null)}
         style={{
           display: "flex",
@@ -137,12 +123,15 @@ export default function Sidebar() {
           padding: "8px",
           borderRadius: "6px",
           marginBottom: "6px",
-          background:
-            hoveredId === conv.conversationId ? "#f3f4f6" : "transparent",
+          background: isActive
+            ? "#e5e7eb"
+            : hoveredId === conv.id
+            ? "#f3f4f6"
+            : "transparent",
         }}
       >
         <Link
-          href={`/conversation/${conv.conversationId}`}
+          href={`/chat/${conv.id}`}
           style={{
             flex: 1,
             textDecoration: "none",
@@ -150,18 +139,29 @@ export default function Sidebar() {
             whiteSpace: "nowrap",
             overflow: "hidden",
             textOverflow: "ellipsis",
+            fontWeight: isActive ? 600 : 400,
           }}
         >
-          {conv.title}
+          {conv.title || "Untitled"}
         </Link>
 
-        {hoveredId === conv.conversationId && (
+        {hoveredId === conv.id && (
           <div style={{ display: "flex", gap: "6px", marginLeft: "8px" }}>
-            <button onClick={() => toggleStar(conv.conversationId)}>
+            <button onClick={() => toggleStar(conv.id)}>
               {conv.starred ? "⭐" : "☆"}
             </button>
-            <button onClick={() => renameConversation(conv.conversationId, conv.title)}>✏</button>
-            <button onClick={() => deleteConversation(conv.conversationId)}>🗑</button>
+
+            <button
+              onClick={() =>
+                renameConversation(conv.id, conv.title)
+              }
+            >
+              ✏
+            </button>
+
+            <button onClick={() => deleteConversation(conv.id)}>
+              🗑
+            </button>
           </div>
         )}
       </div>

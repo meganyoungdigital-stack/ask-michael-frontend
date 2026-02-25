@@ -1,13 +1,22 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { useUser } from "@clerk/nextjs";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ClipboardIcon } from "@heroicons/react/24/outline";
+import { motion, AnimatePresence } from "framer-motion";
+import UpgradeModal from "@/components/UpgradeModal";
+import Sidebar from "@/components/Sidebar";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
+}
+
+interface Conversation {
+  id: string;
+  title: string;
 }
 
 interface PageProps {
@@ -18,20 +27,34 @@ interface PageProps {
 
 export default function ConversationPage({ params }: PageProps) {
   const { conversationId } = params;
+  const { user } = useUser();
+
+  // ✅ Safe Clerk metadata check
+  const isPro =
+    (user?.publicMetadata as { plan?: string })?.plan === "pro";
 
   const [messages, setMessages] = useState<Message[]>([]);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
+
+  const [tone, setTone] = useState("professional");
+  const [language, setLanguage] = useState("English");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
-  // Auto-scroll
+  const FREE_LIMIT = 10;
+
+  // Auto scroll
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Load conversation
+  // Load conversation messages
   useEffect(() => {
     async function loadConversation() {
       try {
@@ -39,17 +62,44 @@ export default function ConversationPage({ params }: PageProps) {
           `/api/conversation?conversationId=${conversationId}`
         );
         const data = await res.json();
-        setMessages(data.messages || []);
-      } catch (error) {
-        console.error("Failed to load conversation:", error);
+        setMessages(data?.messages || []);
+      } catch (err) {
+        console.error("Failed to load conversation:", err);
       }
     }
 
     loadConversation();
   }, [conversationId]);
 
+  // Load sidebar conversations
+  useEffect(() => {
+    async function loadConversations() {
+      try {
+        const res = await fetch("/api/conversations");
+        const data = await res.json();
+
+        if (Array.isArray(data)) {
+          setConversations(data);
+        } else if (Array.isArray(data?.conversations)) {
+          setConversations(data.conversations);
+        } else {
+          setConversations([]);
+        }
+      } catch (err) {
+        console.error("Failed to load conversations:", err);
+      }
+    }
+
+    loadConversations();
+  }, []);
+
   async function sendMessage(customMessages?: Message[]) {
     if ((!input.trim() && !customMessages) || loading) return;
+
+    if (!isPro && messages.length >= FREE_LIMIT) {
+      setIsUpgradeOpen(true);
+      return;
+    }
 
     const userMessage: Message = {
       role: "user",
@@ -67,15 +117,19 @@ export default function ConversationPage({ params }: PageProps) {
     setLoading(true);
 
     try {
+      const formData = new FormData();
+      formData.append("conversationId", conversationId);
+      formData.append("messages", JSON.stringify(updatedMessages));
+      formData.append("tone", tone);
+      formData.append("language", language);
+
+      if (selectedFile) {
+        formData.append("file", selectedFile);
+      }
+
       const response = await fetch("/api/ask", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          conversationId,
-          messages: updatedMessages,
-        }),
+        body: formData,
       });
 
       if (!response.body) return;
@@ -83,32 +137,27 @@ export default function ConversationPage({ params }: PageProps) {
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
 
-      let done = false;
       let assistantMessage = "";
 
-      // Add assistant placeholder
       setMessages((prev) => [
         ...prev,
         { role: "assistant", content: "" },
       ]);
 
-      while (!done) {
-        const { value, done: doneReading } =
-          await reader.read();
-        done = doneReading;
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
 
         const chunk = decoder.decode(value);
         const lines = chunk.split("\n");
 
         for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            const data = line.replace("data: ", "");
+          if (!line.startsWith("data: ")) continue;
 
-            if (data === "[DONE]") {
-              done = true;
-              break;
-            }
+          const data = line.replace("data: ", "");
+          if (data === "[DONE]") break;
 
+          try {
             const parsed = JSON.parse(data);
             assistantMessage += parsed.content;
 
@@ -120,6 +169,8 @@ export default function ConversationPage({ params }: PageProps) {
               };
               return updated;
             });
+          } catch (err) {
+            console.error("Streaming parse error:", err);
           }
         }
       }
@@ -128,18 +179,20 @@ export default function ConversationPage({ params }: PageProps) {
     }
 
     setLoading(false);
+    setSelectedFile(null);
   }
 
   function handleRegenerate() {
     if (messages.length < 2) return;
-
-    const trimmedMessages = messages.slice(0, -1);
-    setMessages(trimmedMessages);
-    sendMessage(trimmedMessages);
+    const trimmed = messages.slice(0, -1);
+    setMessages(trimmed);
+    sendMessage(trimmed);
   }
 
   function copyToClipboard(text: string) {
     navigator.clipboard.writeText(text);
+    setCopySuccess(true);
+    setTimeout(() => setCopySuccess(false), 2000);
   }
 
   function handleTextareaChange(
@@ -150,90 +203,159 @@ export default function ConversationPage({ params }: PageProps) {
     e.target.style.height = `${e.target.scrollHeight}px`;
   }
 
+  const usagePercent =
+    (messages.length / FREE_LIMIT) * 100;
+
   return (
-    <div className="flex flex-col h-screen bg-black text-white">
+    <div className="flex h-screen">
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto">
-        {messages.map((msg, index) => {
-          const isAssistant = msg.role === "assistant";
+      {/* SIDEBAR */}
+      <Sidebar
+        conversations={conversations}
+        activeId={conversationId}
+      />
 
-          return (
-            <div
-              key={index}
-              className={`w-full py-6 ${
-                isAssistant ? "bg-[#1a1a1a]" : "bg-black"
-              }`}
+      {/* MAIN CHAT */}
+      <div className="flex flex-col flex-1 bg-white text-gray-900">
+
+        {/* HEADER */}
+        <div className="border-b border-gray-200 px-6 py-4 flex justify-between">
+          <div className="text-sm text-gray-600">
+            {isPro ? "Pro Plan" : "Free Plan"}
+          </div>
+
+          {!isPro && (
+            <button
+              onClick={() => setIsUpgradeOpen(true)}
+              className="bg-blue-600 text-white px-4 py-2 rounded-xl"
             >
-              <div className="max-w-3xl mx-auto flex gap-4 px-6 group">
+              Upgrade
+            </button>
+          )}
+        </div>
 
-                {/* Avatar */}
-                <div
-                  className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-semibold ${
-                    isAssistant
-                      ? "bg-green-600"
-                      : "bg-blue-600"
-                  }`}
-                >
-                  {isAssistant ? "A" : "U"}
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 relative">
-
-                  <div className="prose prose-invert max-w-none">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                      {msg.content}
-                    </ReactMarkdown>
-                  </div>
-
-                  {/* Copy Button */}
-                  <button
-                    onClick={() =>
-                      copyToClipboard(msg.content)
-                    }
-                    className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition text-gray-400 hover:text-white"
-                  >
-                    <ClipboardIcon className="h-5 w-5" />
-                  </button>
-
-                  {/* Regenerate Button */}
-                  {isAssistant &&
-                    index === messages.length - 1 && (
-                      <button
-                        onClick={handleRegenerate}
-                        className="text-xs text-gray-400 hover:text-white mt-3"
-                      >
-                        Regenerate response
-                      </button>
-                    )}
-                </div>
-              </div>
+        {/* USAGE BAR */}
+        {!isPro && (
+          <div className="px-6 py-2">
+            <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${usagePercent}%` }}
+                transition={{ duration: 0.4 }}
+                className="h-full bg-blue-600"
+              />
             </div>
-          );
-        })}
-
-        {loading && (
-          <div className="py-6 max-w-3xl mx-auto px-6 text-gray-400">
-            Ask Michael is thinking...
           </div>
         )}
 
-        <div ref={bottomRef} />
-      </div>
+        {/* MESSAGES */}
+        <div className="flex-1 overflow-y-auto">
+          <AnimatePresence>
+            {messages.map((msg, index) => {
+              const isAssistant = msg.role === "assistant";
 
-      {/* Input */}
-      <div className="border-t border-gray-800 bg-black py-6">
-        <div className="max-w-3xl mx-auto px-6">
-          <div className="flex items-end bg-[#1a1a1a] rounded-2xl px-4 py-3">
+              return (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="max-w-3xl mx-auto px-6 py-4"
+                >
+                  <div className="flex gap-4">
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-white ${
+                        isAssistant
+                          ? "bg-green-600"
+                          : "bg-blue-600"
+                      }`}
+                    >
+                      {isAssistant ? "A" : "U"}
+                    </div>
 
+                    <div className="flex-1 bg-gray-100 rounded-2xl p-4 relative">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {msg.content}
+                      </ReactMarkdown>
+
+                      <button
+                        onClick={() =>
+                          copyToClipboard(msg.content)
+                        }
+                        className="absolute top-3 right-3 text-gray-400"
+                      >
+                        <ClipboardIcon className="h-5 w-5" />
+                      </button>
+
+                      {isAssistant &&
+                        index === messages.length - 1 && (
+                          <button
+                            onClick={handleRegenerate}
+                            className="text-xs mt-3 text-gray-500"
+                          >
+                            Regenerate response
+                          </button>
+                        )}
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+
+          {loading && (
+            <div className="px-6 py-4 text-gray-500">
+              Ask Michael is thinking...
+            </div>
+          )}
+
+          <div ref={bottomRef} />
+        </div>
+
+        {/* INPUT */}
+        <div className="border-t border-gray-200 py-6 px-6 space-y-3">
+
+          <div className="flex gap-3 flex-wrap">
+            <select
+              value={tone}
+              onChange={(e) => setTone(e.target.value)}
+              className="bg-gray-100 px-3 py-2 rounded-lg text-sm"
+            >
+              <option value="professional">Professional</option>
+              <option value="casual">Casual</option>
+              <option value="technical">Technical</option>
+              <option value="executive">Executive</option>
+            </select>
+
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+              className="bg-gray-100 px-3 py-2 rounded-lg text-sm"
+            >
+              <option>English</option>
+              <option>Spanish</option>
+              <option>French</option>
+              <option>Zulu</option>
+            </select>
+
+            {isPro && (
+              <input
+                type="file"
+                onChange={(e) =>
+                  setSelectedFile(e.target.files?.[0] || null)
+                }
+                className="text-sm"
+              />
+            )}
+          </div>
+
+          <div className="flex items-end bg-gray-100 rounded-2xl px-4 py-3">
             <textarea
               ref={textareaRef}
               value={input}
               onChange={handleTextareaChange}
               placeholder="Message Ask Michael..."
               rows={1}
-              className="flex-1 bg-transparent resize-none outline-none text-white"
+              className="flex-1 bg-transparent resize-none outline-none"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
@@ -245,14 +367,24 @@ export default function ConversationPage({ params }: PageProps) {
             <button
               onClick={() => sendMessage()}
               disabled={loading}
-              className="ml-3 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+              className="ml-3 bg-blue-600 text-white px-4 py-2 rounded-xl"
             >
               Send
             </button>
-
           </div>
         </div>
+
+        {copySuccess && (
+          <div className="fixed bottom-6 right-6 bg-black text-white px-4 py-2 rounded-xl">
+            Copied to clipboard
+          </div>
+        )}
       </div>
+
+      <UpgradeModal
+        isOpen={isUpgradeOpen}
+        onClose={() => setIsUpgradeOpen(false)}
+      />
     </div>
   );
 }

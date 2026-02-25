@@ -7,7 +7,6 @@ import {
   SignedOut,
   SignInButton,
 } from "@clerk/nextjs";
-import Sidebar from "@/components/Sidebar";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -61,43 +60,22 @@ export default function RootLayout({
             <SignedOut>
               <SignInButton mode="modal" />
             </SignedOut>
+
             <SignedIn>
               <UserButton />
             </SignedIn>
           </header>
 
-          {/* Main App Layout */}
-          <div
+          {/* Main Content Area */}
+          <main
             style={{
-              display: "flex",
-              height: "100vh",
               paddingTop: "64px", // prevent header overlap
+              height: "100vh",
+              overflow: "hidden",
             }}
           >
-            {/* Sidebar */}
-            <div
-              style={{
-                width: "260px",
-                borderRight: "1px solid #e5e5e5",
-                background: "#ffffff",
-              }}
-            >
-              <Sidebar />
-            </div>
-
-            {/* Main Content */}
-            <main
-              style={{
-                flex: 1,
-                padding: "32px",
-                overflowY: "auto",
-                background: "#ffffff",
-                color: "#2f2f2f",
-              }}
-            >
-              {children}
-            </main>
-          </div>
+            {children}
+          </main>
         </body>
       </html>
     </ClerkProvider>
