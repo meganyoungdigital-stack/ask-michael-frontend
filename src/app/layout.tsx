@@ -40,42 +40,28 @@ export default function RootLayout({
             color: "#2f2f2f",
           }}
         >
-          {/* Fixed Top Bar */}
-          <header
-            style={{
-              position: "fixed",
-              top: 0,
-              left: 0,
-              right: 0,
-              height: "64px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "flex-end",
-              padding: "0 24px",
-              background: "#ffffff",
-              borderBottom: "1px solid #e5e5e5",
-              zIndex: 100,
-            }}
-          >
-            <SignedOut>
-              <SignInButton mode="modal" />
-            </SignedOut>
+          {/* App Wrapper */}
+          <div className="flex flex-col h-screen">
 
-            <SignedIn>
-              <UserButton />
-            </SignedIn>
-          </header>
+            {/* Fixed Top Bar */}
+            <header
+              className="h-16 flex items-center justify-end px-6 border-b bg-white"
+            >
+              <SignedOut>
+                <SignInButton mode="modal" />
+              </SignedOut>
 
-          {/* Main App Area */}
-          <main
-            style={{
-              paddingTop: "64px",
-              height: "100vh",
-              overflow: "hidden",
-            }}
-          >
-            {children}
-          </main>
+              <SignedIn>
+                <UserButton />
+              </SignedIn>
+            </header>
+
+            {/* Main Content Area */}
+            <main className="flex-1 overflow-hidden">
+              {children}
+            </main>
+
+          </div>
         </body>
       </html>
     </ClerkProvider>
