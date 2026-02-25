@@ -15,12 +15,11 @@ interface SidebarProps {
 }
 
 export default function Sidebar({
-  conversations,
+  conversations = [],
   activeId,
 }: SidebarProps) {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
-  // ⭐ TOGGLE STAR
   async function toggleStar(conversationId: string) {
     await fetch(`/api/conversation/${conversationId}/star`, {
       method: "PATCH",
@@ -28,7 +27,6 @@ export default function Sidebar({
     window.location.reload();
   }
 
-  // ✏ RENAME
   async function renameConversation(
     conversationId: string,
     currentTitle: string
@@ -45,7 +43,6 @@ export default function Sidebar({
     window.location.reload();
   }
 
-  // 🗑 DELETE
   async function deleteConversation(conversationId: string) {
     if (!confirm("Delete this conversation?")) return;
 
@@ -56,7 +53,6 @@ export default function Sidebar({
     window.location.href = "/";
   }
 
-  // ➕ NEW CHAT
   async function newConversation() {
     const res = await fetch("/api/conversation/new", {
       method: "POST",
@@ -74,41 +70,42 @@ export default function Sidebar({
 
   return (
     <aside
-      style={{
-        width: "260px",
-        background: "#ffffff",
-        borderRight: "1px solid #e5e7eb",
-        padding: "16px",
-        color: "#374151",
-      }}
+      className="w-64 h-screen flex-shrink-0 border-r bg-white flex flex-col"
     >
-      {/* NEW CHAT BUTTON */}
-      <button
-        onClick={newConversation}
-        style={{
-          width: "100%",
-          padding: "10px",
-          marginBottom: "16px",
-          background: "#2563eb",
-          color: "white",
-          borderRadius: "6px",
-          fontWeight: 600,
-        }}
-      >
-        + New Chat
-      </button>
+      {/* HEADER */}
+      <div className="p-4 border-b">
+        <button
+          onClick={newConversation}
+          className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition"
+        >
+          + New Chat
+        </button>
+      </div>
 
-      {/* PINNED */}
-      {pinned.length > 0 && (
-        <>
-          <p style={sectionLabel}>Pinned</p>
-          {pinned.map(renderConversation)}
-        </>
-      )}
+      {/* SCROLL AREA */}
+      <div className="flex-1 overflow-y-auto p-4">
 
-      {/* ALL CHATS */}
-      <p style={sectionLabel}>All Chats</p>
-      {normal.map(renderConversation)}
+        {pinned.length > 0 && (
+          <>
+            <p className="text-xs font-semibold text-gray-500 mb-2">
+              Pinned
+            </p>
+            {pinned.map(renderConversation)}
+          </>
+        )}
+
+        <p className="text-xs font-semibold text-gray-500 mt-4 mb-2">
+          All Chats
+        </p>
+
+        {normal.length === 0 && (
+          <div className="text-sm text-gray-400">
+            No conversations yet
+          </div>
+        )}
+
+        {normal.map(renderConversation)}
+      </div>
     </aside>
   );
 
@@ -120,36 +117,23 @@ export default function Sidebar({
         key={conv.conversationId}
         onMouseEnter={() => setHoveredId(conv.conversationId)}
         onMouseLeave={() => setHoveredId(null)}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          padding: "8px",
-          borderRadius: "6px",
-          marginBottom: "6px",
-          background: isActive
-            ? "#e5e7eb"
-            : hoveredId === conv.conversationId
-            ? "#f3f4f6"
-            : "transparent",
-        }}
+        className={`flex items-center px-3 py-2 rounded-lg mb-1 transition ${
+          isActive
+            ? "bg-gray-200"
+            : "hover:bg-gray-100"
+        }`}
       >
         <Link
           href={`/conversation/${conv.conversationId}`}
-          style={{
-            flex: 1,
-            textDecoration: "none",
-            color: "#111827",
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            fontWeight: isActive ? 600 : 400,
-          }}
+          className={`flex-1 truncate ${
+            isActive ? "font-semibold text-black" : "text-gray-700"
+          }`}
         >
           {conv.title || "Untitled"}
         </Link>
 
         {hoveredId === conv.conversationId && (
-          <div style={{ display: "flex", gap: "6px", marginLeft: "8px" }}>
+          <div className="flex gap-2 ml-2 text-sm">
             <button onClick={() => toggleStar(conv.conversationId)}>
               {conv.starred ? "⭐" : "☆"}
             </button>
@@ -171,10 +155,3 @@ export default function Sidebar({
     );
   }
 }
-
-const sectionLabel: React.CSSProperties = {
-  fontSize: "12px",
-  fontWeight: 600,
-  color: "#6b7280",
-  margin: "12px 0 6px",
-};
