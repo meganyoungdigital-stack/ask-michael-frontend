@@ -6,22 +6,12 @@ export default function ConversationLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div
-      style={{
-        display: "flex",
-        height: "calc(100vh - 64px)", // account for header
-      }}
-    >
-      {/* Sidebar */}
-      <Sidebar conversations={[]} activeId="" />
+    <div style={{ display: "flex", height: "calc(100vh - 64px)" }}>
+      <div style={{ width: "250px", background: "red" }}>
+        TEST SIDEBAR
+      </div>
 
-      {/* Chat Content */}
-      <div
-        style={{
-          flex: 1,
-          overflow: "auto",
-        }}
-      >
+      <div style={{ flex: 1, background: "blue" }}>
         {children}
       </div>
     </div>
