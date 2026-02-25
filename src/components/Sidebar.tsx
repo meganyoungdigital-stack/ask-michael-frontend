@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 
 interface Conversation {
-  id: string;
+  conversationId: string;
   title: string;
   starred?: boolean;
 }
@@ -21,19 +21,22 @@ export default function Sidebar({
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   // ⭐ TOGGLE STAR
-  async function toggleStar(id: string) {
-    await fetch(`/api/conversation/${id}/star`, {
+  async function toggleStar(conversationId: string) {
+    await fetch(`/api/conversation/${conversationId}/star`, {
       method: "PATCH",
     });
     window.location.reload();
   }
 
   // ✏ RENAME
-  async function renameConversation(id: string, currentTitle: string) {
+  async function renameConversation(
+    conversationId: string,
+    currentTitle: string
+  ) {
     const newTitle = prompt("Enter new name:", currentTitle);
     if (!newTitle?.trim()) return;
 
-    await fetch(`/api/conversation/${id}`, {
+    await fetch(`/api/conversation/${conversationId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title: newTitle }),
@@ -43,10 +46,10 @@ export default function Sidebar({
   }
 
   // 🗑 DELETE
-  async function deleteConversation(id: string) {
+  async function deleteConversation(conversationId: string) {
     if (!confirm("Delete this conversation?")) return;
 
-    await fetch(`/api/conversation/${id}`, {
+    await fetch(`/api/conversation/${conversationId}`, {
       method: "DELETE",
     });
 
@@ -62,7 +65,7 @@ export default function Sidebar({
     const data = await res.json();
 
     if (data?.conversationId) {
-      window.location.href = `/chat/${data.conversationId}`;
+      window.location.href = `/conversation/${data.conversationId}`;
     }
   }
 
@@ -110,12 +113,12 @@ export default function Sidebar({
   );
 
   function renderConversation(conv: Conversation) {
-    const isActive = conv.id === activeId;
+    const isActive = conv.conversationId === activeId;
 
     return (
       <div
-        key={conv.id}
-        onMouseEnter={() => setHoveredId(conv.id)}
+        key={conv.conversationId}
+        onMouseEnter={() => setHoveredId(conv.conversationId)}
         onMouseLeave={() => setHoveredId(null)}
         style={{
           display: "flex",
@@ -125,13 +128,13 @@ export default function Sidebar({
           marginBottom: "6px",
           background: isActive
             ? "#e5e7eb"
-            : hoveredId === conv.id
+            : hoveredId === conv.conversationId
             ? "#f3f4f6"
             : "transparent",
         }}
       >
         <Link
-          href={`/chat/${conv.id}`}
+          href={`/conversation/${conv.conversationId}`}
           style={{
             flex: 1,
             textDecoration: "none",
@@ -145,21 +148,21 @@ export default function Sidebar({
           {conv.title || "Untitled"}
         </Link>
 
-        {hoveredId === conv.id && (
+        {hoveredId === conv.conversationId && (
           <div style={{ display: "flex", gap: "6px", marginLeft: "8px" }}>
-            <button onClick={() => toggleStar(conv.id)}>
+            <button onClick={() => toggleStar(conv.conversationId)}>
               {conv.starred ? "⭐" : "☆"}
             </button>
 
             <button
               onClick={() =>
-                renameConversation(conv.id, conv.title)
+                renameConversation(conv.conversationId, conv.title)
               }
             >
               ✏
             </button>
 
-            <button onClick={() => deleteConversation(conv.id)}>
+            <button onClick={() => deleteConversation(conv.conversationId)}>
               🗑
             </button>
           </div>
@@ -169,7 +172,7 @@ export default function Sidebar({
   }
 }
 
-const sectionLabel = {
+const sectionLabel: React.CSSProperties = {
   fontSize: "12px",
   fontWeight: 600,
   color: "#6b7280",

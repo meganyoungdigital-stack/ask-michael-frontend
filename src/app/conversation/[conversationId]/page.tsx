@@ -14,8 +14,9 @@ interface Message {
   content: string;
 }
 
+/* ✅ MUST match Sidebar */
 interface Conversation {
-  id: string;
+  conversationId: string;
   title: string;
 }
 
@@ -29,7 +30,6 @@ export default function ConversationPage({ params }: PageProps) {
   const { conversationId } = params;
   const { user } = useUser();
 
-  // ✅ Safe Clerk metadata check
   const isPro =
     (user?.publicMetadata as { plan?: string })?.plan === "pro";
 
@@ -49,12 +49,12 @@ export default function ConversationPage({ params }: PageProps) {
 
   const FREE_LIMIT = 10;
 
-  // Auto scroll
+  /* Auto scroll */
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Load conversation messages
+  /* Load current conversation */
   useEffect(() => {
     async function loadConversation() {
       try {
@@ -71,7 +71,7 @@ export default function ConversationPage({ params }: PageProps) {
     loadConversation();
   }, [conversationId]);
 
-  // Load sidebar conversations
+  /* Load sidebar conversations */
   useEffect(() => {
     async function loadConversations() {
       try {
@@ -132,13 +132,17 @@ export default function ConversationPage({ params }: PageProps) {
         body: formData,
       });
 
-      if (!response.body) return;
+      if (!response.body) {
+        setLoading(false);
+        return;
+      }
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
 
       let assistantMessage = "";
 
+      /* Add assistant placeholder */
       setMessages((prev) => [
         ...prev,
         { role: "assistant", content: "" },
@@ -159,7 +163,7 @@ export default function ConversationPage({ params }: PageProps) {
 
           try {
             const parsed = JSON.parse(data);
-            assistantMessage += parsed.content;
+            assistantMessage += parsed.content || "";
 
             setMessages((prev) => {
               const updated = [...prev];
