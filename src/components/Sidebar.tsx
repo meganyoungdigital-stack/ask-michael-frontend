@@ -10,13 +10,13 @@ interface Conversation {
 }
 
 interface SidebarProps {
-  conversations: Conversation[];
-  activeId: string;
+  conversations?: Conversation[];
+  activeId?: string;
 }
 
 export default function Sidebar({
   conversations = [],
-  activeId,
+  activeId = "",
 }: SidebarProps) {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
@@ -69,9 +69,7 @@ export default function Sidebar({
   const normal = conversations.filter((c) => !c.starred);
 
   return (
-    <aside
-      className="w-64 h-screen flex-shrink-0 border-r bg-white flex flex-col"
-    >
+    <aside className="w-64 h-full flex-shrink-0 border-r bg-white flex flex-col">
       {/* HEADER */}
       <div className="p-4 border-b">
         <button
@@ -84,7 +82,6 @@ export default function Sidebar({
 
       {/* SCROLL AREA */}
       <div className="flex-1 overflow-y-auto p-4">
-
         {pinned.length > 0 && (
           <>
             <p className="text-xs font-semibold text-gray-500 mb-2">
@@ -118,9 +115,7 @@ export default function Sidebar({
         onMouseEnter={() => setHoveredId(conv.conversationId)}
         onMouseLeave={() => setHoveredId(null)}
         className={`flex items-center px-3 py-2 rounded-lg mb-1 transition ${
-          isActive
-            ? "bg-gray-200"
-            : "hover:bg-gray-100"
+          isActive ? "bg-gray-200" : "hover:bg-gray-100"
         }`}
       >
         <Link

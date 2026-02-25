@@ -7,6 +7,8 @@ import {
   SignedOut,
   SignInButton,
 } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
+import Sidebar from "../components/Sidebar";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -24,11 +26,27 @@ export const metadata: Metadata = {
   description: "Expert advice on aluminium smelting maintenance",
 };
 
-export default function RootLayout({
+async function getConversations(userId: string) {
+  if (!userId) return [];
+
+  // 🔁 Replace this with your real DB call
+  // Example:
+  // return await db.conversation.findMany({ where: { userId } });
+
+  return [];
+}
+
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { userId } = await auth();
+
+  const conversations = userId
+    ? await getConversations(userId)
+    : [];
+
   return (
     <ClerkProvider>
       <html lang="en">
@@ -40,13 +58,10 @@ export default function RootLayout({
             color: "#2f2f2f",
           }}
         >
-          {/* App Wrapper */}
           <div className="flex flex-col h-screen">
-
-            {/* Fixed Top Bar */}
-            <header
-              className="h-16 flex items-center justify-end px-6 border-b bg-white"
-            >
+            
+            {/* Top Header */}
+            <header className="h-16 flex items-center justify-end px-6 border-b bg-white">
               <SignedOut>
                 <SignInButton mode="modal" />
               </SignedOut>
@@ -56,11 +71,21 @@ export default function RootLayout({
               </SignedIn>
             </header>
 
-            {/* Main Content Area */}
-            <main className="flex-1 overflow-hidden">
-              {children}
-            </main>
+            {/* Main Row */}
+            <div className="flex flex-1 overflow-hidden">
 
+              <SignedIn>
+                <Sidebar
+                  conversations={conversations}
+                  activeId=""
+                />
+              </SignedIn>
+
+              <main className="flex-1 overflow-y-auto p-6">
+                {children}
+              </main>
+
+            </div>
           </div>
         </body>
       </html>
