@@ -7,16 +7,10 @@ import remarkGfm from "remark-gfm";
 import { ClipboardIcon } from "@heroicons/react/24/outline";
 import { motion, AnimatePresence } from "framer-motion";
 import UpgradeModal from "@/components/UpgradeModal";
-import Sidebar from "@/components/Sidebar";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
-}
-
-interface Conversation {
-  conversationId: string;
-  title: string;
 }
 
 interface PageProps {
@@ -34,9 +28,7 @@ export default function ConversationPage({ params }: PageProps) {
 
   const FREE_LIMIT = 10;
 
-  // STATE
   const [messages, setMessages] = useState<Message[]>([]);
-  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
@@ -47,7 +39,7 @@ export default function ConversationPage({ params }: PageProps) {
   /* AUTO SCROLL */
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, loading]);
 
   /* LOAD CURRENT CONVERSATION */
   useEffect(() => {
@@ -71,32 +63,6 @@ export default function ConversationPage({ params }: PageProps) {
 
     loadConversation();
   }, [conversationId]);
-
-  /* LOAD SIDEBAR CONVERSATIONS */
-  useEffect(() => {
-    async function loadConversations() {
-      try {
-        const res = await fetch("/api/conversations");
-
-        if (!res.ok) throw new Error("Failed to fetch conversations");
-
-        const data = await res.json();
-
-        if (Array.isArray(data)) {
-          setConversations(data);
-        } else if (Array.isArray(data?.conversations)) {
-          setConversations(data.conversations);
-        } else {
-          setConversations([]);
-        }
-      } catch (err) {
-        console.error("Sidebar load error:", err);
-        setConversations([]);
-      }
-    }
-
-    loadConversations();
-  }, []);
 
   async function sendMessage() {
     if (!input.trim() || loading) return;
@@ -139,7 +105,7 @@ export default function ConversationPage({ params }: PageProps) {
 
       let assistantMessage = "";
 
-      // add assistant placeholder
+      // Add assistant placeholder
       setMessages((prev) => [
         ...prev,
         { role: "assistant", content: "" },
@@ -171,15 +137,7 @@ export default function ConversationPage({ params }: PageProps) {
   const usagePercent = (messages.length / FREE_LIMIT) * 100;
 
   return (
-    <div className="flex h-screen">
-
-      {/* SIDEBAR */}
-      <Sidebar
-        conversations={conversations || []}
-        activeId={conversationId}
-      />
-
-      {/* MAIN CHAT */}
+    <>
       <div className="flex flex-col flex-1 bg-white">
 
         {/* HEADER */}
@@ -289,6 +247,6 @@ export default function ConversationPage({ params }: PageProps) {
         isOpen={isUpgradeOpen}
         onClose={() => setIsUpgradeOpen(false)}
       />
-    </div>
+    </>
   );
 }

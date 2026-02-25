@@ -29,10 +29,7 @@ export const metadata: Metadata = {
 async function getConversations(userId: string) {
   if (!userId) return [];
 
-  // 🔁 Replace this with your real DB call
-  // Example:
-  // return await db.conversation.findMany({ where: { userId } });
-
+  // 🔁 Replace this with your real DB call later
   return [];
 }
 
@@ -60,7 +57,7 @@ export default async function RootLayout({
         >
           <div className="flex flex-col h-screen">
             
-            {/* Top Header */}
+            {/* HEADER */}
             <header className="h-16 flex items-center justify-end px-6 border-b bg-white">
               <SignedOut>
                 <SignInButton mode="modal" />
@@ -71,13 +68,12 @@ export default async function RootLayout({
               </SignedIn>
             </header>
 
-            {/* Main Row */}
+            {/* MAIN CONTENT AREA */}
             <div className="flex flex-1 overflow-hidden">
-
+              
               <SignedIn>
                 <Sidebar
                   conversations={conversations}
-                  activeId=""
                 />
               </SignedIn>
 
