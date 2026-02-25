@@ -7,7 +7,6 @@ import {
   SignedOut,
   SignInButton,
 } from "@clerk/nextjs";
-import Sidebar from "@/components/Sidebar";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -30,9 +29,6 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // TEMP empty conversations until you wire fetch
-  const conversations: any[] = [];
-
   return (
     <ClerkProvider>
       <html lang="en">
@@ -70,27 +66,16 @@ export default function RootLayout({
             </SignedIn>
           </header>
 
-          {/* App Layout */}
-          <div
+          {/* Main App Area */}
+          <main
             style={{
-              display: "flex",
-              height: "100vh",
               paddingTop: "64px",
+              height: "100vh",
+              overflow: "hidden",
             }}
           >
-            {/* Sidebar */}
-            <Sidebar conversations={conversations} activeId="" />
-
-            {/* Main Content */}
-            <main
-              style={{
-                flex: 1,
-                overflow: "auto",
-              }}
-            >
-              {children}
-            </main>
-          </div>
+            {children}
+          </main>
         </body>
       </html>
     </ClerkProvider>
