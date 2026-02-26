@@ -1,4 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
+import OpenAI from "openai";
 import {
   recordUserUsage,
   getUserUsage,
@@ -11,9 +12,16 @@ interface AskRequest {
   conversationId: string;
 }
 
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
 export async function POST(req: Request) {
   try {
-    // Get authenticated user
+    /* ============================
+       STEP 1 — AUTH
+    ============================ */
+
     const { userId } = await auth();
 
     if (!userId) {
@@ -23,7 +31,10 @@ export async function POST(req: Request) {
       );
     }
 
-    // Parse body
+    /* ============================
+       STEP 2 — VALIDATE BODY
+    ============================ */
+
     const body: AskRequest = await req.json();
     const { messages, conversationId } = body;
 
@@ -46,7 +57,7 @@ export async function POST(req: Request) {
     );
 
     /* ============================
-       STEP A — CHECK USAGE
+       STEP 3 — CHECK DAILY USAGE
     ============================ */
 
     const usageCount = await getUserUsage(userId);
@@ -63,74 +74,70 @@ export async function POST(req: Request) {
     }
 
     /* ============================
-       STEP B — CALL BACKEND
+       STEP 4 — CALL OPENAI DIRECTLY
     ============================ */
 
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL;
-
-    if (!backendUrl) {
+    if (!process.env.OPENAI_API_KEY) {
       return Response.json(
-        { success: false, error: "Backend URL not configured" },
+        { success: false, error: "OpenAI API key not configured" },
         { status: 500 }
       );
     }
 
-    const backendResponse = await fetch(`${backendUrl}/api/ask`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ messages }),
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: messages.map((m) => ({
+        role: m.role,
+        content: m.content,
+      })),
     });
 
-    const backendData = await backendResponse.json();
+    const assistantReply =
+      completion.choices[0]?.message?.content || "No response generated.";
 
     /* ============================
-       STEP C — SAVE DATA
+       STEP 5 — SAVE TO DATABASE
     ============================ */
 
-    if (backendData.success) {
-      try {
-        await recordUserUsage(userId);
+    try {
+      await recordUserUsage(userId);
 
-        const latestUserMessage = messages[messages.length - 1];
+      const latestUserMessage = messages[messages.length - 1];
 
-        const assistantMessage: Message = {
-          role: "assistant",
-          content:
-            backendData.message ||
-            backendData.response ||
-            backendData.advice ||
-            "",
-          createdAt: new Date(),
-        };
+      const assistantMessage: Message = {
+        role: "assistant",
+        content: assistantReply,
+        createdAt: new Date(),
+      };
 
-        // Append user message
-        await appendMessageToConversation(conversationId, {
-          ...latestUserMessage,
-          createdAt: new Date(),
-        });
+      // Save user message
+      await appendMessageToConversation(conversationId, {
+        ...latestUserMessage,
+        createdAt: new Date(),
+      });
 
-        // Append assistant message
-        await appendMessageToConversation(
-          conversationId,
-          assistantMessage
-        );
+      // Save assistant reply
+      await appendMessageToConversation(
+        conversationId,
+        assistantMessage
+      );
 
-        console.log(
-          `[CONVERSATION_SAVED] userId: ${userId}, conversationId: ${conversationId}`
-        );
-      } catch (dbError) {
-        console.error(
-          `[DB_ERROR] Failed to record usage/conversation`,
-          dbError
-        );
-      }
+      console.log(
+        `[CONVERSATION_SAVED] userId: ${userId}, conversationId: ${conversationId}`
+      );
+    } catch (dbError) {
+      console.error("[DB_ERROR] Failed to record usage/conversation", dbError);
     }
 
-    return Response.json(backendData, {
-      status: backendResponse.status,
+    /* ============================
+       STEP 6 — RETURN RESPONSE
+    ============================ */
+
+    return Response.json({
+      success: true,
+      message: assistantReply,
     });
+
   } catch (error) {
     const errorMsg =
       error instanceof Error ? error.message : "Unknown error";
