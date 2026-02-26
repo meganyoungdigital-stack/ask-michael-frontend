@@ -7,7 +7,7 @@ import { MongoClient, ObjectId } from "mongodb";
 const uri = process.env.MONGODB_URI;
 
 if (!uri) {
-  throw new Error("Please add your MONGODB_URI to .env.local");
+  throw new Error("Please add your MONGODB_URI to environment variables");
 }
 
 /* ============================
@@ -55,9 +55,10 @@ interface Conversation {
   title: string;
   projectType: string;
   isoMode: boolean;
-  starred?: boolean; // ✅ Added for star feature
+  starred?: boolean;
   messages: Message[];
   createdAt: Date;
+  updatedAt?: Date;
 }
 
 interface Usage {
@@ -70,9 +71,6 @@ interface Usage {
    CONVERSATION FUNCTIONS
 ============================ */
 
-/**
- * NEW — Used by /new/route.ts
- */
 export async function saveConversation(
   conversationId: string,
   userId: string,
@@ -89,32 +87,31 @@ export async function saveConversation(
     title,
     projectType,
     isoMode,
-    starred: false, // default value
+    starred: false,
     messages,
     createdAt: new Date(),
+    updatedAt: new Date(),
   });
 }
 
-/**
- * Legacy create (still safe to keep)
- */
 export async function createConversation(userId: string) {
   const db = await getDb();
 
-  const result = await db
-    .collection<Conversation>("conversations")
-    .insertOne({
-      conversationId: new ObjectId().toString(),
-      userId,
-      title: "New Conversation",
-      projectType: "General",
-      isoMode: false,
-      starred: false,
-      messages: [],
-      createdAt: new Date(),
-    });
+  const conversationId = new ObjectId().toString();
 
-  return result.insertedId.toString();
+  await db.collection<Conversation>("conversations").insertOne({
+    conversationId,
+    userId,
+    title: "New Conversation",
+    projectType: "General",
+    isoMode: false,
+    starred: false,
+    messages: [],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
+
+  return conversationId;
 }
 
 export async function getConversation(
@@ -128,13 +125,31 @@ export async function getConversation(
     .findOne({ conversationId, userId });
 }
 
+/* ✅ NEW — Used by layout (NO API FETCH NEEDED) */
+export async function getUserConversations(userId: string) {
+  const db = await getDb();
+
+  const conversations = await db
+    .collection<Conversation>("conversations")
+    .find({ userId })
+    .sort({ updatedAt: -1 })
+    .toArray();
+
+  return conversations.map((conv) => ({
+    conversationId: conv.conversationId,
+    title: conv.title || "Untitled Chat",
+    starred: conv.starred || false,
+  }));
+}
+
+/* Legacy full fetch (kept if needed elsewhere) */
 export async function getConversationsForUser(userId: string) {
   const db = await getDb();
 
   return db
     .collection<Conversation>("conversations")
     .find({ userId })
-    .sort({ createdAt: -1 })
+    .sort({ updatedAt: -1 })
     .toArray();
 }
 
@@ -149,15 +164,14 @@ export async function appendMessageToConversation(
     .updateOne(
       { conversationId },
       {
-        $push: {
-          messages: message,
-        },
+        $push: { messages: message },
+        $set: { updatedAt: new Date() },
       }
     );
 }
 
 /* ============================
-   DIRECT DB ACCESS (for custom routes like star)
+   DIRECT DB ACCESS (Optional)
 ============================ */
 
 export async function connectToDatabase() {
@@ -186,9 +200,7 @@ export async function recordUserUsage(userId: string) {
     .collection<Usage>("usage")
     .updateOne(
       { userId },
-      {
-        $inc: { count: 1 },
-      },
+      { $inc: { count: 1 } },
       { upsert: true }
     );
 }
