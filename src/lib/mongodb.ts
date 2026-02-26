@@ -33,6 +33,13 @@ if (process.env.NODE_ENV === "development") {
   clientPromise = client.connect();
 }
 
+/* ✅ IMPORTANT: Default export for API routes */
+export default clientPromise;
+
+/* ============================
+   DATABASE HELPER
+============================ */
+
 async function getDb() {
   const client = await clientPromise;
   return client.db("ask-michael");
@@ -125,7 +132,6 @@ export async function getConversation(
     .findOne({ conversationId, userId });
 }
 
-/* ✅ NEW — Used by layout (NO API FETCH NEEDED) */
 export async function getUserConversations(userId: string) {
   const db = await getDb();
 
@@ -142,7 +148,6 @@ export async function getUserConversations(userId: string) {
   }));
 }
 
-/* Legacy full fetch (kept if needed elsewhere) */
 export async function getConversationsForUser(userId: string) {
   const db = await getDb();
 
@@ -171,7 +176,7 @@ export async function appendMessageToConversation(
 }
 
 /* ============================
-   DIRECT DB ACCESS (Optional)
+   DIRECT DB ACCESS
 ============================ */
 
 export async function connectToDatabase() {
