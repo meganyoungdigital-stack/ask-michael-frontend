@@ -27,6 +27,7 @@ export default function Sidebar({
     await fetch(`/api/conversation/${conversationId}/star`, {
       method: "PATCH",
     });
+
     router.refresh();
   }
 
@@ -40,7 +41,7 @@ export default function Sidebar({
     await fetch(`/api/conversation/${conversationId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: newTitle }),
+      body: JSON.stringify({ title: newTitle.trim() }),
     });
 
     router.refresh();
@@ -66,11 +67,17 @@ export default function Sidebar({
 
     if (data?.conversationId) {
       router.push(`/conversation/${data.conversationId}`);
+      router.refresh(); // ensures sidebar updates immediately
     }
   }
 
-  const pinned = conversations.filter((c) => c.starred);
-  const normal = conversations.filter((c) => !c.starred);
+  const pinned = conversations
+    .filter((c) => c.starred)
+    .sort((a, b) => a.title.localeCompare(b.title));
+
+  const normal = conversations
+    .filter((c) => !c.starred)
+    .sort((a, b) => a.title.localeCompare(b.title));
 
   return (
     <aside className="w-64 border-r bg-white flex flex-col">
@@ -89,9 +96,7 @@ export default function Sidebar({
             <p className="text-xs font-semibold text-gray-500 mb-2">
               Pinned
             </p>
-            {pinned.map((conv) =>
-              renderConversation(conv)
-            )}
+            {pinned.map(renderConversation)}
           </>
         )}
 
@@ -105,9 +110,7 @@ export default function Sidebar({
           </div>
         )}
 
-        {normal.map((conv) =>
-          renderConversation(conv)
-        )}
+        {normal.map(renderConversation)}
       </div>
     </aside>
   );
@@ -118,9 +121,7 @@ export default function Sidebar({
     return (
       <div
         key={conv.conversationId}
-        onMouseEnter={() =>
-          setHoveredId(conv.conversationId)
-        }
+        onMouseEnter={() => setHoveredId(conv.conversationId)}
         onMouseLeave={() => setHoveredId(null)}
         className={`flex items-center px-3 py-2 rounded-lg mb-1 transition ${
           isActive ? "bg-gray-200" : "hover:bg-gray-100"
@@ -140,9 +141,7 @@ export default function Sidebar({
         {hoveredId === conv.conversationId && (
           <div className="flex gap-2 ml-2 text-sm">
             <button
-              onClick={() =>
-                toggleStar(conv.conversationId)
-              }
+              onClick={() => toggleStar(conv.conversationId)}
             >
               {conv.starred ? "⭐" : "☆"}
             </button>
