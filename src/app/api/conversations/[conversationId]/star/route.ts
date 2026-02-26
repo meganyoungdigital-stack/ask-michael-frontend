@@ -15,7 +15,7 @@ export async function PATCH(
       );
     }
 
-    // ✅ Next 16 fix — await params
+    // ✅ Next 16 requires awaiting params
     const { conversationId } = await params;
 
     const db = await connectToDatabase();
