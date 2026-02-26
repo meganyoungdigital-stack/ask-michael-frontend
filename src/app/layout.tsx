@@ -7,8 +7,7 @@ import {
   SignedOut,
   SignInButton,
 } from "@clerk/nextjs";
-import { auth } from "@clerk/nextjs/server";
-import Sidebar from "../components/Sidebar";
+import Sidebar from "@/components/Sidebar";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -26,24 +25,11 @@ export const metadata: Metadata = {
   description: "Expert advice on aluminium smelting maintenance",
 };
 
-async function getConversations(userId: string) {
-  if (!userId) return [];
-
-  // 🔁 Replace this with your real DB call later
-  return [];
-}
-
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { userId } = await auth();
-
-  const conversations = userId
-    ? await getConversations(userId)
-    : [];
-
   return (
     <ClerkProvider>
       <html lang="en">
@@ -56,7 +42,7 @@ export default async function RootLayout({
           }}
         >
           <div className="flex flex-col h-screen">
-            
+
             {/* HEADER */}
             <header className="h-16 flex items-center justify-end px-6 border-b bg-white">
               <SignedOut>
@@ -68,16 +54,14 @@ export default async function RootLayout({
               </SignedIn>
             </header>
 
-            {/* MAIN CONTENT AREA */}
+            {/* MAIN */}
             <div className="flex flex-1 overflow-hidden">
-              
+
               <SignedIn>
-                <Sidebar
-                  conversations={conversations}
-                />
+                <Sidebar />
               </SignedIn>
 
-              <main className="flex-1 overflow-y-auto p-6">
+              <main className="flex-1 overflow-y-auto">
                 {children}
               </main>
 

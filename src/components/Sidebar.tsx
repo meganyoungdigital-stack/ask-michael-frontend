@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 
@@ -10,52 +10,22 @@ interface Conversation {
   starred?: boolean;
 }
 
-interface SidebarProps {
-  conversations?: Conversation[];
-}
-
-export default function Sidebar({
-  conversations = [],
-}: SidebarProps) {
+export default function Sidebar() {
   const router = useRouter();
   const params = useParams();
   const activeId = params?.conversationId as string;
 
+  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
-  async function toggleStar(conversationId: string) {
-    await fetch(`/api/conversation/${conversationId}/star`, {
-      method: "PATCH",
-    });
+  useEffect(() => {
+    fetchConversations();
+  }, []);
 
-    router.refresh();
-  }
-
-  async function renameConversation(
-    conversationId: string,
-    currentTitle: string
-  ) {
-    const newTitle = prompt("Enter new name:", currentTitle);
-    if (!newTitle?.trim()) return;
-
-    await fetch(`/api/conversation/${conversationId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: newTitle.trim() }),
-    });
-
-    router.refresh();
-  }
-
-  async function deleteConversation(conversationId: string) {
-    if (!confirm("Delete this conversation?")) return;
-
-    await fetch(`/api/conversation/${conversationId}`, {
-      method: "DELETE",
-    });
-
-    router.push("/");
-    router.refresh();
+  async function fetchConversations() {
+    const res = await fetch("/api/conversation/list");
+    const data = await res.json();
+    setConversations(data?.conversations || []);
   }
 
   async function newConversation() {
@@ -67,20 +37,48 @@ export default function Sidebar({
 
     if (data?.conversationId) {
       router.push(`/conversation/${data.conversationId}`);
-      router.refresh(); // ensures sidebar updates immediately
+      fetchConversations();
     }
   }
 
-  const pinned = conversations
-    .filter((c) => c.starred)
-    .sort((a, b) => a.title.localeCompare(b.title));
+  async function toggleStar(id: string) {
+    await fetch(`/api/conversation/${id}/star`, {
+      method: "PATCH",
+    });
 
-  const normal = conversations
-    .filter((c) => !c.starred)
-    .sort((a, b) => a.title.localeCompare(b.title));
+    fetchConversations();
+  }
+
+  async function renameConversation(id: string, currentTitle: string) {
+    const newTitle = prompt("Enter new name:", currentTitle);
+    if (!newTitle?.trim()) return;
+
+    await fetch(`/api/conversation/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: newTitle.trim() }),
+    });
+
+    fetchConversations();
+  }
+
+  async function deleteConversation(id: string) {
+    if (!confirm("Delete this conversation?")) return;
+
+    await fetch(`/api/conversation/${id}`, {
+      method: "DELETE",
+    });
+
+    router.push("/");
+    fetchConversations();
+  }
+
+  const pinned = conversations.filter((c) => c.starred);
+  const normal = conversations.filter((c) => !c.starred);
 
   return (
     <aside className="w-64 border-r bg-white flex flex-col">
+
       <div className="p-4 border-b">
         <button
           onClick={newConversation}
@@ -91,6 +89,7 @@ export default function Sidebar({
       </div>
 
       <div className="flex-1 overflow-y-auto p-4">
+
         {pinned.length > 0 && (
           <>
             <p className="text-xs font-semibold text-gray-500 mb-2">
@@ -130,9 +129,7 @@ export default function Sidebar({
         <Link
           href={`/conversation/${conv.conversationId}`}
           className={`flex-1 truncate ${
-            isActive
-              ? "font-semibold text-black"
-              : "text-gray-700"
+            isActive ? "font-semibold text-black" : "text-gray-700"
           }`}
         >
           {conv.title || "Untitled"}
@@ -140,18 +137,13 @@ export default function Sidebar({
 
         {hoveredId === conv.conversationId && (
           <div className="flex gap-2 ml-2 text-sm">
-            <button
-              onClick={() => toggleStar(conv.conversationId)}
-            >
+            <button onClick={() => toggleStar(conv.conversationId)}>
               {conv.starred ? "⭐" : "☆"}
             </button>
 
             <button
               onClick={() =>
-                renameConversation(
-                  conv.conversationId,
-                  conv.title
-                )
+                renameConversation(conv.conversationId, conv.title)
               }
             >
               ✏
