@@ -1,4 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
+import { headers } from "next/headers";
 import Sidebar from "@/components/Sidebar";
 
 interface Conversation {
@@ -10,19 +11,25 @@ interface Conversation {
 async function getConversations(userId: string): Promise<Conversation[]> {
   if (!userId) return [];
 
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_APP_URL}/api/conversations`,
-    {
-      cache: "no-store",
-      headers: {
-        Cookie: "",
-      },
-    }
-  );
+  // ✅ Next.js 16 requires await
+  const headersList = await headers();
+  const host = headersList.get("host");
+
+  if (!host) return [];
+
+  const protocol =
+    process.env.NODE_ENV === "development" ? "http" : "https";
+
+  const baseUrl = `${protocol}://${host}`;
+
+  const res = await fetch(`${baseUrl}/api/conversations`, {
+    cache: "no-store",
+  });
 
   if (!res.ok) return [];
 
   const data = await res.json();
+
   return Array.isArray(data)
     ? data
     : data?.conversations || [];
