@@ -1,9 +1,14 @@
 import { auth } from "@clerk/nextjs/server";
-import { recordUserUsage, getUserUsage, appendMessageToConversation } from "@/lib/mongodb";
+import {
+  recordUserUsage,
+  getUserUsage,
+  appendMessageToConversation,
+} from "@/lib/mongodb";
 import type { Message } from "@/lib/mongodb";
 
 interface AskRequest {
   messages: Message[];
+  conversationId: string;
 }
 
 export async function POST(req: Request) {
@@ -11,7 +16,6 @@ export async function POST(req: Request) {
     // Get authenticated user
     const { userId } = await auth();
 
-    // Reject if not authenticated
     if (!userId) {
       return Response.json(
         { success: false, error: "Unauthorized - please sign in" },
@@ -19,17 +23,17 @@ export async function POST(req: Request) {
       );
     }
 
-    // Parse request body
-    const body = await req.json();
+    // Parse body
+    const body: AskRequest = await req.json();
     const { messages, conversationId } = body;
 
-    // Validate messages and conversationId
     if (!messages || !Array.isArray(messages)) {
       return Response.json(
         { success: false, error: "Invalid request - messages array required" },
         { status: 400 }
       );
     }
+
     if (!conversationId || typeof conversationId !== "string") {
       return Response.json(
         { success: false, error: "Invalid request - conversationId required" },
@@ -37,25 +41,33 @@ export async function POST(req: Request) {
       );
     }
 
-    // Log request with userId and conversationId
     console.log(
       `[ASK_REQUEST] userId: ${userId}, conversationId: ${conversationId}, messageCount: ${messages.length}`
     );
 
-    // Step A — Get user usage
-    const usage = await getUserUsage(userId);
+    /* ============================
+       STEP A — CHECK USAGE
+    ============================ */
 
-    // Step B — Block if exceeded
+    const usageCount = await getUserUsage(userId);
     const DAILY_LIMIT = 50;
-    if (usage && usage.messageCount >= DAILY_LIMIT) {
+
+    if (usageCount >= DAILY_LIMIT) {
       return Response.json(
-        { success: false, error: "Daily message limit reached. Please upgrade your plan." },
+        {
+          success: false,
+          error: "Daily message limit reached. Please upgrade your plan.",
+        },
         { status: 429 }
       );
     }
 
-    // Step C — Only then call backend API
+    /* ============================
+       STEP B — CALL BACKEND
+    ============================ */
+
     const backendUrl = process.env.NEXT_PUBLIC_API_URL;
+
     if (!backendUrl) {
       return Response.json(
         { success: false, error: "Backend URL not configured" },
@@ -73,35 +85,58 @@ export async function POST(req: Request) {
 
     const backendData = await backendResponse.json();
 
-    // Log usage and record in MongoDB
+    /* ============================
+       STEP C — SAVE DATA
+    ============================ */
+
     if (backendData.success) {
-      console.log(`[ASK_SUCCESS] userId: ${userId}, conversationId: ${conversationId}, advice received`);
       try {
-        // Record user usage
         await recordUserUsage(userId);
 
-        // Save conversation - append both user message and assistant response
         const latestUserMessage = messages[messages.length - 1];
+
         const assistantMessage: Message = {
           role: "assistant",
-          content: backendData.message || backendData.response || backendData.advice || "",
+          content:
+            backendData.message ||
+            backendData.response ||
+            backendData.advice ||
+            "",
+          createdAt: new Date(),
         };
-        await appendMessageToConversation(conversationId, userId, [
-          latestUserMessage,
+
+        // Append user message
+        await appendMessageToConversation(conversationId, {
+          ...latestUserMessage,
+          createdAt: new Date(),
+        });
+
+        // Append assistant message
+        await appendMessageToConversation(
+          conversationId,
           assistantMessage
-        ]);
-        console.log(`[CONVERSATION_SAVED] userId: ${userId}, conversationId: ${conversationId}, conversation updated`);
+        );
+
+        console.log(
+          `[CONVERSATION_SAVED] userId: ${userId}, conversationId: ${conversationId}`
+        );
       } catch (dbError) {
-        console.error(`[DB_ERROR] Failed to record usage/conversation for userId: ${userId}, conversationId: ${conversationId}`, dbError);
+        console.error(
+          `[DB_ERROR] Failed to record usage/conversation`,
+          dbError
+        );
       }
-    } else {
-      console.log(`[ASK_ERROR] userId: ${userId}, conversationId: ${conversationId}, error: ${backendData.error}`);
     }
 
-    return Response.json(backendData, { status: backendResponse.status });
+    return Response.json(backendData, {
+      status: backendResponse.status,
+    });
   } catch (error) {
-    const errorMsg = error instanceof Error ? error.message : "Unknown error";
+    const errorMsg =
+      error instanceof Error ? error.message : "Unknown error";
+
     console.error(`[ASK_ERROR] ${errorMsg}`);
+
     return Response.json(
       { success: false, error: "Failed to process request" },
       { status: 500 }

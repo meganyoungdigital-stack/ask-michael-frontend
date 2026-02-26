@@ -1,196 +1,194 @@
-import { MongoClient, Db } from "mongodb";
+import { MongoClient, ObjectId } from "mongodb";
 
-/* =========================
-   ENV
-========================= */
+/* ============================
+   ENVIRONMENT
+============================ */
 
 const uri = process.env.MONGODB_URI;
 
 if (!uri) {
-  throw new Error("MONGODB_URI is not defined");
+  throw new Error("Please add your MONGODB_URI to .env.local");
 }
 
-/* =========================
-   GLOBAL CONNECTION CACHE
-========================= */
-
-declare global {
-  // Prevent multiple connections in dev (Next.js hot reload)
-  var _mongoClientPromise: Promise<MongoClient> | undefined;
-}
+/* ============================
+   MONGODB CONNECTION (SAFE POOLING)
+============================ */
 
 let client: MongoClient;
 let clientPromise: Promise<MongoClient>;
 
-if (!global._mongoClientPromise) {
+declare global {
+  // eslint-disable-next-line no-var
+  var _mongoClientPromise: Promise<MongoClient> | undefined;
+}
+
+if (process.env.NODE_ENV === "development") {
+  if (!global._mongoClientPromise) {
+    client = new MongoClient(uri);
+    global._mongoClientPromise = client.connect();
+  }
+  clientPromise = global._mongoClientPromise;
+} else {
   client = new MongoClient(uri);
-  global._mongoClientPromise = client.connect();
+  clientPromise = client.connect();
 }
 
-clientPromise = global._mongoClientPromise;
-
-/* =========================
-   CONNECT
-========================= */
-
-export async function connectToDatabase(): Promise<Db> {
+async function getDb() {
   const client = await clientPromise;
-  return client.db("askmichael");
+  return client.db("ask-michael");
 }
 
-/* =========================
+/* ============================
    TYPES
-========================= */
+============================ */
 
 export interface Message {
   role: "user" | "assistant";
   content: string;
-  createdAt?: Date;
+  createdAt: Date;
 }
 
-export type ProjectType =
-  | "Superstructure"
-  | "Pot Shell"
-  | "Structural Frame"
-  | "Welding Procedure"
-  | "Cost Estimate"
-  | "General";
-
-export interface Conversation {
+interface Conversation {
+  _id?: ObjectId;
   conversationId: string;
   userId: string;
   title: string;
-  projectType: ProjectType;
+  projectType: string;
   isoMode: boolean;
-  starred: boolean; // ⭐ Pin support
+  starred?: boolean; // ✅ Added for star feature
   messages: Message[];
   createdAt: Date;
-  updatedAt: Date;
 }
 
-export interface UserUsage {
+interface Usage {
+  _id?: ObjectId;
   userId: string;
-  messageCount: number;
-  totalRequests: number;
-  createdAt: Date;
-  updatedAt: Date;
+  count: number;
 }
 
-/* =========================
-   USER USAGE
-========================= */
+/* ============================
+   CONVERSATION FUNCTIONS
+============================ */
 
-export async function recordUserUsage(userId: string) {
-  const db = await connectToDatabase();
-  const collection = db.collection<UserUsage>("user_usage");
-
-  return collection.findOneAndUpdate(
-    { userId },
-    {
-      $inc: { messageCount: 1, totalRequests: 1 },
-      $set: { updatedAt: new Date() },
-      $setOnInsert: { createdAt: new Date() },
-    },
-    { upsert: true, returnDocument: "after" }
-  );
-}
-
-export async function getUserUsage(userId: string) {
-  const db = await connectToDatabase();
-  return db.collection<UserUsage>("user_usage").findOne({ userId });
-}
-
-/* =========================
-   CONVERSATIONS
-========================= */
-
+/**
+ * NEW — Used by /new/route.ts
+ */
 export async function saveConversation(
   conversationId: string,
   userId: string,
   messages: Message[],
-  title: string = "New Project",
-  projectType: ProjectType = "General",
-  isoMode: boolean = false
+  title: string,
+  projectType: string,
+  isoMode: boolean
 ) {
-  const db = await connectToDatabase();
-  const collection = db.collection<Conversation>("conversations");
+  const db = await getDb();
 
-  return collection.findOneAndUpdate(
-    { conversationId, userId },
-    {
-      $set: {
-        messages,
-        title,
-        projectType,
-        isoMode,
-        updatedAt: new Date(),
-      },
-      $setOnInsert: {
-        createdAt: new Date(),
-        conversationId,
-        userId,
-        starred: false, // ⭐ default pinned state
-      },
-    },
-    { upsert: true, returnDocument: "after" }
-  );
+  await db.collection<Conversation>("conversations").insertOne({
+    conversationId,
+    userId,
+    title,
+    projectType,
+    isoMode,
+    starred: false, // default value
+    messages,
+    createdAt: new Date(),
+  });
 }
 
-export async function appendMessageToConversation(
-  conversationId: string,
-  userId: string,
-  newMessages: Message[]
-) {
-  const db = await connectToDatabase();
-  const collection = db.collection<Conversation>("conversations");
+/**
+ * Legacy create (still safe to keep)
+ */
+export async function createConversation(userId: string) {
+  const db = await getDb();
 
-  return collection.findOneAndUpdate(
-    { conversationId, userId },
-    {
-      $push: {
-        messages: {
-          $each: newMessages.map((m) => ({
-            ...m,
-            createdAt: new Date(),
-          })),
-        },
-      },
-      $set: {
-        updatedAt: new Date(),
-      },
-      $setOnInsert: {
-        createdAt: new Date(),
-        conversationId,
-        userId,
-        title: "New Project",
-        projectType: "General",
-        isoMode: false,
-        starred: false, // ⭐ default pinned state
-      },
-    },
-    { upsert: true, returnDocument: "after" }
-  );
+  const result = await db
+    .collection<Conversation>("conversations")
+    .insertOne({
+      conversationId: new ObjectId().toString(),
+      userId,
+      title: "New Conversation",
+      projectType: "General",
+      isoMode: false,
+      starred: false,
+      messages: [],
+      createdAt: new Date(),
+    });
+
+  return result.insertedId.toString();
 }
 
 export async function getConversation(
   conversationId: string,
   userId: string
 ) {
-  const db = await connectToDatabase();
+  const db = await getDb();
+
   return db
     .collection<Conversation>("conversations")
     .findOne({ conversationId, userId });
 }
 
 export async function getConversationsForUser(userId: string) {
-  const db = await connectToDatabase();
+  const db = await getDb();
 
   return db
     .collection<Conversation>("conversations")
     .find({ userId })
-    .sort({
-      starred: -1,      // ⭐ pinned first
-      updatedAt: -1,    // newest next
-    })
+    .sort({ createdAt: -1 })
     .toArray();
+}
+
+export async function appendMessageToConversation(
+  conversationId: string,
+  message: Message
+) {
+  const db = await getDb();
+
+  await db
+    .collection<Conversation>("conversations")
+    .updateOne(
+      { conversationId },
+      {
+        $push: {
+          messages: message,
+        },
+      }
+    );
+}
+
+/* ============================
+   DIRECT DB ACCESS (for custom routes like star)
+============================ */
+
+export async function connectToDatabase() {
+  const client = await clientPromise;
+  return client.db("ask-michael");
+}
+
+/* ============================
+   USAGE TRACKING
+============================ */
+
+export async function getUserUsage(userId: string) {
+  const db = await getDb();
+
+  const usage = await db
+    .collection<Usage>("usage")
+    .findOne({ userId });
+
+  return usage?.count ?? 0;
+}
+
+export async function recordUserUsage(userId: string) {
+  const db = await getDb();
+
+  await db
+    .collection<Usage>("usage")
+    .updateOne(
+      { userId },
+      {
+        $inc: { count: 1 },
+      },
+      { upsert: true }
+    );
 }
