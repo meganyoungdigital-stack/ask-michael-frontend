@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useUser } from "@clerk/nextjs";
+import { useParams } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ClipboardIcon } from "@heroicons/react/24/outline";
@@ -13,14 +14,10 @@ interface Message {
   content: string;
 }
 
-interface PageProps {
-  params: {
-    conversationId: string;
-  };
-}
+export default function ConversationPage() {
+  const params = useParams();
+  const conversationId = params?.conversationId as string;
 
-export default function ConversationPage({ params }: PageProps) {
-  const { conversationId } = params;
   const { user } = useUser();
 
   const isPro =
@@ -67,6 +64,11 @@ export default function ConversationPage({ params }: PageProps) {
   async function sendMessage() {
     if (!input.trim() || loading) return;
 
+    if (!conversationId) {
+      console.error("Missing conversationId");
+      return;
+    }
+
     if (!isPro && messages.length >= FREE_LIMIT) {
       setIsUpgradeOpen(true);
       return;
@@ -90,10 +92,17 @@ export default function ConversationPage({ params }: PageProps) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          conversationId,
+          conversationId: conversationId, // 🔥 explicitly send it
           messages: updatedMessages,
         }),
       });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("API error:", errorText);
+        setLoading(false);
+        return;
+      }
 
       if (!response.body) {
         setLoading(false);
