@@ -33,7 +33,6 @@ if (process.env.NODE_ENV === "development") {
   clientPromise = client.connect();
 }
 
-/* ✅ IMPORTANT: Default export for API routes */
 export default clientPromise;
 
 /* ============================
@@ -55,6 +54,13 @@ export interface Message {
   createdAt: Date;
 }
 
+export interface Attachment {
+  name: string;
+  url: string;
+  type: string;
+  uploadedAt: Date;
+}
+
 interface Conversation {
   _id?: ObjectId;
   conversationId: string;
@@ -64,6 +70,7 @@ interface Conversation {
   isoMode: boolean;
   starred?: boolean;
   messages: Message[];
+  attachments?: Attachment[];
   createdAt: Date;
   updatedAt?: Date;
 }
@@ -74,36 +81,19 @@ interface Usage {
   count: number;
 }
 
+interface User {
+  _id?: ObjectId;
+  userId: string;
+  tier: "free" | "pro";
+  createdAt: Date;
+}
+
 /* ============================
    CONVERSATION FUNCTIONS
 ============================ */
 
-export async function saveConversation(
-  conversationId: string,
-  userId: string,
-  messages: Message[],
-  title: string,
-  projectType: string,
-  isoMode: boolean
-) {
-  const db = await getDb();
-
-  await db.collection<Conversation>("conversations").insertOne({
-    conversationId,
-    userId,
-    title,
-    projectType,
-    isoMode,
-    starred: false,
-    messages,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
-}
-
 export async function createConversation(userId: string) {
   const db = await getDb();
-
   const conversationId = new ObjectId().toString();
 
   await db.collection<Conversation>("conversations").insertOne({
@@ -114,6 +104,7 @@ export async function createConversation(userId: string) {
     isoMode: false,
     starred: false,
     messages: [],
+    attachments: [],
     createdAt: new Date(),
     updatedAt: new Date(),
   });
@@ -148,6 +139,7 @@ export async function getUserConversations(userId: string) {
   }));
 }
 
+/* 🔥 REQUIRED FOR YOUR PROJECT ROUTE */
 export async function getConversationsForUser(userId: string) {
   const db = await getDb();
 
@@ -160,28 +152,94 @@ export async function getConversationsForUser(userId: string) {
 
 export async function appendMessageToConversation(
   conversationId: string,
+  userId: string,
   message: Message
 ) {
   const db = await getDb();
 
-  await db
-    .collection<Conversation>("conversations")
-    .updateOne(
-      { conversationId },
-      {
-        $push: { messages: message },
-        $set: { updatedAt: new Date() },
-      }
-    );
+  await db.collection<Conversation>("conversations").updateOne(
+    { conversationId, userId },
+    {
+      $push: { messages: message },
+      $set: { updatedAt: new Date() },
+    }
+  );
+}
+
+export async function updateConversationTitle(
+  conversationId: string,
+  userId: string,
+  title: string,
+  projectType?: string
+) {
+  const db = await getDb();
+
+  await db.collection<Conversation>("conversations").updateOne(
+    { conversationId, userId },
+    {
+      $set: {
+        title,
+        projectType,
+        updatedAt: new Date(),
+      },
+    }
+  );
+}
+
+/* 🔥 NEW — ATTACHMENT FUNCTION */
+export async function addAttachmentToConversation(
+  conversationId: string,
+  userId: string,
+  attachment: Attachment
+) {
+  const db = await getDb();
+
+  await db.collection<Conversation>("conversations").updateOne(
+    { conversationId, userId },
+    {
+      $push: { attachments: attachment },
+      $set: { updatedAt: new Date() },
+    }
+  );
 }
 
 /* ============================
-   DIRECT DB ACCESS
+   USER / TIER FUNCTIONS
 ============================ */
 
-export async function connectToDatabase() {
-  const client = await clientPromise;
-  return client.db("ask-michael");
+export async function getUser(userId: string) {
+  const db = await getDb();
+  return db.collection<User>("users").findOne({ userId });
+}
+
+export async function upsertUser(userId: string) {
+  const db = await getDb();
+
+  await db.collection<User>("users").updateOne(
+    { userId },
+    {
+      $setOnInsert: {
+        userId,
+        tier: "free",
+        createdAt: new Date(),
+      },
+    },
+    { upsert: true }
+  );
+}
+
+export async function updateUserTier(
+  userId: string,
+  tier: "free" | "pro"
+) {
+  const db = await getDb();
+
+  await db.collection<User>("users").updateOne(
+    { userId },
+    {
+      $set: { tier },
+    }
+  );
 }
 
 /* ============================
@@ -201,11 +259,18 @@ export async function getUserUsage(userId: string) {
 export async function recordUserUsage(userId: string) {
   const db = await getDb();
 
-  await db
-    .collection<Usage>("usage")
-    .updateOne(
-      { userId },
-      { $inc: { count: 1 } },
-      { upsert: true }
-    );
+  await db.collection<Usage>("usage").updateOne(
+    { userId },
+    { $inc: { count: 1 } },
+    { upsert: true }
+  );
+}
+
+/* ============================
+   DIRECT DB ACCESS (OPTIONAL)
+============================ */
+
+export async function connectToDatabase() {
+  const client = await clientPromise;
+  return client.db("ask-michael");
 }
