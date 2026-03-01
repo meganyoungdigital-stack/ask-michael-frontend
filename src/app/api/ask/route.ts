@@ -15,13 +15,20 @@ const openai = new OpenAI({
 
 export async function POST(req: Request) {
   try {
+    /* =====================================================
+       🔐 AUTH
+    ===================================================== */
     const { userId } = await auth();
 
     if (!userId) {
       return new Response("Unauthorized", { status: 401 });
     }
 
-    const { messages, conversationId } = await req.json();
+    // ✅ FORCE STRING TYPE FOR TYPESCRIPT
+    const safeUserId: string = userId;
+
+    const body = await req.json();
+    const { messages, conversationId } = body;
 
     if (!messages || !conversationId) {
       return new Response("Invalid request", { status: 400 });
@@ -30,10 +37,9 @@ export async function POST(req: Request) {
     /* =====================================================
        🔒 VALIDATE CONVERSATION OWNERSHIP
     ===================================================== */
-
     const conversation = await getConversation(
       conversationId,
-      userId
+      safeUserId
     );
 
     if (!conversation) {
@@ -43,18 +49,12 @@ export async function POST(req: Request) {
     }
 
     /* =====================================================
-       💳 TIER + USAGE LOGIC (READY FOR STRIPE)
+       💳 TIER + USAGE LOGIC
     ===================================================== */
-
-    const usageCount = await getUserUsage(userId);
+    const usageCount = await getUserUsage(safeUserId);
 
     const DAILY_FREE_LIMIT = 50;
-
-    // 🔥 Future Stripe hook:
-    // const user = await getUser(userId);
-    // const isPro = user?.tier === "pro";
-
-    const isPro = false; // placeholder until Stripe added
+    const isPro = false; // Stripe later
     const limit = isPro ? 1000 : DAILY_FREE_LIMIT;
 
     if (usageCount >= limit) {
@@ -69,7 +69,6 @@ export async function POST(req: Request) {
     /* =====================================================
        🧠 AI TITLE GENERATION (FIRST MESSAGE ONLY)
     ===================================================== */
-
     if (conversation.messages.length === 0) {
       try {
         const titleCompletion =
@@ -117,7 +116,8 @@ No explanations.
         const raw =
           titleCompletion.choices[0]?.message?.content || "";
 
-        let parsed;
+        let parsed: any = null;
+
         try {
           parsed = JSON.parse(raw);
         } catch {
@@ -134,7 +134,7 @@ No explanations.
         const db = await connectToDatabase();
 
         await db.collection("conversations").updateOne(
-          { conversationId, userId },
+          { conversationId, userId: safeUserId },
           {
             $set: {
               title: `[${generatedCategory}] ${generatedTitle}`,
@@ -152,7 +152,7 @@ No explanations.
        💬 STREAM MAIN AI RESPONSE
     ===================================================== */
 
-    const stream = await openai.chat.completions.create({
+    const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       stream: true,
       messages: messages.map((m: Message) => ({
@@ -163,55 +163,61 @@ No explanations.
 
     const encoder = new TextEncoder();
 
-    const readableStream = new ReadableStream({
+    const stream = new ReadableStream({
       async start(controller) {
         let fullResponse = "";
 
-        for await (const chunk of stream) {
-          const token =
-            chunk.choices[0]?.delta?.content || "";
+        try {
+          for await (const chunk of completion) {
+            const token =
+              chunk.choices[0]?.delta?.content || "";
 
-          if (token) {
-            fullResponse += token;
-            controller.enqueue(encoder.encode(token));
+            if (token) {
+              fullResponse += token;
+              controller.enqueue(
+                encoder.encode(token)
+              );
+            }
           }
+
+          /* =====================================================
+             💾 SAVE MESSAGES AFTER STREAM ENDS
+          ===================================================== */
+
+          const userMessageToSave: Message = {
+            role: "user",
+            content: latestUserMessage.content,
+            createdAt: new Date(),
+          };
+
+          const assistantMessage: Message = {
+            role: "assistant",
+            content: fullResponse,
+            createdAt: new Date(),
+          };
+
+          await appendMessageToConversation(
+            conversationId,
+            safeUserId,
+            userMessageToSave
+          );
+
+          await appendMessageToConversation(
+            conversationId,
+            safeUserId,
+            assistantMessage
+          );
+
+          await recordUserUsage(safeUserId);
+        } catch (err) {
+          console.error("Streaming error:", err);
+        } finally {
+          controller.close();
         }
-
-        /* =====================================================
-           💾 SAVE BOTH MESSAGES SAFELY
-        ===================================================== */
-
-        const userMessageToSave: Message = {
-          role: "user",
-          content: latestUserMessage.content,
-          createdAt: new Date(),
-        };
-
-        const assistantMessage: Message = {
-          role: "assistant",
-          content: fullResponse,
-          createdAt: new Date(),
-        };
-
-        await appendMessageToConversation(
-          conversationId,
-          userId,
-          userMessageToSave
-        );
-
-        await appendMessageToConversation(
-          conversationId,
-          userId,
-          assistantMessage
-        );
-
-        await recordUserUsage(userId);
-
-        controller.close();
       },
     });
 
-    return new Response(readableStream, {
+    return new Response(stream, {
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
       },

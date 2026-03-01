@@ -17,10 +17,7 @@ interface Message {
 
 export default function ConversationPage() {
   const params = useParams();
-
-  // ✅ FIX 1: Correct param name (folder is [conversation])
   const conversationId = params?.conversation as string;
-
   const { user } = useUser();
 
   const isPro =
@@ -41,24 +38,21 @@ export default function ConversationPage() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
-  /* LOAD CURRENT CONVERSATION */
+  /* LOAD CONVERSATION */
   useEffect(() => {
     if (!conversationId) return;
 
     async function loadConversation() {
       try {
-        // ✅ FIX 2: Correct API route structure
         const res = await fetch(
           `/api/conversations/${conversationId}`
         );
 
-        if (!res.ok) throw new Error("Failed to fetch conversation");
+        if (!res.ok) throw new Error();
 
         const data = await res.json();
-
         setMessages(Array.isArray(data?.messages) ? data.messages : []);
-      } catch (err) {
-        console.error("Conversation load error:", err);
+      } catch {
         setMessages([]);
       }
     }
@@ -67,8 +61,7 @@ export default function ConversationPage() {
   }, [conversationId]);
 
   async function sendMessage() {
-    if (!input.trim() || loading) return;
-    if (!conversationId) return;
+    if (!input.trim() || loading || !conversationId) return;
 
     if (!isPro && messages.length >= FREE_LIMIT) {
       setIsUpgradeOpen(true);
@@ -77,7 +70,7 @@ export default function ConversationPage() {
 
     const userMessage: Message = {
       role: "user",
-      content: input,
+      content: input.trim(),
       createdAt: new Date(),
     };
 
@@ -90,30 +83,22 @@ export default function ConversationPage() {
     try {
       const response = await fetch("/api/ask", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           conversationId,
           messages: updatedMessages,
         }),
       });
 
-      if (!response.ok) {
-        console.error(await response.text());
-        setLoading(false);
-        return;
-      }
-
-      if (!response.body) {
-        setLoading(false);
+      if (!response.ok || !response.body) {
+        console.error("API Error");
         return;
       }
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
 
-      let assistantMessage = "";
+      let assistantText = "";
 
       // Add assistant placeholder
       setMessages((prev) => [
@@ -125,24 +110,28 @@ export default function ConversationPage() {
         const { done, value } = await reader.read();
         if (done) break;
 
-        const chunk = decoder.decode(value);
-        assistantMessage += chunk;
+        const chunk = decoder.decode(value, { stream: true });
+        assistantText += chunk;
 
         setMessages((prev) => {
           const updated = [...prev];
-          updated[updated.length - 1] = {
-            role: "assistant",
-            content: assistantMessage,
-            createdAt: new Date(),
-          };
+          const lastIndex = updated.length - 1;
+
+          if (updated[lastIndex]?.role === "assistant") {
+            updated[lastIndex] = {
+              ...updated[lastIndex],
+              content: assistantText,
+            };
+          }
+
           return updated;
         });
       }
-    } catch (error) {
-      console.error("Send error:", error);
+    } catch (err) {
+      console.error("Streaming error:", err);
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   }
 
   const usagePercent = Math.min(
@@ -242,9 +231,9 @@ export default function ConversationPage() {
             <button
               onClick={sendMessage}
               disabled={loading}
-              className="ml-3 bg-blue-600 text-white px-4 py-2 rounded-xl"
+              className="ml-3 bg-blue-600 text-white px-4 py-2 rounded-xl disabled:opacity-50"
             >
-              Send
+              {loading ? "..." : "Send"}
             </button>
           </div>
         </div>
