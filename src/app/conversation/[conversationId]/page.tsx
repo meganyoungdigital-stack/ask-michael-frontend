@@ -90,8 +90,24 @@ export default function ConversationPage() {
         }),
       });
 
-      if (!response.ok || !response.body) {
-        console.error("API Error");
+      if (!response.ok) {
+        console.error("API failed:", response.status);
+        throw new Error("API failed");
+      }
+
+      // 🔥 If streaming not supported, fallback to text()
+      if (!response.body) {
+        const text = await response.text();
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: text || "No response from AI.",
+            createdAt: new Date(),
+          },
+        ]);
+
         return;
       }
 
@@ -128,7 +144,16 @@ export default function ConversationPage() {
         });
       }
     } catch (err) {
-      console.error("Streaming error:", err);
+      console.error("Send error:", err);
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: "⚠️ Something went wrong. Please try again.",
+          createdAt: new Date(),
+        },
+      ]);
     } finally {
       setLoading(false);
     }
