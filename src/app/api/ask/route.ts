@@ -10,13 +10,13 @@ import {
 import type { Message } from "@/lib/mongodb";
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!,
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 export async function POST(req: Request) {
   try {
     /* =====================================================
-       🔐 AUTH
+       🔐 AUTH (Clerk v5 requires await)
     ===================================================== */
     const { userId } = await auth();
 
@@ -24,18 +24,20 @@ export async function POST(req: Request) {
       return new Response("Unauthorized", { status: 401 });
     }
 
-    // ✅ FORCE STRING TYPE FOR TYPESCRIPT
-    const safeUserId: string = userId;
+    const safeUserId = userId;
 
+    /* =====================================================
+       📦 BODY
+    ===================================================== */
     const body = await req.json();
     const { messages, conversationId } = body;
 
-    if (!messages || !conversationId) {
-      return new Response("Invalid request", { status: 400 });
+    if (!messages || !conversationId || !Array.isArray(messages)) {
+      return new Response("Invalid request body", { status: 400 });
     }
 
     /* =====================================================
-       🔒 VALIDATE CONVERSATION OWNERSHIP
+       🔒 VERIFY CONVERSATION
     ===================================================== */
     const conversation = await getConversation(
       conversationId,
@@ -49,12 +51,12 @@ export async function POST(req: Request) {
     }
 
     /* =====================================================
-       💳 TIER + USAGE LOGIC
+       💳 USAGE LIMIT
     ===================================================== */
     const usageCount = await getUserUsage(safeUserId);
 
     const DAILY_FREE_LIMIT = 50;
-    const isPro = false; // Stripe later
+    const isPro = false;
     const limit = isPro ? 1000 : DAILY_FREE_LIMIT;
 
     if (usageCount >= limit) {
@@ -67,7 +69,7 @@ export async function POST(req: Request) {
       messages[messages.length - 1];
 
     /* =====================================================
-       🧠 AI TITLE GENERATION (FIRST MESSAGE ONLY)
+       🧠 TITLE GENERATION (ONLY FIRST MESSAGE)
     ===================================================== */
     if (conversation.messages.length === 0) {
       try {
@@ -78,31 +80,18 @@ export async function POST(req: Request) {
               {
                 role: "system",
                 content: `
-You are an AI system for a structural engineering platform.
-
 Generate:
-1) A short professional conversation title (3-6 words)
-2) A category label
+1) Short professional title (3-6 words)
+2) Category from this list:
+ISO 3834, WPS, Welding, Structural Design,
+Steel Connection, Cost Estimation,
+Quality Control, Inspection, General Engineering
 
-Allowed categories:
-- ISO 3834
-- WPS
-- Welding
-- Structural Design
-- Steel Connection
-- Cost Estimation
-- Quality Control
-- Inspection
-- General Engineering
-
-Respond ONLY in this JSON format:
-
+Respond ONLY as JSON:
 {
-"title": "Short Title Here",
-"category": "One Category From List"
+"title": "Title",
+"category": "Category"
 }
-
-No explanations.
                 `,
               },
               {
@@ -149,81 +138,119 @@ No explanations.
     }
 
     /* =====================================================
-       💬 STREAM MAIN AI RESPONSE
+       💬 MAIN AI RESPONSE (STREAM WITH SAFE FALLBACK)
     ===================================================== */
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      stream: true,
-      messages: messages.map((m: Message) => ({
-        role: m.role,
-        content: m.content,
-      })),
-    });
+    try {
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        stream: true,
+        messages: messages.map((m: Message) => ({
+          role: m.role,
+          content: m.content,
+        })),
+      });
 
-    const encoder = new TextEncoder();
+      const encoder = new TextEncoder();
 
-    const stream = new ReadableStream({
-      async start(controller) {
-        let fullResponse = "";
+      const stream = new ReadableStream({
+        async start(controller) {
+          let fullResponse = "";
 
-        try {
-          for await (const chunk of completion) {
-            const token =
-              chunk.choices[0]?.delta?.content || "";
+          try {
+            for await (const chunk of completion) {
+              const token =
+                chunk.choices[0]?.delta?.content || "";
 
-            if (token) {
-              fullResponse += token;
-              controller.enqueue(
-                encoder.encode(token)
-              );
+              if (token) {
+                fullResponse += token;
+                controller.enqueue(
+                  encoder.encode(token)
+                );
+              }
             }
+
+            // Save messages after stream finishes
+            const userMessageToSave: Message = {
+              role: "user",
+              content: latestUserMessage.content,
+              createdAt: new Date(),
+            };
+
+            const assistantMessage: Message = {
+              role: "assistant",
+              content: fullResponse,
+              createdAt: new Date(),
+            };
+
+            await appendMessageToConversation(
+              conversationId,
+              safeUserId,
+              userMessageToSave
+            );
+
+            await appendMessageToConversation(
+              conversationId,
+              safeUserId,
+              assistantMessage
+            );
+
+            await recordUserUsage(safeUserId);
+          } catch (err) {
+            console.error("Streaming loop error:", err);
+          } finally {
+            controller.close();
           }
+        },
+      });
 
-          /* =====================================================
-             💾 SAVE MESSAGES AFTER STREAM ENDS
-          ===================================================== */
+      return new Response(stream, {
+        headers: {
+          "Content-Type": "text/plain; charset=utf-8",
+        },
+      });
+    } catch (streamError) {
+      console.error("Stream init failed:", streamError);
 
-          const userMessageToSave: Message = {
-            role: "user",
-            content: latestUserMessage.content,
-            createdAt: new Date(),
-          };
+      // 🔥 FALLBACK TO NON-STREAM RESPONSE
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: messages.map((m: Message) => ({
+          role: m.role,
+          content: m.content,
+        })),
+      });
 
-          const assistantMessage: Message = {
-            role: "assistant",
-            content: fullResponse,
-            createdAt: new Date(),
-          };
+      const fullResponse =
+        completion.choices[0]?.message?.content ||
+        "AI failed to respond.";
 
-          await appendMessageToConversation(
-            conversationId,
-            safeUserId,
-            userMessageToSave
-          );
-
-          await appendMessageToConversation(
-            conversationId,
-            safeUserId,
-            assistantMessage
-          );
-
-          await recordUserUsage(safeUserId);
-        } catch (err) {
-          console.error("Streaming error:", err);
-        } finally {
-          controller.close();
+      await appendMessageToConversation(
+        conversationId,
+        safeUserId,
+        {
+          role: "user",
+          content: latestUserMessage.content,
+          createdAt: new Date(),
         }
-      },
-    });
+      );
 
-    return new Response(stream, {
-      headers: {
-        "Content-Type": "text/plain; charset=utf-8",
-      },
-    });
+      await appendMessageToConversation(
+        conversationId,
+        safeUserId,
+        {
+          role: "assistant",
+          content: fullResponse,
+          createdAt: new Date(),
+        }
+      );
+
+      await recordUserUsage(safeUserId);
+
+      return new Response(fullResponse);
+    }
   } catch (error) {
-    console.error("[ASK_ERROR]", error);
+    console.error("[ASK_FATAL_ERROR]", error);
     return new Response("Internal server error", {
       status: 500,
     });
