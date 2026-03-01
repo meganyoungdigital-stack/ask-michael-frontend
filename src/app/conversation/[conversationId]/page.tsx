@@ -12,11 +12,14 @@ import UpgradeModal from "@/components/UpgradeModal";
 interface Message {
   role: "user" | "assistant";
   content: string;
+  createdAt?: Date;
 }
 
 export default function ConversationPage() {
   const params = useParams();
-  const conversationId = params?.conversationId as string;
+
+  // ✅ FIX 1: Correct param name (folder is [conversation])
+  const conversationId = params?.conversation as string;
 
   const { user } = useUser();
 
@@ -44,13 +47,15 @@ export default function ConversationPage() {
 
     async function loadConversation() {
       try {
+        // ✅ FIX 2: Correct API route structure
         const res = await fetch(
-          `/api/conversation?conversationId=${conversationId}`
+          `/api/conversations/${conversationId}`
         );
 
         if (!res.ok) throw new Error("Failed to fetch conversation");
 
         const data = await res.json();
+
         setMessages(Array.isArray(data?.messages) ? data.messages : []);
       } catch (err) {
         console.error("Conversation load error:", err);
@@ -63,11 +68,7 @@ export default function ConversationPage() {
 
   async function sendMessage() {
     if (!input.trim() || loading) return;
-
-    if (!conversationId) {
-      console.error("Missing conversationId");
-      return;
-    }
+    if (!conversationId) return;
 
     if (!isPro && messages.length >= FREE_LIMIT) {
       setIsUpgradeOpen(true);
@@ -77,6 +78,7 @@ export default function ConversationPage() {
     const userMessage: Message = {
       role: "user",
       content: input,
+      createdAt: new Date(),
     };
 
     const updatedMessages = [...messages, userMessage];
@@ -92,14 +94,13 @@ export default function ConversationPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          conversationId: conversationId, // 🔥 explicitly send it
+          conversationId,
           messages: updatedMessages,
         }),
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error("API error:", errorText);
+        console.error(await response.text());
         setLoading(false);
         return;
       }
@@ -117,7 +118,7 @@ export default function ConversationPage() {
       // Add assistant placeholder
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "" },
+        { role: "assistant", content: "", createdAt: new Date() },
       ]);
 
       while (true) {
@@ -132,6 +133,7 @@ export default function ConversationPage() {
           updated[updated.length - 1] = {
             role: "assistant",
             content: assistantMessage,
+            createdAt: new Date(),
           };
           return updated;
         });
@@ -143,12 +145,14 @@ export default function ConversationPage() {
     setLoading(false);
   }
 
-  const usagePercent = (messages.length / FREE_LIMIT) * 100;
+  const usagePercent = Math.min(
+    (messages.length / FREE_LIMIT) * 100,
+    100
+  );
 
   return (
     <>
       <div className="flex flex-col flex-1 bg-white">
-
         {/* HEADER */}
         <div className="border-b px-6 py-4 flex justify-between">
           <div className="text-sm">
