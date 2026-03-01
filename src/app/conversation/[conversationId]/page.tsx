@@ -44,8 +44,11 @@ export default function ConversationPage() {
 
     async function loadConversation() {
       try {
+        const baseUrl =
+          process.env.NEXT_PUBLIC_API_URL || "";
+
         const res = await fetch(
-          `/api/conversations/${conversationId}`
+          `${baseUrl}/api/conversations/${conversationId}`
         );
 
         if (!res.ok) throw new Error();
@@ -81,21 +84,27 @@ export default function ConversationPage() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/ask", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          conversationId,
-          messages: updatedMessages,
-        }),
-      });
+      const baseUrl =
+        process.env.NEXT_PUBLIC_API_URL || "";
+
+      const response = await fetch(
+        `${baseUrl}/api/ask`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            conversationId,
+            messages: updatedMessages,
+          }),
+        }
+      );
 
       if (!response.ok) {
         console.error("API failed:", response.status);
         throw new Error("API failed");
       }
 
-      // 🔥 If streaming not supported, fallback to text()
+      // Fallback if streaming unavailable
       if (!response.body) {
         const text = await response.text();
 
@@ -126,7 +135,10 @@ export default function ConversationPage() {
         const { done, value } = await reader.read();
         if (done) break;
 
-        const chunk = decoder.decode(value, { stream: true });
+        const chunk = decoder.decode(value, {
+          stream: true,
+        });
+
         assistantText += chunk;
 
         setMessages((prev) => {
@@ -150,7 +162,8 @@ export default function ConversationPage() {
         ...prev,
         {
           role: "assistant",
-          content: "⚠️ Something went wrong. Please try again.",
+          content:
+            "⚠️ Something went wrong. Please try again.",
           createdAt: new Date(),
         },
       ]);
@@ -167,7 +180,6 @@ export default function ConversationPage() {
   return (
     <>
       <div className="flex flex-col flex-1 bg-white">
-        {/* HEADER */}
         <div className="border-b px-6 py-4 flex justify-between">
           <div className="text-sm">
             {isPro ? "Pro Plan" : "Free Plan"}
@@ -183,7 +195,6 @@ export default function ConversationPage() {
           )}
         </div>
 
-        {/* USAGE BAR */}
         {!isPro && (
           <div className="px-6 py-2">
             <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
@@ -197,7 +208,6 @@ export default function ConversationPage() {
           </div>
         )}
 
-        {/* MESSAGES */}
         <div className="flex-1 overflow-y-auto">
           <AnimatePresence>
             {messages.map((msg, index) => (
@@ -208,15 +218,22 @@ export default function ConversationPage() {
                 className="max-w-3xl mx-auto px-6 py-4"
               >
                 <div className="bg-gray-100 rounded-2xl p-4 relative">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                  >
                     {msg.content}
                   </ReactMarkdown>
 
                   <button
                     onClick={() => {
-                      navigator.clipboard.writeText(msg.content);
+                      navigator.clipboard.writeText(
+                        msg.content
+                      );
                       setCopySuccess(true);
-                      setTimeout(() => setCopySuccess(false), 2000);
+                      setTimeout(
+                        () => setCopySuccess(false),
+                        2000
+                      );
                     }}
                     className="absolute top-3 right-3 text-gray-400"
                   >
@@ -236,17 +253,21 @@ export default function ConversationPage() {
           <div ref={bottomRef} />
         </div>
 
-        {/* INPUT */}
         <div className="border-t px-6 py-6">
           <div className="flex items-end bg-gray-100 rounded-2xl px-4 py-3">
             <textarea
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) =>
+                setInput(e.target.value)
+              }
               placeholder="Message..."
               rows={1}
               className="flex-1 bg-transparent resize-none outline-none"
               onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
+                if (
+                  e.key === "Enter" &&
+                  !e.shiftKey
+                ) {
                   e.preventDefault();
                   sendMessage();
                 }
@@ -272,7 +293,9 @@ export default function ConversationPage() {
 
       <UpgradeModal
         isOpen={isUpgradeOpen}
-        onClose={() => setIsUpgradeOpen(false)}
+        onClose={() =>
+          setIsUpgradeOpen(false)
+        }
       />
     </>
   );
