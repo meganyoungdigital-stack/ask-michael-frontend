@@ -17,7 +17,10 @@ interface Message {
 
 export default function ConversationPage() {
   const params = useParams();
-  const conversationId = params?.conversation as string;
+
+  // 🔥 FIX IS HERE
+  const conversationId = params?.conversationId as string;
+
   const { user } = useUser();
 
   const isPro =
@@ -44,22 +47,15 @@ export default function ConversationPage() {
 
     async function loadConversation() {
       try {
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "";
-
-        console.log("LOAD API URL:", baseUrl);
-
         const res = await fetch(
-          `${baseUrl}/api/conversations/${conversationId}`
+          `/api/conversations/${conversationId}`
         );
 
-        console.log("LOAD status:", res.status);
-
-        if (!res.ok) throw new Error("Failed to load conversation");
+        if (!res.ok) throw new Error();
 
         const data = await res.json();
         setMessages(Array.isArray(data?.messages) ? data.messages : []);
-      } catch (err) {
-        console.error("Load error:", err);
+      } catch {
         setMessages([]);
       }
     }
@@ -68,6 +64,8 @@ export default function ConversationPage() {
   }, [conversationId]);
 
   async function sendMessage() {
+    console.log("SEND CLICKED"); // Debug log
+
     if (!input.trim() || loading || !conversationId) return;
 
     if (!isPro && messages.length >= FREE_LIMIT) {
@@ -88,11 +86,7 @@ export default function ConversationPage() {
     setLoading(true);
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "";
-
-      console.log("SEND API URL:", baseUrl);
-
-      const response = await fetch(`${baseUrl}/api/ask`, {
+      const response = await fetch(`/api/ask`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -101,11 +95,8 @@ export default function ConversationPage() {
         }),
       });
 
-      console.log("SEND status:", response.status);
-
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error("API failed:", errorText);
+        console.error("API failed:", response.status);
         throw new Error("API failed");
       }
 
@@ -126,9 +117,9 @@ export default function ConversationPage() {
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
+
       let assistantText = "";
 
-      // Add placeholder
       setMessages((prev) => [
         ...prev,
         { role: "assistant", content: "", createdAt: new Date() },
@@ -138,7 +129,10 @@ export default function ConversationPage() {
         const { done, value } = await reader.read();
         if (done) break;
 
-        const chunk = decoder.decode(value, { stream: true });
+        const chunk = decoder.decode(value, {
+          stream: true,
+        });
+
         assistantText += chunk;
 
         setMessages((prev) => {
@@ -163,7 +157,7 @@ export default function ConversationPage() {
         {
           role: "assistant",
           content:
-            "⚠️ Something went wrong. Check console for details.",
+            "⚠️ Something went wrong. Please try again.",
           createdAt: new Date(),
         },
       ]);
@@ -180,34 +174,6 @@ export default function ConversationPage() {
   return (
     <>
       <div className="flex flex-col flex-1 bg-white">
-        <div className="border-b px-6 py-4 flex justify-between">
-          <div className="text-sm">
-            {isPro ? "Pro Plan" : "Free Plan"}
-          </div>
-
-          {!isPro && (
-            <button
-              onClick={() => setIsUpgradeOpen(true)}
-              className="bg-blue-600 text-white px-4 py-2 rounded-xl"
-            >
-              Upgrade
-            </button>
-          )}
-        </div>
-
-        {!isPro && (
-          <div className="px-6 py-2">
-            <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${usagePercent}%` }}
-                transition={{ duration: 0.4 }}
-                className="h-full bg-blue-600"
-              />
-            </div>
-          </div>
-        )}
-
         <div className="flex-1 overflow-y-auto">
           <AnimatePresence>
             {messages.map((msg, index) => (
@@ -223,11 +189,9 @@ export default function ConversationPage() {
                   </ReactMarkdown>
 
                   <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(msg.content);
-                      setCopySuccess(true);
-                      setTimeout(() => setCopySuccess(false), 2000);
-                    }}
+                    onClick={() =>
+                      navigator.clipboard.writeText(msg.content)
+                    }
                     className="absolute top-3 right-3 text-gray-400"
                   >
                     <ClipboardIcon className="h-5 w-5" />
@@ -263,6 +227,7 @@ export default function ConversationPage() {
             />
 
             <button
+              type="button"
               onClick={sendMessage}
               disabled={loading}
               className="ml-3 bg-blue-600 text-white px-4 py-2 rounded-xl disabled:opacity-50"
@@ -271,12 +236,6 @@ export default function ConversationPage() {
             </button>
           </div>
         </div>
-
-        {copySuccess && (
-          <div className="fixed bottom-6 right-6 bg-black text-white px-4 py-2 rounded-xl">
-            Copied
-          </div>
-        )}
       </div>
 
       <UpgradeModal
