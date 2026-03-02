@@ -44,18 +44,22 @@ export default function ConversationPage() {
 
     async function loadConversation() {
       try {
-        const baseUrl =
-          process.env.NEXT_PUBLIC_API_URL || "";
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "";
+
+        console.log("LOAD API URL:", baseUrl);
 
         const res = await fetch(
           `${baseUrl}/api/conversations/${conversationId}`
         );
 
-        if (!res.ok) throw new Error();
+        console.log("LOAD status:", res.status);
+
+        if (!res.ok) throw new Error("Failed to load conversation");
 
         const data = await res.json();
         setMessages(Array.isArray(data?.messages) ? data.messages : []);
-      } catch {
+      } catch (err) {
+        console.error("Load error:", err);
         setMessages([]);
       }
     }
@@ -84,27 +88,27 @@ export default function ConversationPage() {
     setLoading(true);
 
     try {
-      const baseUrl =
-        process.env.NEXT_PUBLIC_API_URL || "";
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "";
 
-      const response = await fetch(
-        `${baseUrl}/api/ask`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            conversationId,
-            messages: updatedMessages,
-          }),
-        }
-      );
+      console.log("SEND API URL:", baseUrl);
+
+      const response = await fetch(`${baseUrl}/api/ask`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          conversationId,
+          messages: updatedMessages,
+        }),
+      });
+
+      console.log("SEND status:", response.status);
 
       if (!response.ok) {
-        console.error("API failed:", response.status);
+        const errorText = await response.text();
+        console.error("API failed:", errorText);
         throw new Error("API failed");
       }
 
-      // Fallback if streaming unavailable
       if (!response.body) {
         const text = await response.text();
 
@@ -122,10 +126,9 @@ export default function ConversationPage() {
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
-
       let assistantText = "";
 
-      // Add assistant placeholder
+      // Add placeholder
       setMessages((prev) => [
         ...prev,
         { role: "assistant", content: "", createdAt: new Date() },
@@ -135,10 +138,7 @@ export default function ConversationPage() {
         const { done, value } = await reader.read();
         if (done) break;
 
-        const chunk = decoder.decode(value, {
-          stream: true,
-        });
-
+        const chunk = decoder.decode(value, { stream: true });
         assistantText += chunk;
 
         setMessages((prev) => {
@@ -163,7 +163,7 @@ export default function ConversationPage() {
         {
           role: "assistant",
           content:
-            "⚠️ Something went wrong. Please try again.",
+            "⚠️ Something went wrong. Check console for details.",
           createdAt: new Date(),
         },
       ]);
@@ -218,22 +218,15 @@ export default function ConversationPage() {
                 className="max-w-3xl mx-auto px-6 py-4"
               >
                 <div className="bg-gray-100 rounded-2xl p-4 relative">
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                  >
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
                     {msg.content}
                   </ReactMarkdown>
 
                   <button
                     onClick={() => {
-                      navigator.clipboard.writeText(
-                        msg.content
-                      );
+                      navigator.clipboard.writeText(msg.content);
                       setCopySuccess(true);
-                      setTimeout(
-                        () => setCopySuccess(false),
-                        2000
-                      );
+                      setTimeout(() => setCopySuccess(false), 2000);
                     }}
                     className="absolute top-3 right-3 text-gray-400"
                   >
@@ -257,17 +250,12 @@ export default function ConversationPage() {
           <div className="flex items-end bg-gray-100 rounded-2xl px-4 py-3">
             <textarea
               value={input}
-              onChange={(e) =>
-                setInput(e.target.value)
-              }
+              onChange={(e) => setInput(e.target.value)}
               placeholder="Message..."
               rows={1}
               className="flex-1 bg-transparent resize-none outline-none"
               onKeyDown={(e) => {
-                if (
-                  e.key === "Enter" &&
-                  !e.shiftKey
-                ) {
+                if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
                   sendMessage();
                 }
@@ -293,9 +281,7 @@ export default function ConversationPage() {
 
       <UpgradeModal
         isOpen={isUpgradeOpen}
-        onClose={() =>
-          setIsUpgradeOpen(false)
-        }
+        onClose={() => setIsUpgradeOpen(false)}
       />
     </>
   );
