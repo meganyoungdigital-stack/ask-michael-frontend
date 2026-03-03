@@ -182,16 +182,58 @@ export default function ConversationPage() {
   return (
     <>
       <div className="flex flex-col flex-1 bg-white">
-        {/* 🔥 HEADER WITH SHARE BUTTON */}
-        <div className="flex justify-end px-6 py-4 border-b">
-          <button
-            onClick={handleShare}
-            disabled={shareLoading}
-            className="bg-gray-200 px-4 py-2 rounded-xl hover:bg-gray-300 transition"
-          >
-            {shareLoading ? "Generating..." : "Share"}
-          </button>
+        {/* 🔥 HEADER BAR */}
+<div className="flex items-center justify-between px-6 py-4 border-b bg-white">
+  
+  {/* LEFT SIDE – Usage */}
+  <div className="flex items-center gap-4">
+    {!isPro && (
+      <>
+        <div className="text-sm text-gray-600">
+          {messages.filter(m => m.role === "user").length} / {FREE_LIMIT} Free Messages
         </div>
+
+        <div className="w-40 h-2 bg-gray-200 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-blue-600 transition-all"
+            style={{
+              width: `${Math.min(
+                (messages.length / FREE_LIMIT) * 100,
+                100
+              )}%`,
+            }}
+          />
+        </div>
+      </>
+    )}
+
+    {isPro && (
+      <div className="text-sm text-green-600 font-medium">
+        Pro Plan Active
+      </div>
+    )}
+  </div>
+
+  {/* RIGHT SIDE – Buttons */}
+  <div className="flex items-center gap-3">
+    {!isPro && (
+      <button
+        onClick={() => setIsUpgradeOpen(true)}
+        className="bg-yellow-500 text-white px-4 py-2 rounded-xl hover:bg-yellow-600 transition"
+      >
+        Upgrade
+      </button>
+    )}
+
+    <button
+      onClick={handleShare}
+      disabled={shareLoading}
+      className="bg-gray-200 px-4 py-2 rounded-xl hover:bg-gray-300 transition"
+    >
+      {shareLoading ? "Generating..." : "Share"}
+    </button>
+  </div>
+</div>
 
         <div className="flex-1 overflow-y-auto">
           <AnimatePresence>
