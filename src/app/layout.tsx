@@ -52,8 +52,8 @@ export default function RootLayout({
                 <Image
                   src="/m-logo.png"
                   alt="Ask Michael Logo"
-                  width={160}
-                  height={40}
+                  width={100}
+                  height={28}
                   priority
                 />
               </div>

@@ -2,6 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
+import Image from "next/image";
+import { motion } from "framer-motion";
 
 export default function HomePage() {
   const router = useRouter();
@@ -19,12 +21,36 @@ export default function HomePage() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center h-full">
+    <div className="flex flex-col items-center justify-center h-full text-center px-6">
+      
+      {/* Logo with smooth fade-in */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="mb-6"
+      >
+        <Image
+          src="/m-logo.png"
+          alt="Ask Michael"
+          width={280}
+          height={90}
+          priority
+          className="object-contain"
+        />
+      </motion.div>
 
+      {/* Main Heading */}
       <h1 className="text-4xl font-bold">
         Ask <span className="text-blue-600">Michael</span>
       </h1>
 
+      {/* Subtext */}
+      <p className="text-gray-600 text-lg max-w-xl mt-4">
+        Expert advice on aluminium smelting maintenance
+      </p>
+
+      {/* Signed Out Button */}
       <SignedOut>
         <div className="mt-6">
           <SignInButton mode="modal">
@@ -35,6 +61,7 @@ export default function HomePage() {
         </div>
       </SignedOut>
 
+      {/* Signed In New Chat Button */}
       <SignedIn>
         <button
           onClick={handleNewChat}
