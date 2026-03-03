@@ -17,8 +17,6 @@ interface Message {
 
 export default function ConversationPage() {
   const params = useParams();
-
-  // 🔥 FIX IS HERE
   const conversationId = params?.conversationId as string;
 
   const { user } = useUser();
@@ -32,7 +30,8 @@ export default function ConversationPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
-  const [copySuccess, setCopySuccess] = useState(false);
+  const [shareLoading, setShareLoading] = useState(false);
+  const [shareSuccess, setShareSuccess] = useState(false);
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
@@ -63,9 +62,44 @@ export default function ConversationPage() {
     loadConversation();
   }, [conversationId]);
 
-  async function sendMessage() {
-    console.log("SEND CLICKED"); // Debug log
+  /* ============================
+     SHARE CONVERSATION
+  ============================ */
+  async function shareConversation() {
+    if (!conversationId) return;
 
+    try {
+      setShareLoading(true);
+
+      const res = await fetch(
+        `/api/conversation/${conversationId}/share`,
+        { method: "POST" }
+      );
+
+      const data = await res.json();
+
+      if (data.shareUrl) {
+        await navigator.clipboard.writeText(data.shareUrl);
+        setShareSuccess(true);
+
+        setTimeout(() => {
+          setShareSuccess(false);
+        }, 2500);
+      } else {
+        alert("Failed to create share link.");
+      }
+    } catch (err) {
+      console.error("Share error:", err);
+      alert("Something went wrong while sharing.");
+    } finally {
+      setShareLoading(false);
+    }
+  }
+
+  /* ============================
+     SEND MESSAGE
+  ============================ */
+  async function sendMessage() {
     if (!input.trim() || loading || !conversationId) return;
 
     if (!isPro && messages.length >= FREE_LIMIT) {
@@ -95,10 +129,7 @@ export default function ConversationPage() {
         }),
       });
 
-      if (!response.ok) {
-        console.error("API failed:", response.status);
-        throw new Error("API failed");
-      }
+      if (!response.ok) throw new Error("API failed");
 
       if (!response.body) {
         const text = await response.text();
@@ -129,10 +160,7 @@ export default function ConversationPage() {
         const { done, value } = await reader.read();
         if (done) break;
 
-        const chunk = decoder.decode(value, {
-          stream: true,
-        });
-
+        const chunk = decoder.decode(value, { stream: true });
         assistantText += chunk;
 
         setMessages((prev) => {
@@ -166,14 +194,25 @@ export default function ConversationPage() {
     }
   }
 
-  const usagePercent = Math.min(
-    (messages.length / FREE_LIMIT) * 100,
-    100
-  );
-
   return (
     <>
-      <div className="flex flex-col flex-1 bg-white">
+      <div className="flex flex-col flex-1 bg-white relative">
+
+        {/* 🔥 SHARE BUTTON */}
+        <div className="flex justify-end px-6 pt-4">
+          <button
+            onClick={shareConversation}
+            disabled={shareLoading}
+            className="bg-gray-200 px-4 py-2 rounded-xl hover:bg-gray-300 disabled:opacity-50"
+          >
+            {shareLoading
+              ? "Sharing..."
+              : shareSuccess
+              ? "Link Copied!"
+              : "Share"}
+          </button>
+        </div>
+
         <div className="flex-1 overflow-y-auto">
           <AnimatePresence>
             {messages.map((msg, index) => (
