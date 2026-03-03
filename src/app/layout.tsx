@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Image from "next/image";
 import {
   ClerkProvider,
   UserButton,
@@ -44,14 +45,30 @@ export default function RootLayout({
           <div className="flex flex-col h-screen">
 
             {/* HEADER */}
-            <header className="h-16 flex items-center justify-end px-6 border-b bg-white">
-              <SignedOut>
-                <SignInButton mode="modal" />
-              </SignedOut>
+            <header className="h-16 flex items-center justify-between px-6 border-b bg-white">
 
-              <SignedIn>
-                <UserButton />
-              </SignedIn>
+              {/* LEFT: LOGO */}
+              <div className="flex items-center">
+                <Image
+                  src="/m-logo.png"
+                  alt="Ask Michael Logo"
+                  width={160}
+                  height={40}
+                  priority
+                />
+              </div>
+
+              {/* RIGHT: AUTH */}
+              <div>
+                <SignedOut>
+                  <SignInButton mode="modal" />
+                </SignedOut>
+
+                <SignedIn>
+                  <UserButton />
+                </SignedIn>
+              </div>
+
             </header>
 
             {/* MAIN */}

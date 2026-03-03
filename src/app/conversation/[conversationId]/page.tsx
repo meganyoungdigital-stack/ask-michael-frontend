@@ -48,7 +48,7 @@ export default function ConversationPage() {
     async function loadConversation() {
       try {
         const res = await fetch(
-          `/api/conversations/${conversationId}`
+          `/api/conversation/${conversationId}`
         );
 
         if (!res.ok) throw new Error();
