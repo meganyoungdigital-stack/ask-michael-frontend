@@ -3,6 +3,50 @@ import { connectToDatabase } from "@/lib/mongodb";
 import { auth } from "@clerk/nextjs/server";
 
 /* =====================================================
+   📥 GET CONVERSATION (🔥 THIS FIXES YOUR HISTORY)
+===================================================== */
+export async function GET(
+  req: NextRequest,
+  context: { params: Promise<{ conversationId: string }> }
+) {
+  try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    const { conversationId } = await context.params;
+
+    const db = await connectToDatabase();
+
+    const conversation = await db
+      .collection("conversations")
+      .findOne({ conversationId, userId });
+
+    if (!conversation) {
+      return NextResponse.json(
+        { error: "Conversation not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      messages: conversation.messages || [],
+    });
+  } catch (error) {
+    console.error("[CONVERSATION_GET_ERROR]", error);
+    return NextResponse.json(
+      { error: "Fetch failed" },
+      { status: 500 }
+    );
+  }
+}
+
+/* =====================================================
    ✏️ UPDATE CONVERSATION
 ===================================================== */
 export async function PATCH(
@@ -19,7 +63,7 @@ export async function PATCH(
       );
     }
 
-    const { conversationId } = await context.params; // ✅ Required in Next 16
+    const { conversationId } = await context.params;
     const body = await req.json();
 
     const db = await connectToDatabase();
@@ -63,7 +107,7 @@ export async function DELETE(
       );
     }
 
-    const { conversationId } = await context.params; // ✅ Required in Next 16
+    const { conversationId } = await context.params;
 
     const db = await connectToDatabase();
 
