@@ -18,7 +18,6 @@ interface Message {
 export default function ConversationPage() {
   const params = useParams();
   const conversationId = params?.conversationId as string;
-
   const { user } = useUser();
 
   const isPro =
@@ -30,8 +29,12 @@ export default function ConversationPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
+
+  // 🔥 SHARE STATE
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [shareLoading, setShareLoading] = useState(false);
-  const [shareSuccess, setShareSuccess] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareError, setShareError] = useState("");
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
@@ -63,42 +66,9 @@ export default function ConversationPage() {
   }, [conversationId]);
 
   /* ============================
-     SHARE CONVERSATION
-  ============================ */
-  async function shareConversation() {
-    if (!conversationId) return;
-
-    try {
-      setShareLoading(true);
-
-      const res = await fetch(
-        `/api/conversation/${conversationId}/share`,
-        { method: "POST" }
-      );
-
-      const data = await res.json();
-
-      if (data.shareUrl) {
-        await navigator.clipboard.writeText(data.shareUrl);
-        setShareSuccess(true);
-
-        setTimeout(() => {
-          setShareSuccess(false);
-        }, 2500);
-      } else {
-        alert("Failed to create share link.");
-      }
-    } catch (err) {
-      console.error("Share error:", err);
-      alert("Something went wrong while sharing.");
-    } finally {
-      setShareLoading(false);
-    }
-  }
-
-  /* ============================
      SEND MESSAGE
   ============================ */
+
   async function sendMessage() {
     if (!input.trim() || loading || !conversationId) return;
 
@@ -129,26 +99,10 @@ export default function ConversationPage() {
         }),
       });
 
-      if (!response.ok) throw new Error("API failed");
+      if (!response.ok) throw new Error();
 
-      if (!response.body) {
-        const text = await response.text();
-
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "assistant",
-            content: text || "No response from AI.",
-            createdAt: new Date(),
-          },
-        ]);
-
-        return;
-      }
-
-      const reader = response.body.getReader();
+      const reader = response.body?.getReader();
       const decoder = new TextDecoder();
-
       let assistantText = "";
 
       setMessages((prev) => [
@@ -156,30 +110,28 @@ export default function ConversationPage() {
         { role: "assistant", content: "", createdAt: new Date() },
       ]);
 
+      if (!reader) return;
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
-        const chunk = decoder.decode(value, { stream: true });
-        assistantText += chunk;
+        assistantText += decoder.decode(value, {
+          stream: true,
+        });
 
         setMessages((prev) => {
           const updated = [...prev];
           const lastIndex = updated.length - 1;
 
           if (updated[lastIndex]?.role === "assistant") {
-            updated[lastIndex] = {
-              ...updated[lastIndex],
-              content: assistantText,
-            };
+            updated[lastIndex].content = assistantText;
           }
 
           return updated;
         });
       }
-    } catch (err) {
-      console.error("Send error:", err);
-
+    } catch {
       setMessages((prev) => [
         ...prev,
         {
@@ -194,22 +146,50 @@ export default function ConversationPage() {
     }
   }
 
+  /* ============================
+     SHARE FUNCTION
+  ============================ */
+
+  async function handleShare() {
+    if (!conversationId) return;
+
+    setShareLoading(true);
+    setShareError("");
+
+    try {
+      const res = await fetch(
+        `/api/conversation/${conversationId}/share`,
+        { method: "POST" }
+      );
+
+      if (!res.ok) throw new Error();
+
+      const data = await res.json();
+
+      setShareUrl(data.shareUrl);
+      setShowShareModal(true);
+    } catch {
+      setShareError("Failed to generate share link.");
+    } finally {
+      setShareLoading(false);
+    }
+  }
+
+  /* ============================
+     UI
+  ============================ */
+
   return (
     <>
-      <div className="flex flex-col flex-1 bg-white relative">
-
-        {/* 🔥 SHARE BUTTON */}
-        <div className="flex justify-end px-6 pt-4">
+      <div className="flex flex-col flex-1 bg-white">
+        {/* 🔥 HEADER WITH SHARE BUTTON */}
+        <div className="flex justify-end px-6 py-4 border-b">
           <button
-            onClick={shareConversation}
+            onClick={handleShare}
             disabled={shareLoading}
-            className="bg-gray-200 px-4 py-2 rounded-xl hover:bg-gray-300 disabled:opacity-50"
+            className="bg-gray-200 px-4 py-2 rounded-xl hover:bg-gray-300 transition"
           >
-            {shareLoading
-              ? "Sharing..."
-              : shareSuccess
-              ? "Link Copied!"
-              : "Share"}
+            {shareLoading ? "Generating..." : "Share"}
           </button>
         </div>
 
@@ -231,7 +211,7 @@ export default function ConversationPage() {
                     onClick={() =>
                       navigator.clipboard.writeText(msg.content)
                     }
-                    className="absolute top-3 right-3 text-gray-400"
+                    className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
                   >
                     <ClipboardIcon className="h-5 w-5" />
                   </button>
@@ -249,6 +229,7 @@ export default function ConversationPage() {
           <div ref={bottomRef} />
         </div>
 
+        {/* INPUT */}
         <div className="border-t px-6 py-6">
           <div className="flex items-end bg-gray-100 rounded-2xl px-4 py-3">
             <textarea
@@ -274,8 +255,48 @@ export default function ConversationPage() {
               {loading ? "..." : "Send"}
             </button>
           </div>
+
+          {shareError && (
+            <p className="text-red-500 mt-2 text-sm">
+              {shareError}
+            </p>
+          )}
         </div>
       </div>
+
+      {/* 🔥 SHARE MODAL */}
+      {showShareModal && shareUrl && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-2xl w-[420px] shadow-lg">
+            <h2 className="text-lg font-semibold mb-4">
+              Share this conversation
+            </h2>
+
+            <div className="flex gap-2">
+              <input
+                value={shareUrl}
+                readOnly
+                className="border px-3 py-2 rounded-xl w-full text-sm"
+              />
+              <button
+                onClick={() =>
+                  navigator.clipboard.writeText(shareUrl)
+                }
+                className="bg-blue-600 text-white px-4 rounded-xl"
+              >
+                Copy
+              </button>
+            </div>
+
+            <button
+              onClick={() => setShowShareModal(false)}
+              className="mt-4 text-gray-500 text-sm"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
       <UpgradeModal
         isOpen={isUpgradeOpen}

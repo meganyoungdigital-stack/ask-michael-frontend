@@ -71,6 +71,11 @@ interface Conversation {
   starred?: boolean;
   messages: Message[];
   attachments?: Attachment[];
+
+  // 🔥 SHARE SUPPORT
+  shareId?: string;
+  isPublic?: boolean;
+
   createdAt: Date;
   updatedAt?: Date;
 }
@@ -105,6 +110,7 @@ export async function createConversation(userId: string) {
     starred: false,
     messages: [],
     attachments: [],
+    isPublic: false, // 🔥 default private
     createdAt: new Date(),
     updatedAt: new Date(),
   });
@@ -121,6 +127,40 @@ export async function getConversation(
   return db
     .collection<Conversation>("conversations")
     .findOne({ conversationId, userId });
+}
+
+/* 🔥 NEW — Fetch public conversation by shareId */
+export async function getPublicConversation(shareId: string) {
+  const db = await getDb();
+
+  return db.collection<Conversation>("conversations").findOne({
+    shareId,
+    isPublic: true,
+  });
+}
+
+/* 🔥 NEW — Make conversation public */
+export async function makeConversationPublic(
+  conversationId: string,
+  userId: string,
+  shareId: string
+) {
+  const db = await getDb();
+
+  const result = await db
+    .collection<Conversation>("conversations")
+    .updateOne(
+      { conversationId, userId },
+      {
+        $set: {
+          isPublic: true,
+          shareId,
+          updatedAt: new Date(),
+        },
+      }
+    );
+
+  return result.matchedCount > 0;
 }
 
 export async function getUserConversations(userId: string) {
@@ -186,7 +226,7 @@ export async function updateConversationTitle(
   );
 }
 
-/* 🔥 NEW — ATTACHMENT FUNCTION */
+/* 🔥 ATTACHMENT FUNCTION */
 export async function addAttachmentToConversation(
   conversationId: string,
   userId: string,
@@ -267,7 +307,7 @@ export async function recordUserUsage(userId: string) {
 }
 
 /* ============================
-   DIRECT DB ACCESS (OPTIONAL)
+   DIRECT DB ACCESS
 ============================ */
 
 export async function connectToDatabase() {
