@@ -1,76 +1,49 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
-import Image from "next/image";
+import Link from "next/link";
 import { motion } from "framer-motion";
 
-export default function HomePage() {
-  const router = useRouter();
-
-  async function handleNewChat() {
-    const res = await fetch("/api/conversation/new", {
-      method: "POST",
-    });
-
-    const data = await res.json();
-
-    if (data?.conversationId) {
-      router.push(`/conversation/${data.conversationId}`);
-    }
-  }
-
+export default function LandingPage() {
   return (
-    <div className="flex flex-col items-center justify-center h-full text-center px-6">
-      
-      {/* Logo with smooth fade-in */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="mb-6"
-      >
-        <Image
-          src="/m-logo.png"
-          alt="Ask Michael"
-          width={280}
-          height={90}
-          priority
-          className="object-contain"
-        />
-      </motion.div>
+    <main className="relative h-screen w-full bg-black text-white overflow-hidden">
 
-      {/* Main Heading */}
-      <h1 className="text-4xl font-bold">
-        Ask <span className="text-blue-600">Michael</span>
-      </h1>
+      <div className="absolute inset-0 bg-gradient-to-b from-[#0b1026] via-[#111a40] to-black" />
 
-      {/* Subtext */}
-      <p className="text-gray-600 text-lg max-w-xl mt-4">
-        Expert advice on aluminium smelting maintenance
-      </p>
+      <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-6">
 
-      {/* Signed Out Button */}
-      <SignedOut>
-        <div className="mt-6">
-          <SignInButton mode="modal">
-            <button className="bg-blue-600 text-white px-6 py-3 rounded-xl">
-              Sign In to Start
-            </button>
-          </SignInButton>
-        </div>
-      </SignedOut>
-
-      {/* Signed In New Chat Button */}
-      <SignedIn>
-        <button
-          onClick={handleNewChat}
-          className="mt-6 bg-blue-600 text-white px-8 py-3 rounded-xl"
+        <motion.h1
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1 }}
+          className="text-6xl md:text-8xl font-bold tracking-wider"
         >
-          New Chat
-        </button>
-      </SignedIn>
+          ASK MICHAEL
+        </motion.h1>
 
-    </div>
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8 }}
+          className="mt-6 text-xl text-gray-300 max-w-2xl"
+        >
+          Advanced AI built for structured intelligence,
+          engineering precision, and scalable insight.
+        </motion.p>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.2 }}
+          className="mt-10"
+        >
+          <Link href="/app">
+            <button className="px-8 py-4 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-lg font-semibold hover:scale-105 transition">
+              Enter Platform →
+            </button>
+          </Link>
+        </motion.div>
+
+      </div>
+    </main>
   );
 }
