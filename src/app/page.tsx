@@ -1,14 +1,124 @@
 "use client";
 
+import {
+  motion,
+  useMotionValue,
+  useTransform,
+  useScroll,
+} from "framer-motion";
+import { useEffect, useRef } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
 
 export default function LandingPage() {
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  const rotateX = useTransform(mouseY, [-500, 500], [6, -6]);
+  const rotateY = useTransform(mouseX, [-500, 500], [-6, 6]);
+
+  // Scroll push-in
+  const { scrollYProgress } = useScroll();
+  const scrollScale = useTransform(scrollYProgress, [0, 1], [1, 1.25]);
+
+  // Starfield canvas
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      mouseX.set(e.clientX - window.innerWidth / 2);
+      mouseY.set(e.clientY - window.innerHeight / 2);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+
+    // Star animation
+    const canvas = canvasRef.current!;
+    const ctx = canvas.getContext("2d")!;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const stars = Array.from({ length: 120 }).map(() => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 1.2,
+      speed: Math.random() * 0.4,
+    }));
+
+    let animationFrameId: number;
+
+    const render = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      stars.forEach((star) => {
+        star.y += star.speed;
+        if (star.y > canvas.height) star.y = 0;
+
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+        ctx.fillStyle = "white";
+        ctx.fill();
+      });
+
+      animationFrameId = requestAnimationFrame(render);
+    };
+
+    render();
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [mouseX, mouseY]);
+
   return (
-    <main className="relative h-screen w-full bg-black text-white overflow-hidden">
+    <main className="relative h-screen w-full overflow-hidden bg-black text-white">
 
-      <div className="absolute inset-0 bg-gradient-to-b from-[#0b1026] via-[#111a40] to-black" />
+      {/* ⭐ Floating Stars */}
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 z-0 opacity-40"
+      />
 
+      {/* 🌌 Animated Background */}
+      <motion.div
+        style={{ rotateX, rotateY, scale: scrollScale }}
+        animate={{ scale: [1, 1.05, 1] }}
+        transition={{ duration: 40, repeat: Infinity }}
+        className="absolute inset-0"
+      >
+        <div
+          className="w-full h-full bg-cover bg-center"
+          style={{
+            backgroundImage: "url('/hero-bg.png')",
+          }}
+        />
+      </motion.div>
+
+      {/* 🌫 Moving Mist Layer (Add mist.png to /public) */}
+      <motion.div
+        animate={{ x: ["0%", "-10%", "0%"] }}
+        transition={{ duration: 120, repeat: Infinity }}
+        className="absolute inset-0 bg-[url('/mist.png')] bg-cover opacity-20"
+      />
+
+      {/* 🔵 Energy Beam */}
+      <motion.div
+        animate={{ opacity: [0.3, 0.8, 0.3] }}
+        transition={{ duration: 4, repeat: Infinity }}
+        className="absolute left-1/2 -translate-x-1/2 w-2 h-full bg-gradient-to-b from-blue-400 to-transparent blur-xl"
+      />
+
+      {/* ⚡ Lightning Pulse */}
+      <motion.div
+        animate={{ opacity: [0, 0.4, 0] }}
+        transition={{ duration: 6, repeat: Infinity }}
+        className="absolute inset-0 bg-blue-400/20"
+      />
+
+      {/* Dark Overlay */}
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
+
+      {/* Content */}
       <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-6">
 
         <motion.h1
@@ -26,8 +136,7 @@ export default function LandingPage() {
           transition={{ delay: 0.8 }}
           className="mt-6 text-xl text-gray-300 max-w-2xl"
         >
-          Advanced AI built for structured intelligence,
-          engineering precision, and scalable insight.
+          Enter the intelligence dimension.
         </motion.p>
 
         <motion.div
