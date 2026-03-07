@@ -69,8 +69,12 @@ export default function Sidebar() {
       method: "DELETE",
     });
 
-    router.push("/");
-    fetchConversations();
+    // Refresh list
+    await fetchConversations();
+
+    // Redirect to clean chat start screen
+    router.push("/app");
+    router.refresh();
   }
 
   const pinned = conversations.filter((c) => c.starred);

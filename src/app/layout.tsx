@@ -1,13 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Image from "next/image";
-import {
-  ClerkProvider,
-  UserButton,
-  SignedIn,
-  SignedOut,
-  SignInButton,
-} from "@clerk/nextjs";
+import { ClerkProvider, SignedIn } from "@clerk/nextjs";
 import Sidebar from "@/components/Sidebar";
 import "./globals.css";
 
@@ -42,47 +35,18 @@ export default function RootLayout({
             color: "#2f2f2f",
           }}
         >
-          <div className="flex flex-col h-screen">
+          <div className="flex h-screen">
 
-            {/* HEADER */}
-            <header className="h-16 flex items-center justify-between px-6 border-b bg-white">
+            {/* Sidebar only appears when signed in */}
+            <SignedIn>
+              <Sidebar />
+            </SignedIn>
 
-              {/* LEFT: LOGO */}
-              <div className="flex items-center">
-                <Image
-                  src="/m-logo.png"
-                  alt="Ask Michael Logo"
-                  width={50}
-                  height={28}
-                  priority
-                />
-              </div>
+            {/* Main Content */}
+            <main className="flex-1 overflow-y-auto">
+              {children}
+            </main>
 
-              {/* RIGHT: AUTH */}
-              <div>
-                <SignedOut>
-                  <SignInButton mode="modal" />
-                </SignedOut>
-
-                <SignedIn>
-                  <UserButton />
-                </SignedIn>
-              </div>
-
-            </header>
-
-            {/* MAIN */}
-            <div className="flex flex-1 overflow-hidden">
-
-              <SignedIn>
-                <Sidebar />
-              </SignedIn>
-
-              <main className="flex-1 overflow-y-auto">
-                {children}
-              </main>
-
-            </div>
           </div>
         </body>
       </html>

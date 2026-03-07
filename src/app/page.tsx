@@ -31,9 +31,9 @@ export default function LandingPage() {
 
     window.addEventListener("mousemove", handleMouseMove);
 
-    // Star animation
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext("2d")!;
+
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
@@ -51,6 +51,7 @@ export default function LandingPage() {
 
       stars.forEach((star) => {
         star.y += star.speed;
+
         if (star.y > canvas.height) star.y = 0;
 
         ctx.beginPath();
@@ -94,7 +95,7 @@ export default function LandingPage() {
         />
       </motion.div>
 
-      {/* 🌫 Moving Mist Layer (Add mist.png to /public) */}
+      {/* 🌫 Moving Mist Layer */}
       <motion.div
         animate={{ x: ["0%", "-10%", "0%"] }}
         transition={{ duration: 120, repeat: Infinity }}
@@ -115,8 +116,8 @@ export default function LandingPage() {
         className="absolute inset-0 bg-blue-400/20"
       />
 
-      {/* Dark Overlay */}
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
+      {/* Dark overlay WITHOUT blur */}
+      <div className="absolute inset-0 bg-black/25" />
 
       {/* Content */}
       <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-6">
@@ -134,7 +135,7 @@ export default function LandingPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
-          className="mt-6 text-xl text-gray-300 max-w-2xl"
+          className="mt-6 text-xl text-gray-200 max-w-2xl"
         >
           Enter the intelligence dimension.
         </motion.p>
