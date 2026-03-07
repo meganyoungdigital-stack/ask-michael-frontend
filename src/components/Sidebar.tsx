@@ -10,22 +10,50 @@ interface Conversation {
   starred?: boolean;
 }
 
+interface Document {
+  _id: string;
+  name: string;
+}
+
 export default function Sidebar() {
   const router = useRouter();
   const params = useParams();
   const activeId = params?.conversationId as string;
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [documents, setDocuments] = useState<Document[]>([]);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchConversations();
+    fetchDocuments();
   }, []);
 
   async function fetchConversations() {
     const res = await fetch("/api/conversation/list");
     const data = await res.json();
     setConversations(data?.conversations || []);
+  }
+
+  async function fetchDocuments() {
+    const res = await fetch("/api/documents");
+    const data = await res.json();
+    setDocuments(data?.documents || []);
+  }
+
+  async function uploadDocument(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    await fetch("/api/documents/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    fetchDocuments();
   }
 
   async function newConversation() {
@@ -69,10 +97,8 @@ export default function Sidebar() {
       method: "DELETE",
     });
 
-    // Refresh list
     await fetchConversations();
 
-    // Redirect to clean chat start screen
     router.push("/app");
     router.refresh();
   }
@@ -82,6 +108,8 @@ export default function Sidebar() {
 
   return (
     <aside className="w-64 border-r bg-white flex flex-col">
+
+      {/* New Chat */}
 
       <div className="p-4 border-b">
         <button
@@ -94,6 +122,8 @@ export default function Sidebar() {
 
       <div className="flex-1 overflow-y-auto p-4">
 
+        {/* Pinned */}
+
         {pinned.length > 0 && (
           <>
             <p className="text-xs font-semibold text-gray-500 mb-2">
@@ -102,6 +132,8 @@ export default function Sidebar() {
             {pinned.map(renderConversation)}
           </>
         )}
+
+        {/* All Chats */}
 
         <p className="text-xs font-semibold text-gray-500 mt-4 mb-2">
           All Chats
@@ -114,6 +146,43 @@ export default function Sidebar() {
         )}
 
         {normal.map(renderConversation)}
+
+        {/* Documents */}
+
+        <div className="mt-6 border-t pt-4">
+
+          <p className="text-xs font-semibold text-gray-500 mb-2">
+            Documents
+          </p>
+
+          {documents.length === 0 && (
+            <div className="text-sm text-gray-400 mb-2">
+              No documents uploaded
+            </div>
+          )}
+
+          {documents.map((doc) => (
+            <div
+              key={doc._id}
+              className="text-sm text-gray-700 hover:bg-gray-100 px-2 py-1 rounded cursor-pointer truncate"
+            >
+              📄 {doc.name}
+            </div>
+          ))}
+
+          {/* Upload */}
+
+          <label className="block mt-2 text-sm text-blue-600 hover:underline cursor-pointer">
+            + Upload
+            <input
+              type="file"
+              className="hidden"
+              onChange={uploadDocument}
+            />
+          </label>
+
+        </div>
+
       </div>
     </aside>
   );
@@ -140,8 +209,11 @@ export default function Sidebar() {
         </Link>
 
         {hoveredId === conv.conversationId && (
-          <div className="flex gap-2 ml-2 text-sm">
-            <button onClick={() => toggleStar(conv.conversationId)}>
+          <div className="flex gap-1 ml-2 text-xs">
+            <button
+              onClick={() => toggleStar(conv.conversationId)}
+              className="hover:scale-110"
+            >
               {conv.starred ? "⭐" : "☆"}
             </button>
 
@@ -149,6 +221,7 @@ export default function Sidebar() {
               onClick={() =>
                 renameConversation(conv.conversationId, conv.title)
               }
+              className="hover:scale-110"
             >
               ✏
             </button>
@@ -157,6 +230,7 @@ export default function Sidebar() {
               onClick={() =>
                 deleteConversation(conv.conversationId)
               }
+              className="hover:scale-110"
             >
               🗑
             </button>
