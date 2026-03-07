@@ -30,8 +30,8 @@ export default function RootLayout({
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
           style={{
             margin: 0,
-            background: "#ffffff",
-            color: "#2f2f2f",
+            background: "#000000",
+            color: "#ffffff",
           }}
         >
           {children}
