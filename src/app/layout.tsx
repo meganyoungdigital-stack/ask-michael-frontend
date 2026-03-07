@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { ClerkProvider, SignedIn } from "@clerk/nextjs";
-import Sidebar from "@/components/Sidebar";
+import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -35,19 +34,7 @@ export default function RootLayout({
             color: "#2f2f2f",
           }}
         >
-          <div className="flex h-screen">
-
-            {/* Sidebar only appears when signed in */}
-            <SignedIn>
-              <Sidebar />
-            </SignedIn>
-
-            {/* Main Content */}
-            <main className="flex-1 overflow-y-auto">
-              {children}
-            </main>
-
-          </div>
+          {children}
         </body>
       </html>
     </ClerkProvider>
