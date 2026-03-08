@@ -9,7 +9,7 @@ import {
 import { useEffect, useRef } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
-import AIOrb from "@/components/AIOrb";
+import Navbar from "@/components/Navbar";
 
 export default function LandingPage() {
   const mouseX = useMotionValue(0);
@@ -74,9 +74,12 @@ export default function LandingPage() {
   return (
     <main className="relative w-full overflow-x-hidden bg-black text-white">
 
+      {/* NAVBAR */}
+      <Navbar />
+
       {/* HERO SECTION */}
 
-      <section className="relative h-screen w-full overflow-hidden">
+      <section className="relative h-screen w-full overflow-hidden pt-20">
 
         {/* ⭐ Floating Stars */}
         <canvas
@@ -136,16 +139,11 @@ export default function LandingPage() {
             ASK MICHAEL
           </motion.h1>
 
-          {/* 🔮 AI Hologram Orb */}
-          <div className="mt-10">
-            <AIOrb />
-          </div>
-
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8 }}
-            className="mt-10 text-xl text-gray-200 max-w-2xl"
+            className="mt-6 text-xl text-gray-200 max-w-2xl"
           >
             Enter the intelligence dimension.
           </motion.p>

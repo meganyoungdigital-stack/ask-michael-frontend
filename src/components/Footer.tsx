@@ -1,6 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
+import Link from "next/link"
 
 export default function Footer() {
 
@@ -31,36 +32,106 @@ Industrial AI intelligence for engineering knowledge,
 procedures and operational decision support.
 </p>
 
+<div className="mt-4 text-sm">
+<a
+href="mailto:askmichael@askmichaelai.org"
+className="hover:text-white"
+>
+askmichael@askmichaelai.org
+</a>
+</div>
+
 </div>
 
 {/* Platform */}
 <div>
 <h3 className="text-white font-semibold mb-4">Platform</h3>
+
 <ul className="space-y-2 text-sm">
-<li className="hover:text-white cursor-pointer">Ask Michael</li>
-<li className="hover:text-white cursor-pointer">Documents</li>
-<li className="hover:text-white cursor-pointer">AI Knowledge</li>
+
+<li>
+<Link href="/app" className="hover:text-white">
+Ask Michael
+</Link>
+</li>
+
+<li>
+<Link href="/ai-documents" className="hover:text-white">
+Documents
+</Link>
+</li>
+
+<li>
+<Link href="/knowledge-engineering" className="hover:text-white">
+AI Knowledge Engineering
+</Link>
+</li>
+
 </ul>
 </div>
 
 {/* Solutions */}
 <div>
+
 <h3 className="text-white font-semibold mb-4">Solutions</h3>
+
 <ul className="space-y-2 text-sm">
-<li>Engineering Assistance</li>
-<li>Industrial Procedures</li>
-<li>Maintenance Intelligence</li>
+
+<li>
+<Link href="/industrial-procedures" className="hover:text-white">
+Industrial Procedures
+</Link>
+</li>
+
+<li>
+<Link href="/maintenance-intelligence" className="hover:text-white">
+Maintenance Intelligence
+</Link>
+</li>
+
+<li>
+<Link href="/pricing" className="hover:text-white">
+Pricing
+</Link>
+</li>
+
+<li>
+<Link href="/contact" className="hover:text-white">
+Contact
+</Link>
+</li>
+
 </ul>
+
 </div>
 
 {/* Legal */}
 <div>
+
 <h3 className="text-white font-semibold mb-4">Legal</h3>
+
 <ul className="space-y-2 text-sm">
-<li className="hover:text-white cursor-pointer">Terms</li>
-<li className="hover:text-white cursor-pointer">Privacy</li>
-<li className="hover:text-white cursor-pointer">AI Policy</li>
+
+<li>
+<Link href="/terms" className="hover:text-white">
+Terms
+</Link>
+</li>
+
+<li>
+<Link href="/privacy" className="hover:text-white">
+Privacy
+</Link>
+</li>
+
+<li>
+<Link href="/ai-policy" className="hover:text-white">
+AI Policy
+</Link>
+</li>
+
 </ul>
+
 </div>
 
 </div>
