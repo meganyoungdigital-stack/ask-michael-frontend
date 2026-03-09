@@ -1,10 +1,12 @@
 import BackHome from "@/components/BackHome";
 import { notFound } from "next/navigation";
 
-const pages: Record<
-  string,
-  { title: string; content: string[] }
-> = {
+type PageData = {
+  title: string;
+  content: string[];
+};
+
+const pages: Record<string, PageData> = {
   "ai-documents": {
     title: "AI Document Assistance",
     content: [
@@ -109,9 +111,9 @@ export default function DynamicPage({
   }
 
   return (
-    <main className="min-h-screen bg-black text-white px-6 py-20">
+    <main className="min-h-screen bg-black text-white px-6 py-24">
 
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-3xl mx-auto">
 
         <BackHome />
 
@@ -120,7 +122,7 @@ export default function DynamicPage({
         </h1>
 
         {page.content.map((paragraph, index) => (
-          <p key={index} className="mb-6 text-gray-300">
+          <p key={index} className="mb-6 text-gray-300 leading-relaxed">
             {paragraph}
           </p>
         ))}

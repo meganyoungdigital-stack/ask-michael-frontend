@@ -8,8 +8,6 @@ import {
 } from "framer-motion";
 import { useEffect, useRef } from "react";
 import Link from "next/link";
-import Footer from "@/components/Footer";
-import Navbar from "@/components/Navbar";
 
 export default function LandingPage() {
   const mouseX = useMotionValue(0);
@@ -75,8 +73,7 @@ export default function LandingPage() {
     <main className="relative w-full overflow-x-hidden bg-black text-white">
 
       {/* NAVBAR */}
-      <Navbar />
-
+      
       {/* HERO SECTION */}
 
       <section className="relative h-screen w-full overflow-hidden pt-20">
@@ -167,8 +164,7 @@ export default function LandingPage() {
 
       {/* FOOTER SECTION */}
 
-      <Footer />
-
+      
     </main>
   );
 }
