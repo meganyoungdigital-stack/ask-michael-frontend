@@ -21,8 +21,8 @@ export default function HomePage() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center h-full text-center px-6">
-      
+    <div className="flex flex-col items-center justify-center min-h-screen bg-white text-gray-900 text-center px-6">
+
       {/* Logo with smooth fade-in */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -54,7 +54,7 @@ export default function HomePage() {
       <SignedOut>
         <div className="mt-6">
           <SignInButton mode="modal">
-            <button className="bg-blue-600 text-white px-6 py-3 rounded-xl">
+            <button className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition">
               Sign In to Start
             </button>
           </SignInButton>
@@ -65,7 +65,7 @@ export default function HomePage() {
       <SignedIn>
         <button
           onClick={handleNewChat}
-          className="mt-6 bg-blue-600 text-white px-8 py-3 rounded-xl"
+          className="mt-6 bg-blue-600 text-white px-8 py-3 rounded-xl hover:bg-blue-700 transition"
         >
           New Chat
         </button>

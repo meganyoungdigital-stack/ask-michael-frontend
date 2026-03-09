@@ -26,7 +26,7 @@ Ask Michael
 
 <div className="hidden md:flex items-center gap-8 text-sm text-gray-300">
 
-<Link href="/solutions" className="hover:text-white transition">
+<Link href="/page/knowledge-engineering" className="hover:text-white transition">
 Solutions
 </Link>
 
@@ -34,11 +34,11 @@ Solutions
 Platform
 </Link>
 
-<Link href="/pricing" className="hover:text-white transition">
+<Link href="/page/pricing" className="hover:text-white transition">
 Pricing
 </Link>
 
-<Link href="/contact" className="hover:text-white transition">
+<Link href="/page/contact" className="hover:text-white transition">
 Contact
 </Link>
 

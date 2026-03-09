@@ -17,6 +17,7 @@ export default function ChatMessage({
   content,
   isTyping = false,
 }: ChatMessageProps) {
+
   const isAssistant = role === "assistant";
   const [copied, setCopied] = useState(false);
 
@@ -36,7 +37,8 @@ export default function ChatMessage({
       }`}
     >
       <div className="relative group max-w-2xl">
-        {/* Bubble */}
+
+        {/* Chat Bubble */}
         <div
           className={`rounded-2xl px-5 py-4 shadow-sm border text-sm leading-relaxed ${
             isAssistant
@@ -44,15 +46,17 @@ export default function ChatMessage({
               : "bg-blue-600 text-white border-blue-600"
           }`}
         >
+
           {isTyping ? (
             <TypingIndicator />
           ) : (
-            <div className="prose max-w-none">
+            <div className="prose prose-sm max-w-none text-gray-800">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {content}
               </ReactMarkdown>
             </div>
           )}
+
         </div>
 
         {/* Copy Button */}
@@ -68,12 +72,14 @@ export default function ChatMessage({
             )}
           </button>
         )}
+
       </div>
     </motion.div>
   );
 }
 
-/* Typing Indicator Component */
+/* Typing Indicator */
+
 function TypingIndicator() {
   return (
     <div className="flex items-center gap-1">

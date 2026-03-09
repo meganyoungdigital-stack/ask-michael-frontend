@@ -23,6 +23,7 @@ export default function Footer() {
 
 {/* Logo */}
 <div>
+
 <h2 className="text-white text-xl font-semibold mb-4">
 Ask Michael
 </h2>
@@ -45,6 +46,7 @@ askmichael@askmichaelai.org
 
 {/* Platform */}
 <div>
+
 <h3 className="text-white font-semibold mb-4">Platform</h3>
 
 <ul className="space-y-2 text-sm">
@@ -56,18 +58,25 @@ Ask Michael
 </li>
 
 <li>
-<Link href="/ai-documents" className="hover:text-white">
-Documents
-</Link>
-</li>
-
-<li>
-<Link href="/knowledge-engineering" className="hover:text-white">
+<Link href="/page/knowledge-engineering" className="hover:text-white">
 AI Knowledge Engineering
 </Link>
 </li>
 
+<li>
+<Link href="/page/industrial-procedures" className="hover:text-white">
+Industrial Procedures
+</Link>
+</li>
+
+<li>
+<Link href="/page/maintenance-intelligence" className="hover:text-white">
+Maintenance Intelligence
+</Link>
+</li>
+
 </ul>
+
 </div>
 
 {/* Solutions */}
@@ -78,25 +87,13 @@ AI Knowledge Engineering
 <ul className="space-y-2 text-sm">
 
 <li>
-<Link href="/industrial-procedures" className="hover:text-white">
-Industrial Procedures
-</Link>
-</li>
-
-<li>
-<Link href="/maintenance-intelligence" className="hover:text-white">
-Maintenance Intelligence
-</Link>
-</li>
-
-<li>
-<Link href="/pricing" className="hover:text-white">
+<Link href="/page/pricing" className="hover:text-white">
 Pricing
 </Link>
 </li>
 
 <li>
-<Link href="/contact" className="hover:text-white">
+<Link href="/page/contact" className="hover:text-white">
 Contact
 </Link>
 </li>
