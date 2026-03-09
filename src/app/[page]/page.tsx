@@ -89,19 +89,24 @@ const pages: Record<string, PageData> = {
   },
 };
 
-/* THIS FIXES YOUR 404 ERRORS */
+/* Tell Next which routes exist */
 
 export function generateStaticParams() {
-  return Object.keys(pages).map((page) => ({
-    page,
+  return Object.keys(pages).map((slug) => ({
+    page: slug,
   }));
 }
+
+/* Disable unknown dynamic pages */
+
+export const dynamicParams = false;
 
 export default function DynamicPage({
   params,
 }: {
   params: { page: string };
 }) {
+
   const page = pages[params.page];
 
   if (!page) {
@@ -111,15 +116,19 @@ export default function DynamicPage({
   return (
     <main className="min-h-screen bg-black text-white px-6 py-24">
       <div className="max-w-3xl mx-auto">
+
         <BackHome />
 
-        <h1 className="text-4xl font-bold mb-10">{page.title}</h1>
+        <h1 className="text-4xl font-bold mb-10">
+          {page.title}
+        </h1>
 
         {page.content.map((paragraph, index) => (
           <p key={index} className="mb-6 text-gray-300 leading-relaxed">
             {paragraph}
           </p>
         ))}
+
       </div>
     </main>
   );
