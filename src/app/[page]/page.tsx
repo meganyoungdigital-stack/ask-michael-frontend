@@ -10,6 +10,14 @@ type PageData = {
 
 const pages: Record<string, PageData> = {
 
+  app: {
+    title: "Ask Michael Platform",
+    content: [
+      "Welcome to the Ask Michael AI platform.",
+      "Log in to access engineering knowledge, AI conversations and operational decision support."
+    ],
+  },
+
   solutions: {
     title: "Solutions",
     content: [
@@ -82,7 +90,7 @@ const pages: Record<string, PageData> = {
 
 };
 
-/* Tell Next.js which dynamic routes exist */
+/* Allow only defined dynamic pages */
 export function generateStaticParams() {
   return Object.keys(pages).map((page) => ({
     page,
@@ -112,7 +120,10 @@ export default function DynamicPage({
         </h1>
 
         {pageData.content.map((paragraph, index) => (
-          <p key={index} className="mb-6 text-gray-300 leading-relaxed">
+          <p
+            key={index}
+            className="mb-6 text-gray-300 leading-relaxed"
+          >
             {paragraph}
           </p>
         ))}
