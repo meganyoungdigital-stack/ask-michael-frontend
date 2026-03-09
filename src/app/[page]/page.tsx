@@ -7,12 +7,11 @@ type PageData = {
 };
 
 const pages: Record<string, PageData> = {
-
   solutions: {
     title: "Solutions",
     content: [
       "Ask Michael AI provides AI-powered solutions for engineering and industrial environments.",
-      "Our platform supports knowledge engineering, maintenance intelligence and industrial procedures."
+      "Our platform supports knowledge engineering, maintenance intelligence and industrial procedures.",
     ],
   },
 
@@ -20,7 +19,7 @@ const pages: Record<string, PageData> = {
     title: "Pricing",
     content: [
       "Standard Plan — $29 / month",
-      "Enterprise Plan — Contact us for enterprise pricing."
+      "Enterprise Plan — Contact us for enterprise pricing.",
     ],
   },
 
@@ -28,7 +27,7 @@ const pages: Record<string, PageData> = {
     title: "Contact",
     content: [
       "For enquiries regarding Ask Michael AI please contact our team.",
-      "Email: contact@askmichael.ai"
+      "Email: contact@askmichael.ai",
     ],
   },
 
@@ -36,54 +35,55 @@ const pages: Record<string, PageData> = {
     title: "Privacy Policy",
     content: [
       "Ask Michael AI respects user privacy.",
-      "Information is used only for providing AI services."
+      "Information is used only for providing AI services.",
     ],
   },
 
   terms: {
     title: "Terms of Service",
     content: [
-      "By using Ask Michael AI you agree to the platform terms."
+      "By using Ask Michael AI you agree to the platform terms.",
     ],
   },
 
   "ai-policy": {
     title: "AI Policy",
     content: [
-      "AI responses must be validated by qualified professionals."
+      "AI responses must be validated by qualified professionals.",
     ],
   },
 
   "knowledge-engineering": {
     title: "AI Knowledge Engineering",
     content: [
-      "Ask Michael AI structures technical knowledge for industrial environments."
+      "Ask Michael AI structures technical knowledge for industrial environments.",
     ],
   },
 
   "industrial-procedures": {
     title: "Industrial Procedures",
     content: [
-      "Ask Michael AI assists with structured operational procedures."
+      "Ask Michael AI assists with structured operational procedures.",
     ],
   },
 
   "maintenance-intelligence": {
     title: "Maintenance Intelligence",
     content: [
-      "AI insights supporting maintenance planning and diagnostics."
+      "AI insights supporting maintenance planning and diagnostics.",
     ],
   },
-
 };
 
-export default function DynamicPage({
+export default async function DynamicPage({
   params,
 }: {
-  params: { page: string };
+  params: Promise<{ page: string }>;
 }) {
 
-  const pageData = pages[params.page];
+  const { page } = await params;
+
+  const pageData = pages[page];
 
   if (!pageData) {
     notFound();
