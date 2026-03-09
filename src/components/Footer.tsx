@@ -9,10 +9,8 @@ export default function Footer() {
 
 <footer className="relative bg-black text-gray-300 overflow-hidden border-t border-gray-800">
 
-{/* animated gradient background */}
 <div className="absolute inset-0 opacity-30 bg-gradient-to-t from-purple-900 via-blue-900 to-black blur-3xl"></div>
 
-{/* animated glow */}
 <motion.div
   className="absolute -top-40 left-1/2 w-[800px] h-[800px] bg-purple-600 rounded-full opacity-20 blur-[200px]"
   animate={{ scale: [1,1.2,1] }}
@@ -132,8 +130,6 @@ AI Policy
 </div>
 
 </div>
-
-{/* bottom bar */}
 
 <div className="relative border-t border-gray-800 text-center text-xs text-gray-500 py-6">
 
