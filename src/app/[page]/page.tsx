@@ -82,15 +82,22 @@ const pages: Record<string, PageData> = {
 
 };
 
+/* Tell Next.js which dynamic routes exist */
+export function generateStaticParams() {
+  return Object.keys(pages).map((page) => ({
+    page,
+  }));
+}
+
 export default function DynamicPage({
   params,
 }: {
   params: { page: string };
 }) {
 
-  const page = pages[params.page];
+  const pageData = pages[params.page];
 
-  if (!page) {
+  if (!pageData) {
     notFound();
   }
 
@@ -101,10 +108,10 @@ export default function DynamicPage({
         <BackHome />
 
         <h1 className="text-4xl font-bold mb-10">
-          {page.title}
+          {pageData.title}
         </h1>
 
-        {page.content.map((paragraph, index) => (
+        {pageData.content.map((paragraph, index) => (
           <p key={index} className="mb-6 text-gray-300 leading-relaxed">
             {paragraph}
           </p>
