@@ -8,6 +8,7 @@ import {
 } from "framer-motion";
 import { useEffect, useRef } from "react";
 import Link from "next/link";
+import Navbar from "@/components/Navbar";
 
 export default function LandingPage() {
   const mouseX = useMotionValue(0);
@@ -72,19 +73,15 @@ export default function LandingPage() {
   return (
     <main className="relative w-full overflow-x-hidden bg-black text-white">
 
-      {/* NAVBAR */}
-      
-      {/* HERO SECTION */}
+      <Navbar />
 
       <section className="relative h-screen w-full overflow-hidden pt-20">
 
-        {/* ⭐ Floating Stars */}
         <canvas
           ref={canvasRef}
           className="absolute inset-0 z-0 opacity-40"
         />
 
-        {/* 🌌 Animated Background */}
         <motion.div
           style={{ rotateX, rotateY, scale: scrollScale }}
           animate={{ scale: [1, 1.05, 1] }}
@@ -99,31 +96,25 @@ export default function LandingPage() {
           />
         </motion.div>
 
-        {/* 🌫 Moving Mist Layer */}
         <motion.div
           animate={{ x: ["0%", "-10%", "0%"] }}
           transition={{ duration: 120, repeat: Infinity }}
           className="absolute inset-0 bg-[url('/mist.png')] bg-cover opacity-20"
         />
 
-        {/* 🔵 Energy Beam */}
         <motion.div
           animate={{ opacity: [0.3, 0.8, 0.3] }}
           transition={{ duration: 4, repeat: Infinity }}
           className="absolute left-1/2 -translate-x-1/2 w-2 h-full bg-gradient-to-b from-blue-400 to-transparent blur-xl"
         />
 
-        {/* ⚡ Lightning Pulse */}
         <motion.div
           animate={{ opacity: [0, 0.4, 0] }}
           transition={{ duration: 6, repeat: Infinity }}
           className="absolute inset-0 bg-blue-400/20"
         />
 
-        {/* Dark overlay */}
         <div className="absolute inset-0 bg-black/25" />
-
-        {/* HERO CONTENT */}
 
         <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-6">
 
@@ -151,7 +142,7 @@ export default function LandingPage() {
             transition={{ delay: 1.2 }}
             className="mt-10"
           >
-            <Link href="/app">
+            <Link href="/portal">
               <button className="px-8 py-4 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-lg font-semibold hover:scale-105 transition">
                 Enter Platform →
               </button>
@@ -162,9 +153,6 @@ export default function LandingPage() {
 
       </section>
 
-      {/* FOOTER SECTION */}
-
-      
     </main>
   );
 }
