@@ -1,26 +1,18 @@
 "use client";
 
-import Link from "next/link";
+import Sidebar from "@/components/Sidebar";
 
-export default function AppHome() {
+export default function PlatformPage() {
+
   return (
-    <main className="flex h-screen">
-      
-      {/* Sidebar */}
-      <aside className="w-72 border-r p-4">
-        <button className="w-full bg-blue-600 text-white py-2 rounded mb-4">
-          + New Chat
-        </button>
 
-        <p className="text-sm text-gray-500">Pinned</p>
-        <p className="text-sm mt-2">[Welding] Potshell Repair ...</p>
+    <main className="flex h-screen bg-neutral-950 text-white">
 
-        <p className="text-sm text-gray-500 mt-6">All Chats</p>
-        <p className="text-sm text-gray-400">No conversations yet</p>
-      </aside>
+      <Sidebar />
 
-      {/* Main */}
-      <section className="flex-1 flex flex-col items-center justify-center">
+      {/* Main Area */}
+
+      <section className="flex-1 flex flex-col items-center justify-center text-center">
 
         <img
           src="/logo.png"
@@ -28,20 +20,17 @@ export default function AppHome() {
           className="w-40 mb-6"
         />
 
-        <h1 className="text-3xl font-bold">
-          Ask <span className="text-blue-600">Michael</span>
+        <h1 className="text-4xl font-bold">
+          Ask <span className="text-blue-500">Michael</span>
         </h1>
 
-        <p className="text-gray-500 mt-2">
+        <p className="text-gray-400 mt-3">
           Expert advice on aluminium smelting maintenance
         </p>
 
-        <Link
-          href="/portal"
-          className="mt-6 bg-blue-600 text-white px-6 py-2 rounded"
-        >
-          New Chat
-        </Link>
+        <p className="text-sm text-gray-500 mt-6">
+          Start a new conversation to begin
+        </p>
 
       </section>
 
