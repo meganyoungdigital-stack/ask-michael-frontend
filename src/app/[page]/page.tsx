@@ -7,13 +7,6 @@ type PageData = {
 };
 
 const pages: Record<string, PageData> = {
-  app: {
-    title: "Ask Michael Platform",
-    content: [
-      "Welcome to the Ask Michael AI platform.",
-      "Log in to access engineering knowledge and AI assistance."
-    ],
-  },
 
   solutions: {
     title: "Solutions",
@@ -81,17 +74,16 @@ const pages: Record<string, PageData> = {
       "AI insights supporting maintenance planning and diagnostics."
     ],
   },
+
 };
 
-export default async function DynamicPage({
+export default function DynamicPage({
   params,
 }: {
-  params: Promise<{ page: string }>;
+  params: { page: string };
 }) {
 
-  const { page } = await params;
-
-  const pageData = pages[page];
+  const pageData = pages[params.page];
 
   if (!pageData) {
     notFound();

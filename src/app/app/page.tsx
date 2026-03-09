@@ -5,7 +5,6 @@ export default async function AppPage() {
 
   const user = await currentUser();
 
-  // If not logged in → redirect to Clerk sign-in
   if (!user) {
     redirect("/sign-in");
   }
