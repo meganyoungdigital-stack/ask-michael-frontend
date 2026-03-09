@@ -30,7 +30,6 @@ export default function ConversationPage() {
   const [loading, setLoading] = useState(false);
   const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
 
-  // 🔥 SHARE STATE
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [shareLoading, setShareLoading] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
@@ -38,20 +37,24 @@ export default function ConversationPage() {
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
+  const userMessageCount = messages.filter(
+    (m) => m.role === "user"
+  ).length;
+
   /* AUTO SCROLL */
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
   /* LOAD CONVERSATION */
+
   useEffect(() => {
     if (!conversationId) return;
 
     async function loadConversation() {
       try {
-        const res = await fetch(
-          `/api/conversation/${conversationId}`
-        );
+        const res = await fetch(`/api/conversation/${conversationId}`);
 
         if (!res.ok) throw new Error();
 
@@ -65,14 +68,12 @@ export default function ConversationPage() {
     loadConversation();
   }, [conversationId]);
 
-  /* ============================
-     SEND MESSAGE
-  ============================ */
+  /* SEND MESSAGE */
 
   async function sendMessage() {
     if (!input.trim() || loading || !conversationId) return;
 
-    if (!isPro && messages.length >= FREE_LIMIT) {
+    if (!isPro && userMessageCount >= FREE_LIMIT) {
       setIsUpgradeOpen(true);
       return;
     }
@@ -103,11 +104,12 @@ export default function ConversationPage() {
 
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
+
       let assistantText = "";
 
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "", createdAt: new Date() },
+        { role: "assistant", content: "" },
       ]);
 
       if (!reader) return;
@@ -116,18 +118,11 @@ export default function ConversationPage() {
         const { done, value } = await reader.read();
         if (done) break;
 
-        assistantText += decoder.decode(value, {
-          stream: true,
-        });
+        assistantText += decoder.decode(value);
 
         setMessages((prev) => {
           const updated = [...prev];
-          const lastIndex = updated.length - 1;
-
-          if (updated[lastIndex]?.role === "assistant") {
-            updated[lastIndex].content = assistantText;
-          }
-
+          updated[updated.length - 1].content = assistantText;
           return updated;
         });
       }
@@ -136,9 +131,7 @@ export default function ConversationPage() {
         ...prev,
         {
           role: "assistant",
-          content:
-            "⚠️ Something went wrong. Please try again.",
-          createdAt: new Date(),
+          content: "⚠️ Something went wrong. Please try again.",
         },
       ]);
     } finally {
@@ -146,15 +139,12 @@ export default function ConversationPage() {
     }
   }
 
-  /* ============================
-     SHARE FUNCTION
-  ============================ */
+  /* SHARE */
 
   async function handleShare() {
     if (!conversationId) return;
 
     setShareLoading(true);
-    setShareError("");
 
     try {
       const res = await fetch(
@@ -162,80 +152,76 @@ export default function ConversationPage() {
         { method: "POST" }
       );
 
-      if (!res.ok) throw new Error();
-
       const data = await res.json();
 
       setShareUrl(data.shareUrl);
       setShowShareModal(true);
     } catch {
       setShareError("Failed to generate share link.");
-    } finally {
-      setShareLoading(false);
     }
-  }
 
-  /* ============================
-     UI
-  ============================ */
+    setShareLoading(false);
+  }
 
   return (
     <>
       <div className="flex flex-col flex-1 bg-white">
-        {/* 🔥 HEADER BAR */}
-<div className="flex items-center justify-between px-6 py-4 border-b bg-white">
-  
-  {/* LEFT SIDE – Usage */}
-  <div className="flex items-center gap-4">
-    {!isPro && (
-      <>
-        <div className="text-sm text-gray-600">
-          {messages.filter(m => m.role === "user").length} / {FREE_LIMIT} Free Messages
+
+        {/* HEADER */}
+
+        <div className="flex items-center justify-between px-6 py-4 border-b">
+
+          <div className="flex items-center gap-4">
+
+            {!isPro && (
+              <>
+                <div className="text-sm text-gray-600">
+                  {userMessageCount} / {FREE_LIMIT} Free Messages
+                </div>
+
+                <div className="w-40 h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-blue-600"
+                    style={{
+                      width: `${(userMessageCount / FREE_LIMIT) * 100}%`,
+                    }}
+                  />
+                </div>
+              </>
+            )}
+
+            {isPro && (
+              <div className="text-green-600 text-sm font-semibold">
+                Pro Plan Active
+              </div>
+            )}
+          </div>
+
+          <div className="flex gap-3">
+
+            {!isPro && (
+              <button
+                onClick={() => setIsUpgradeOpen(true)}
+                className="bg-yellow-500 text-white px-4 py-2 rounded-xl"
+              >
+                Upgrade
+              </button>
+            )}
+
+            <button
+              onClick={handleShare}
+              className="bg-gray-200 px-4 py-2 rounded-xl"
+            >
+              {shareLoading ? "Generating..." : "Share"}
+            </button>
+
+          </div>
         </div>
 
-        <div className="w-40 h-2 bg-gray-200 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-blue-600 transition-all"
-            style={{
-              width: `${Math.min(
-                (messages.length / FREE_LIMIT) * 100,
-                100
-              )}%`,
-            }}
-          />
-        </div>
-      </>
-    )}
-
-    {isPro && (
-      <div className="text-sm text-green-600 font-medium">
-        Pro Plan Active
-      </div>
-    )}
-  </div>
-
-  {/* RIGHT SIDE – Buttons */}
-  <div className="flex items-center gap-3">
-    {!isPro && (
-      <button
-        onClick={() => setIsUpgradeOpen(true)}
-        className="bg-yellow-500 text-white px-4 py-2 rounded-xl hover:bg-yellow-600 transition"
-      >
-        Upgrade
-      </button>
-    )}
-
-    <button
-      onClick={handleShare}
-      disabled={shareLoading}
-      className="bg-gray-200 px-4 py-2 rounded-xl hover:bg-gray-300 transition"
-    >
-      {shareLoading ? "Generating..." : "Share"}
-    </button>
-  </div>
-</div>
+        {/* CHAT */}
 
         <div className="flex-1 overflow-y-auto">
+
           <AnimatePresence>
             {messages.map((msg, index) => (
               <motion.div
@@ -245,6 +231,7 @@ export default function ConversationPage() {
                 className="max-w-3xl mx-auto px-6 py-4"
               >
                 <div className="bg-gray-100 rounded-2xl p-4 relative">
+
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>
                     {msg.content}
                   </ReactMarkdown>
@@ -253,27 +240,29 @@ export default function ConversationPage() {
                     onClick={() =>
                       navigator.clipboard.writeText(msg.content)
                     }
-                    className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+                    className="absolute top-3 right-3 text-gray-400"
                   >
                     <ClipboardIcon className="h-5 w-5" />
                   </button>
+
                 </div>
               </motion.div>
             ))}
           </AnimatePresence>
 
           {loading && (
-            <div className="px-6 py-4 text-gray-500">
-              Thinking...
-            </div>
+            <div className="px-6 py-4 text-gray-500">Thinking...</div>
           )}
 
           <div ref={bottomRef} />
         </div>
 
         {/* INPUT */}
+
         <div className="border-t px-6 py-6">
+
           <div className="flex items-end bg-gray-100 rounded-2xl px-4 py-3">
+
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -289,37 +278,37 @@ export default function ConversationPage() {
             />
 
             <button
-              type="button"
               onClick={sendMessage}
               disabled={loading}
-              className="ml-3 bg-blue-600 text-white px-4 py-2 rounded-xl disabled:opacity-50"
+              className="ml-3 bg-blue-600 text-white px-4 py-2 rounded-xl"
             >
-              {loading ? "..." : "Send"}
+              Send
             </button>
+
           </div>
 
-          {shareError && (
-            <p className="text-red-500 mt-2 text-sm">
-              {shareError}
-            </p>
-          )}
         </div>
       </div>
 
-      {/* 🔥 SHARE MODAL */}
+      {/* SHARE MODAL */}
+
       {showShareModal && shareUrl && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-2xl w-[420px] shadow-lg">
-            <h2 className="text-lg font-semibold mb-4">
+
+          <div className="bg-white p-6 rounded-2xl w-[420px]">
+
+            <h2 className="font-semibold mb-4">
               Share this conversation
             </h2>
 
             <div className="flex gap-2">
+
               <input
                 value={shareUrl}
                 readOnly
-                className="border px-3 py-2 rounded-xl w-full text-sm"
+                className="border px-3 py-2 rounded-xl w-full"
               />
+
               <button
                 onClick={() =>
                   navigator.clipboard.writeText(shareUrl)
@@ -328,6 +317,7 @@ export default function ConversationPage() {
               >
                 Copy
               </button>
+
             </div>
 
             <button
@@ -336,7 +326,9 @@ export default function ConversationPage() {
             >
               Close
             </button>
+
           </div>
+
         </div>
       )}
 
