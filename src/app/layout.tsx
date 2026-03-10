@@ -1,6 +1,7 @@
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
+import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: "Ask Michael AI",
@@ -20,6 +21,8 @@ export default function RootLayout({
           <main className="flex-1 flex flex-col min-h-0">
             {children}
           </main>
+
+          <Footer />
 
         </body>
       </html>

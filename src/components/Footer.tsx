@@ -8,7 +8,7 @@ export default function Footer() {
 
   return (
 
-<footer className="relative bg-black text-gray-300 overflow-hidden border-t border-gray-800">
+<footer className="w-full relative bg-black text-gray-300 overflow-hidden border-t border-gray-800 flex-shrink-0">
 
 <div className="absolute inset-0 opacity-30 bg-gradient-to-t from-purple-900 via-blue-900 to-black blur-3xl"></div>
 
@@ -64,7 +64,7 @@ askmichael@askmichaelai.org
 <ul className="space-y-2 text-sm">
 
 <li>
-<Link href="/app" className="hover:text-white">
+<Link href="/portal" className="hover:text-white">
 Ask Michael
 </Link>
 </li>

@@ -44,6 +44,11 @@ async function getDb() {
   return client.db("ask-michael");
 }
 
+/* 🔥 ADDED — compatibility helper for API routes */
+export async function connectDB() {
+  return getDb();
+}
+
 /* ============================
    TYPES
 ============================ */
@@ -72,7 +77,6 @@ interface Conversation {
   messages: Message[];
   attachments?: Attachment[];
 
-  // 🔥 SHARE SUPPORT
   shareId?: string;
   isPublic?: boolean;
 
@@ -110,7 +114,7 @@ export async function createConversation(userId: string) {
     starred: false,
     messages: [],
     attachments: [],
-    isPublic: false, // 🔥 default private
+    isPublic: false,
     createdAt: new Date(),
     updatedAt: new Date(),
   });
@@ -129,7 +133,6 @@ export async function getConversation(
     .findOne({ conversationId, userId });
 }
 
-/* 🔥 NEW — Fetch public conversation by shareId */
 export async function getPublicConversation(shareId: string) {
   const db = await getDb();
 
@@ -139,7 +142,6 @@ export async function getPublicConversation(shareId: string) {
   });
 }
 
-/* 🔥 NEW — Make conversation public */
 export async function makeConversationPublic(
   conversationId: string,
   userId: string,
@@ -179,7 +181,6 @@ export async function getUserConversations(userId: string) {
   }));
 }
 
-/* 🔥 REQUIRED FOR YOUR PROJECT ROUTE */
 export async function getConversationsForUser(userId: string) {
   const db = await getDb();
 
@@ -226,7 +227,6 @@ export async function updateConversationTitle(
   );
 }
 
-/* 🔥 ATTACHMENT FUNCTION */
 export async function addAttachmentToConversation(
   conversationId: string,
   userId: string,
