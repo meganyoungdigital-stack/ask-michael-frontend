@@ -78,6 +78,7 @@ export default function Sidebar() {
     );
 
     router.push("/portal");
+    router.refresh();
   }
 
   async function togglePin(conv: Conversation) {
@@ -86,7 +87,8 @@ export default function Sidebar() {
       method: "POST",
     });
 
-    fetchConversations();
+    await fetchConversations();
+    router.refresh();
   }
 
   async function renameConversation(conv: Conversation) {
@@ -101,7 +103,8 @@ export default function Sidebar() {
       body: JSON.stringify({ title: newTitle }),
     });
 
-    fetchConversations();
+    await fetchConversations();
+    router.refresh();
   }
 
   const pinned = conversations.filter((c) => c.starred);
@@ -125,7 +128,7 @@ export default function Sidebar() {
 
       {/* LIST */}
 
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto min-h-0 p-4">
 
         {/* PINNED */}
 
@@ -212,9 +215,9 @@ export default function Sidebar() {
                 e.stopPropagation();
                 togglePin(conv);
               }}
-              title="Pin"
+              title="Pin / Unpin"
             >
-              ⭐
+              {conv.starred ? "📌" : "⭐"}
             </button>
 
             <button

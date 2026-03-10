@@ -181,7 +181,7 @@ export default function ConversationPage() {
 
   return (
     <>
-      <div className="flex flex-col flex-1 bg-white">
+      <div className="flex flex-col flex-1 min-h-0 bg-white">
 
         {/* HEADER */}
 
@@ -238,7 +238,7 @@ export default function ConversationPage() {
 
         {/* CHAT */}
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto min-h-0">
 
           <AnimatePresence>
 
@@ -251,7 +251,7 @@ export default function ConversationPage() {
                 className="max-w-3xl mx-auto px-6 py-4"
               >
 
-                <div className="bg-gray-100 rounded-2xl p-4 relative">
+                <div className="bg-gray-100 text-black rounded-2xl p-4 relative">
 
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>
                     {msg.content}
