@@ -18,9 +18,9 @@ interface Message {
 
 export default function ConversationPage() {
   const params = useParams();
-  const conversationId = params?.conversationId as string;
+  const conversationId = params?.conversationId as string | undefined;
 
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
 
   const isPro =
     (user?.publicMetadata as { plan?: string })?.plan === "pro";
@@ -169,6 +169,16 @@ export default function ConversationPage() {
     setShareLoading(false);
   }
 
+  /* WAIT FOR CLERK */
+
+  if (!isLoaded) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        Loading...
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="flex flex-col flex-1 bg-white">
@@ -294,11 +304,7 @@ export default function ConversationPage() {
               }}
             />
 
-            {/* DOCUMENT UPLOAD */}
-
             <DocumentUpload />
-
-            {/* SEND */}
 
             <button
               onClick={sendMessage}
