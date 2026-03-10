@@ -16,6 +16,7 @@ interface Message {
 }
 
 export default function ConversationPage() {
+
   const params = useParams();
   const conversationId = params?.conversationId as string;
   const { user } = useUser();
@@ -50,27 +51,36 @@ export default function ConversationPage() {
   /* LOAD CONVERSATION */
 
   useEffect(() => {
+
     if (!conversationId) return;
 
     async function loadConversation() {
+
       try {
+
         const res = await fetch(`/api/conversation/${conversationId}`);
 
         if (!res.ok) throw new Error();
 
         const data = await res.json();
+
         setMessages(Array.isArray(data?.messages) ? data.messages : []);
+
       } catch {
+
         setMessages([]);
+
       }
     }
 
     loadConversation();
+
   }, [conversationId]);
 
   /* SEND MESSAGE */
 
   async function sendMessage() {
+
     if (!input.trim() || loading || !conversationId) return;
 
     if (!isPro && userMessageCount >= FREE_LIMIT) {
@@ -91,9 +101,12 @@ export default function ConversationPage() {
     setLoading(true);
 
     try {
+
       const response = await fetch(`/api/ask`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           conversationId,
           messages: updatedMessages,
@@ -115,18 +128,26 @@ export default function ConversationPage() {
       if (!reader) return;
 
       while (true) {
+
         const { done, value } = await reader.read();
+
         if (done) break;
 
         assistantText += decoder.decode(value);
 
         setMessages((prev) => {
+
           const updated = [...prev];
           updated[updated.length - 1].content = assistantText;
+
           return updated;
+
         });
+
       }
+
     } catch {
+
       setMessages((prev) => [
         ...prev,
         {
@@ -134,19 +155,24 @@ export default function ConversationPage() {
           content: "⚠️ Something went wrong. Please try again.",
         },
       ]);
+
     } finally {
+
       setLoading(false);
+
     }
   }
 
   /* SHARE */
 
   async function handleShare() {
+
     if (!conversationId) return;
 
     setShareLoading(true);
 
     try {
+
       const res = await fetch(
         `/api/conversation/${conversationId}/share`,
         { method: "POST" }
@@ -156,15 +182,20 @@ export default function ConversationPage() {
 
       setShareUrl(data.shareUrl);
       setShowShareModal(true);
+
     } catch {
+
       setShareError("Failed to generate share link.");
+
     }
 
     setShareLoading(false);
+
   }
 
   return (
     <>
+
       <div className="flex flex-col flex-1 bg-white">
 
         {/* HEADER */}
@@ -195,6 +226,7 @@ export default function ConversationPage() {
                 Pro Plan Active
               </div>
             )}
+
           </div>
 
           <div className="flex gap-3">
@@ -216,6 +248,7 @@ export default function ConversationPage() {
             </button>
 
           </div>
+
         </div>
 
         {/* CHAT */}
@@ -223,13 +256,16 @@ export default function ConversationPage() {
         <div className="flex-1 overflow-y-auto">
 
           <AnimatePresence>
+
             {messages.map((msg, index) => (
+
               <motion.div
                 key={index}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="max-w-3xl mx-auto px-6 py-4"
               >
+
                 <div className="bg-gray-100 rounded-2xl p-4 relative">
 
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>
@@ -240,28 +276,34 @@ export default function ConversationPage() {
                     onClick={() =>
                       navigator.clipboard.writeText(msg.content)
                     }
-                    className="absolute top-3 right-3 text-gray-400"
+                    className="absolute top-3 right-3 text-gray-400 hover:text-black"
                   >
                     <ClipboardIcon className="h-5 w-5" />
                   </button>
 
                 </div>
+
               </motion.div>
+
             ))}
+
           </AnimatePresence>
 
           {loading && (
-            <div className="px-6 py-4 text-gray-500">Thinking...</div>
+            <div className="px-6 py-4 text-gray-500">
+              Thinking...
+            </div>
           )}
 
           <div ref={bottomRef} />
+
         </div>
 
         {/* INPUT */}
 
         <div className="border-t px-6 py-6">
 
-          <div className="flex items-end bg-gray-100 rounded-2xl px-4 py-3">
+          <div className="flex items-end bg-gray-100 rounded-2xl px-4 py-3 gap-2">
 
             <textarea
               value={input}
@@ -270,17 +312,36 @@ export default function ConversationPage() {
               rows={1}
               className="flex-1 bg-transparent resize-none outline-none"
               onKeyDown={(e) => {
+
                 if (e.key === "Enter" && !e.shiftKey) {
+
                   e.preventDefault();
                   sendMessage();
+
                 }
+
               }}
             />
+
+            {/* FILE UPLOAD */}
+
+            <label className="cursor-pointer text-blue-600 text-lg px-2">
+
+              📎
+
+              <input
+                type="file"
+                className="hidden"
+              />
+
+            </label>
+
+            {/* SEND */}
 
             <button
               onClick={sendMessage}
               disabled={loading}
-              className="ml-3 bg-blue-600 text-white px-4 py-2 rounded-xl"
+              className="bg-blue-600 text-white px-4 py-2 rounded-xl"
             >
               Send
             </button>
@@ -288,11 +349,13 @@ export default function ConversationPage() {
           </div>
 
         </div>
+
       </div>
 
       {/* SHARE MODAL */}
 
       {showShareModal && shareUrl && (
+
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
 
           <div className="bg-white p-6 rounded-2xl w-[420px]">
@@ -330,12 +393,14 @@ export default function ConversationPage() {
           </div>
 
         </div>
+
       )}
 
       <UpgradeModal
         isOpen={isUpgradeOpen}
         onClose={() => setIsUpgradeOpen(false)}
       />
+
     </>
   );
 }

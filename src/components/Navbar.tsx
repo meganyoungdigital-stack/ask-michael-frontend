@@ -28,7 +28,7 @@ export default function Navbar() {
 
           {/* Logo + Title */}
           <Link href="/" className="flex items-center gap-2 text-white text-lg font-semibold">
-            <img src="/logo.png" className="w-8" />
+            <img src="/m-logo.png" className="w-8" />
             Ask Michael
           </Link>
 

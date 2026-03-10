@@ -10,46 +10,55 @@ async function connectDB() {
   await mongoose.connect(MONGODB_URI);
 }
 
-export async function POST(req: Request) {
+/* GET DOCUMENTS */
+
+export async function GET() {
+  try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    await connectDB();
+
+    const documents = await Document.find({ userId }).sort({ createdAt: -1 });
+
+    return NextResponse.json({ documents });
+
+  } catch {
+    return NextResponse.json({ error: "Failed to load documents" }, { status: 500 });
+  }
+}
+
+/* DELETE DOCUMENT */
+
+export async function DELETE(req: Request) {
+
   try {
 
     const { userId } = await auth();
 
     if (!userId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     await connectDB();
 
-    const formData = await req.formData();
-    const file = formData.get("file") as File;
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
 
-    if (!file) {
-      return NextResponse.json(
-        { error: "No file uploaded" },
-        { status: 400 }
-      );
+    if (!id) {
+      return NextResponse.json({ error: "Missing id" }, { status: 400 });
     }
 
-    const newDoc = await Document.create({
-      userId,
-      name: file.name,
-      url: "",
-    });
+    await Document.deleteOne({ _id: id, userId });
 
-    return NextResponse.json({
-      success: true,
-      document: newDoc,
-    });
+    return NextResponse.json({ success: true });
 
-  } catch (error) {
+  } catch {
 
-    return NextResponse.json(
-      { error: "Upload failed" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Delete failed" }, { status: 500 });
+
   }
 }

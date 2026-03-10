@@ -1,53 +1,25 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { ClerkProvider } from "@clerk/nextjs";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import "./globals.css";
+"use client";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+import Sidebar from "@/components/Sidebar";
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-export const metadata: Metadata = {
-  title: "Ask Michael",
-  description: "Expert advice on aluminium smelting maintenance",
-};
-
-export default function RootLayout({
+export default function ConversationLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <ClerkProvider>
-      <html lang="en">
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-          style={{
-            margin: 0,
-            background: "#000000",
-            color: "#ffffff",
-          }}
-        >
-          {/* TOP NAVBAR */}
-          <Navbar />
+    <div className="flex h-screen overflow-hidden">
 
-          {/* PAGE CONTENT */}
-          <main className="min-h-screen">
-            {children}
-          </main>
+      {/* SIDEBAR */}
 
-          {/* FOOTER */}
-          <Footer />
-        </body>
-      </html>
-    </ClerkProvider>
+      <Sidebar />
+
+      {/* CHAT AREA */}
+
+      <div className="flex-1 flex flex-col overflow-hidden bg-white">
+        {children}
+      </div>
+
+    </div>
   );
 }

@@ -15,7 +15,7 @@ export default function PlatformPage() {
       <section className="flex-1 flex flex-col items-center justify-center text-center">
 
         <img
-          src="/logo.png"
+          src="/m-logo.png"
           alt="Ask Michael"
           className="w-40 mb-6"
         />

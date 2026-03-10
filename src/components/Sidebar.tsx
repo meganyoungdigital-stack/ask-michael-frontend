@@ -44,26 +44,10 @@ export default function Sidebar() {
 
   async function deleteDocument(id: string) {
 
-    if (!confirm("Delete this document?")) return;
+    if (!confirm("Delete document?")) return;
 
-    await fetch(`/api/documents/${id}`, {
+    await fetch(`/api/documents?id=${id}`, {
       method: "DELETE",
-    });
-
-    fetchDocuments();
-  }
-
-  async function uploadDocument(e: React.ChangeEvent<HTMLInputElement>) {
-
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append("file", file);
-
-    await fetch("/api/documents/upload", {
-      method: "POST",
-      body: formData
     });
 
     fetchDocuments();
@@ -73,8 +57,9 @@ export default function Sidebar() {
   const normal = conversations.filter((c) => !c.starred);
 
   return (
-
     <aside className="w-72 border-r border-gray-800 bg-neutral-950 text-white flex flex-col">
+
+      {/* New Chat */}
 
       <div className="p-4 border-b border-gray-800">
 
@@ -89,12 +74,16 @@ export default function Sidebar() {
 
       <div className="flex-1 overflow-y-auto p-4">
 
+        {/* PINNED */}
+
         {pinned.length > 0 && (
           <>
             <p className="text-xs text-gray-400 mb-2">Pinned</p>
             {pinned.map(renderConversation)}
           </>
         )}
+
+        {/* ALL */}
 
         <p className="text-xs text-gray-400 mt-4 mb-2">All Chats</p>
 
@@ -126,19 +115,9 @@ export default function Sidebar() {
 
           ))}
 
-          <label className="block mt-2 text-blue-400 text-sm cursor-pointer">
-            + Upload
-            <input
-              type="file"
-              className="hidden"
-              onChange={uploadDocument}
-            />
-          </label>
-
         </div>
 
       </div>
-
     </aside>
   );
 
@@ -147,15 +126,37 @@ export default function Sidebar() {
     const active = conv.conversationId === activeId;
 
     return (
-      <Link
+      <div
         key={conv.conversationId}
-        href={`/conversation/${conv.conversationId}`}
-        className={`block px-3 py-2 rounded-lg mb-1 text-sm ${
+        onMouseEnter={() => setHoveredId(conv.conversationId)}
+        onMouseLeave={() => setHoveredId(null)}
+        className={`flex items-center px-3 py-2 rounded-lg mb-1 ${
           active ? "bg-neutral-800" : "hover:bg-neutral-900"
         }`}
       >
-        {conv.title || "Untitled"}
-      </Link>
+
+        <Link
+          href={`/conversation/${conv.conversationId}`}
+          className="flex-1 truncate text-sm"
+        >
+          {conv.title || "Untitled"}
+        </Link>
+
+        {hoveredId === conv.conversationId && (
+
+          <div className="flex gap-2 text-xs ml-2">
+
+            <button>⭐</button>
+
+            <button>✏</button>
+
+            <button>🗑</button>
+
+          </div>
+
+        )}
+
+      </div>
     );
   }
 }
