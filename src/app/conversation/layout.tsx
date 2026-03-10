@@ -8,11 +8,15 @@ export default function ConversationLayout({
   children: React.ReactNode;
 }) {
   return (
-    <main className="flex h-screen bg-neutral-950 text-white">
+    <main className="flex h-screen w-full overflow-hidden bg-neutral-950 text-white">
+
+      {/* SIDEBAR */}
 
       <Sidebar />
 
-      <div className="flex-1 flex flex-col">
+      {/* CHAT AREA */}
+
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {children}
       </div>
 

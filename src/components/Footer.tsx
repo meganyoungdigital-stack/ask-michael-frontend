@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion"
 import Link from "next/link"
+import Image from "next/image"
 
 export default function Footer() {
 
@@ -20,11 +21,23 @@ export default function Footer() {
 <div className="relative max-w-7xl mx-auto px-6 py-20 grid grid-cols-2 md:grid-cols-4 gap-10">
 
 {/* Logo */}
+
 <div>
 
-<h2 className="text-white text-xl font-semibold mb-4">
+<div className="flex items-center gap-3 mb-4">
+
+<Image
+src="/m-logo.png"
+alt="Ask Michael Logo"
+width={36}
+height={36}
+/>
+
+<h2 className="text-white text-xl font-semibold">
 Ask Michael
 </h2>
+
+</div>
 
 <p className="text-sm text-gray-400">
 Industrial AI intelligence for engineering knowledge,
@@ -43,6 +56,7 @@ askmichael@askmichaelai.org
 </div>
 
 {/* Platform */}
+
 <div>
 
 <h3 className="text-white font-semibold mb-4">Platform</h3>
@@ -78,6 +92,7 @@ Maintenance Intelligence
 </div>
 
 {/* Solutions */}
+
 <div>
 
 <h3 className="text-white font-semibold mb-4">Solutions</h3>
@@ -101,6 +116,7 @@ Contact
 </div>
 
 {/* Legal */}
+
 <div>
 
 <h3 className="text-white font-semibold mb-4">Legal</h3>

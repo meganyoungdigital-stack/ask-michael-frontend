@@ -8,6 +8,7 @@ import remarkGfm from "remark-gfm";
 import { ClipboardIcon } from "@heroicons/react/24/outline";
 import { motion, AnimatePresence } from "framer-motion";
 import UpgradeModal from "@/components/UpgradeModal";
+import DocumentUpload from "@/components/DocumentUpload";
 
 interface Message {
   role: "user" | "assistant";
@@ -16,9 +17,9 @@ interface Message {
 }
 
 export default function ConversationPage() {
-
   const params = useParams();
   const conversationId = params?.conversationId as string;
+
   const { user } = useUser();
 
   const isPro =
@@ -51,13 +52,10 @@ export default function ConversationPage() {
   /* LOAD CONVERSATION */
 
   useEffect(() => {
-
     if (!conversationId) return;
 
     async function loadConversation() {
-
       try {
-
         const res = await fetch(`/api/conversation/${conversationId}`);
 
         if (!res.ok) throw new Error();
@@ -65,22 +63,17 @@ export default function ConversationPage() {
         const data = await res.json();
 
         setMessages(Array.isArray(data?.messages) ? data.messages : []);
-
       } catch {
-
         setMessages([]);
-
       }
     }
 
     loadConversation();
-
   }, [conversationId]);
 
   /* SEND MESSAGE */
 
   async function sendMessage() {
-
     if (!input.trim() || loading || !conversationId) return;
 
     if (!isPro && userMessageCount >= FREE_LIMIT) {
@@ -101,7 +94,6 @@ export default function ConversationPage() {
     setLoading(true);
 
     try {
-
       const response = await fetch(`/api/ask`, {
         method: "POST",
         headers: {
@@ -128,7 +120,6 @@ export default function ConversationPage() {
       if (!reader) return;
 
       while (true) {
-
         const { done, value } = await reader.read();
 
         if (done) break;
@@ -136,18 +127,12 @@ export default function ConversationPage() {
         assistantText += decoder.decode(value);
 
         setMessages((prev) => {
-
           const updated = [...prev];
           updated[updated.length - 1].content = assistantText;
-
           return updated;
-
         });
-
       }
-
     } catch {
-
       setMessages((prev) => [
         ...prev,
         {
@@ -155,24 +140,19 @@ export default function ConversationPage() {
           content: "⚠️ Something went wrong. Please try again.",
         },
       ]);
-
     } finally {
-
       setLoading(false);
-
     }
   }
 
   /* SHARE */
 
   async function handleShare() {
-
     if (!conversationId) return;
 
     setShareLoading(true);
 
     try {
-
       const res = await fetch(
         `/api/conversation/${conversationId}/share`,
         { method: "POST" }
@@ -182,20 +162,15 @@ export default function ConversationPage() {
 
       setShareUrl(data.shareUrl);
       setShowShareModal(true);
-
     } catch {
-
       setShareError("Failed to generate share link.");
-
     }
 
     setShareLoading(false);
-
   }
 
   return (
     <>
-
       <div className="flex flex-col flex-1 bg-white">
 
         {/* HEADER */}
@@ -312,29 +287,16 @@ export default function ConversationPage() {
               rows={1}
               className="flex-1 bg-transparent resize-none outline-none"
               onKeyDown={(e) => {
-
                 if (e.key === "Enter" && !e.shiftKey) {
-
                   e.preventDefault();
                   sendMessage();
-
                 }
-
               }}
             />
 
-            {/* FILE UPLOAD */}
+            {/* DOCUMENT UPLOAD */}
 
-            <label className="cursor-pointer text-blue-600 text-lg px-2">
-
-              📎
-
-              <input
-                type="file"
-                className="hidden"
-              />
-
-            </label>
+            <DocumentUpload />
 
             {/* SEND */}
 
