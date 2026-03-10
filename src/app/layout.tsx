@@ -1,25 +1,21 @@
-"use client";
+import "./globals.css";
+import type { Metadata } from "next";
 
-import Sidebar from "@/components/Sidebar";
+export const metadata: Metadata = {
+  title: "Ask Michael AI",
+  description: "Industrial AI intelligence platform",
+};
 
-export default function ConversationLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex h-screen overflow-hidden">
-
-      {/* SIDEBAR */}
-
-      <Sidebar />
-
-      {/* CHAT AREA */}
-
-      <div className="flex-1 flex flex-col overflow-hidden bg-white">
+    <html lang="en">
+      <body className="bg-black text-white">
         {children}
-      </div>
-
-    </div>
+      </body>
+    </html>
   );
 }
