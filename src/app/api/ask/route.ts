@@ -1,4 +1,5 @@
 export const runtime = "nodejs";
+
 import { auth } from "@clerk/nextjs/server";
 import OpenAI from "openai";
 import {
@@ -14,11 +15,35 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+/* =====================================================
+   📄 READ ATTACHMENT TEXT
+===================================================== */
+
+async function getAttachmentText(attachments: any[]) {
+  let text = "";
+
+  for (const file of attachments) {
+    if (!file?.url) continue;
+
+    try {
+      const res = await fetch(file.url);
+      const fileText = await res.text();
+
+      text += `\n\nFILE: ${file.name}\n${fileText}`;
+    } catch (err) {
+      console.error("Attachment read error:", err);
+    }
+  }
+
+  return text;
+}
+
 export async function POST(req: Request) {
   try {
     /* =====================================================
-       🔐 AUTH (Clerk v5 requires await)
+       🔐 AUTH
     ===================================================== */
+
     const { userId } = await auth();
 
     if (!userId) {
@@ -30,6 +55,7 @@ export async function POST(req: Request) {
     /* =====================================================
        📦 BODY
     ===================================================== */
+
     const body = await req.json();
     const { messages, conversationId } = body;
 
@@ -40,6 +66,7 @@ export async function POST(req: Request) {
     /* =====================================================
        🔒 VERIFY CONVERSATION
     ===================================================== */
+
     const conversation = await getConversation(
       conversationId,
       safeUserId
@@ -52,8 +79,17 @@ export async function POST(req: Request) {
     }
 
     /* =====================================================
+       📄 LOAD ATTACHMENTS (RAG)
+    ===================================================== */
+
+    const attachments = conversation.attachments || [];
+
+    const documentText = await getAttachmentText(attachments);
+
+    /* =====================================================
        💳 USAGE LIMIT
     ===================================================== */
+
     const usageCount = await getUserUsage(safeUserId);
 
     const DAILY_FREE_LIMIT = 50;
@@ -70,8 +106,9 @@ export async function POST(req: Request) {
       messages[messages.length - 1];
 
     /* =====================================================
-       🧠 TITLE GENERATION (ONLY FIRST MESSAGE)
+       🧠 TITLE GENERATION
     ===================================================== */
+
     if (conversation.messages.length === 0) {
       try {
         const titleCompletion =
@@ -139,17 +176,36 @@ Respond ONLY as JSON:
     }
 
     /* =====================================================
-       💬 MAIN AI RESPONSE (STREAM WITH SAFE FALLBACK)
+       🧠 BUILD FINAL MESSAGES WITH DOCUMENT CONTEXT
+    ===================================================== */
+
+    const finalMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
+      {
+        role: "system",
+        content: `
+You are an engineering AI assistant.
+
+If documents are provided, use them to answer the user's question.
+
+DOCUMENT CONTENT:
+${documentText}
+        `,
+      },
+      ...messages.map((m: Message) => ({
+        role: m.role,
+        content: m.content,
+      })),
+    ];
+
+    /* =====================================================
+       💬 MAIN AI RESPONSE (STREAM)
     ===================================================== */
 
     try {
       const completion = await openai.chat.completions.create({
         model: "gpt-4o-mini",
         stream: true,
-        messages: messages.map((m: Message) => ({
-          role: m.role,
-          content: m.content,
-        })),
+        messages: finalMessages,
       });
 
       const encoder = new TextEncoder();
@@ -171,7 +227,6 @@ Respond ONLY as JSON:
               }
             }
 
-            // Save messages after stream finishes
             const userMessageToSave: Message = {
               role: "user",
               content: latestUserMessage.content,
@@ -213,13 +268,9 @@ Respond ONLY as JSON:
     } catch (streamError) {
       console.error("Stream init failed:", streamError);
 
-      // 🔥 FALLBACK TO NON-STREAM RESPONSE
       const completion = await openai.chat.completions.create({
         model: "gpt-4o-mini",
-        messages: messages.map((m: Message) => ({
-          role: m.role,
-          content: m.content,
-        })),
+        messages: finalMessages,
       });
 
       const fullResponse =

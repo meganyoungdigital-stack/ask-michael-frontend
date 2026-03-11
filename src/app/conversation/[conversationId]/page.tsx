@@ -16,6 +16,12 @@ interface Message {
   createdAt?: Date;
 }
 
+interface Attachment {
+  name: string;
+  url: string;
+  type: string;
+}
+
 export default function ConversationPage() {
   const params = useParams();
   const conversationId = params?.conversationId as string | undefined;
@@ -28,6 +34,7 @@ export default function ConversationPage() {
   const FREE_LIMIT = 10;
 
   const [messages, setMessages] = useState<Message[]>([]);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
@@ -63,8 +70,10 @@ export default function ConversationPage() {
         const data = await res.json();
 
         setMessages(Array.isArray(data?.messages) ? data.messages : []);
+        setAttachments(Array.isArray(data?.attachments) ? data.attachments : []);
       } catch {
         setMessages([]);
+        setAttachments([]);
       }
     }
 
@@ -235,6 +244,35 @@ export default function ConversationPage() {
           </div>
 
         </div>
+
+        {/* ATTACHMENTS */}
+
+        {attachments.length > 0 && (
+          <div className="max-w-3xl mx-auto w-full px-6 pt-4">
+
+            <div className="text-xs text-gray-500 mb-2">
+              Attachments
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+
+              {attachments.map((file, i) => (
+
+                <a
+                  key={i}
+                  href={file.url}
+                  target="_blank"
+                  className="bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded-lg text-sm"
+                >
+                  📎 {file.name}
+                </a>
+
+              ))}
+
+            </div>
+
+          </div>
+        )}
 
         {/* CHAT AREA */}
 
