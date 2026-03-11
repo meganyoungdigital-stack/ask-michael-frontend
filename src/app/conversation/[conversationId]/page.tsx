@@ -181,11 +181,11 @@ export default function ConversationPage() {
 
   return (
     <>
-      <div className="flex flex-col flex-1 min-h-0 bg-white">
+      <div className="flex flex-col h-screen bg-white">
 
         {/* HEADER */}
 
-        <div className="flex items-center justify-between px-6 py-4 border-b">
+        <div className="flex items-center justify-between px-6 py-4 border-b flex-shrink-0">
 
           <div className="flex items-center gap-4">
 
@@ -236,9 +236,9 @@ export default function ConversationPage() {
 
         </div>
 
-        {/* CHAT */}
+        {/* CHAT AREA */}
 
-        <div className="flex-1 overflow-y-auto min-h-0">
+        <div className="flex-1 overflow-y-auto">
 
           <AnimatePresence>
 
@@ -275,7 +275,7 @@ export default function ConversationPage() {
           </AnimatePresence>
 
           {loading && (
-            <div className="px-6 py-4 text-gray-500">
+            <div className="px-6 py-4 text-gray-500 max-w-3xl mx-auto">
               Thinking...
             </div>
           )}
@@ -286,9 +286,9 @@ export default function ConversationPage() {
 
         {/* INPUT */}
 
-        <div className="border-t px-6 py-6">
+        <div className="border-t px-6 py-6 flex-shrink-0">
 
-          <div className="flex items-end bg-gray-100 rounded-2xl px-4 py-3 gap-2">
+          <div className="flex items-end bg-gray-100 rounded-2xl px-4 py-3 gap-2 max-w-3xl mx-auto">
 
             <textarea
               value={input}
@@ -368,7 +368,6 @@ export default function ConversationPage() {
         isOpen={isUpgradeOpen}
         onClose={() => setIsUpgradeOpen(false)}
       />
-
     </>
   );
 }
