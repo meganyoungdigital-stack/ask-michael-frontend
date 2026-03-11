@@ -2,7 +2,11 @@
 
 import { useState } from "react";
 
-export default function DocumentUpload() {
+interface DocumentUploadProps {
+  conversationId?: string;
+}
+
+export default function DocumentUpload({ conversationId }: DocumentUploadProps) {
 
   const [uploading, setUploading] = useState(false);
 
@@ -10,7 +14,10 @@ export default function DocumentUpload() {
 
     const file = e.target.files?.[0];
 
-    if (!file) return;
+    if (!file || !conversationId) {
+      alert("No conversation selected.");
+      return;
+    }
 
     setUploading(true);
 
@@ -20,23 +27,31 @@ export default function DocumentUpload() {
 
       reader.onload = async () => {
 
-        const res = await fetch("/api/documents/upload", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            name: file.name,
-            url: reader.result,
-            type: file.type,
-          }),
-        });
+        try {
 
-        if (!res.ok) throw new Error();
+          const res = await fetch("/api/conversation/upload", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              conversationId,
+              name: file.name,
+              url: reader.result,
+              type: file.type,
+            }),
+          });
 
-        alert("Document uploaded successfully.");
+          if (!res.ok) throw new Error();
 
-        window.location.reload();
+          alert("File attached to conversation.");
+
+        } catch {
+          alert("Upload failed.");
+        }
+
+        setUploading(false);
+
       };
 
       reader.readAsDataURL(file);
@@ -44,10 +59,9 @@ export default function DocumentUpload() {
     } catch {
 
       alert("Upload failed.");
+      setUploading(false);
 
     }
-
-    setUploading(false);
 
   }
 

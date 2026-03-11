@@ -304,7 +304,7 @@ export default function ConversationPage() {
               }}
             />
 
-            <DocumentUpload />
+            <DocumentUpload conversationId={conversationId} />
 
             <button
               onClick={sendMessage}
