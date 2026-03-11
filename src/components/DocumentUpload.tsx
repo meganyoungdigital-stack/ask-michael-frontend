@@ -12,23 +12,34 @@ export default function DocumentUpload() {
 
     if (!file) return;
 
-    const formData = new FormData();
-    formData.append("file", file);
-
     setUploading(true);
 
     try {
 
-      const res = await fetch("/api/documents", {
-        method: "POST",
-        body: formData,
-      });
+      const reader = new FileReader();
 
-      if (!res.ok) throw new Error();
+      reader.onload = async () => {
 
-      alert("Document uploaded successfully.");
+        const res = await fetch("/api/documents/upload", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: file.name,
+            url: reader.result,
+            type: file.type,
+          }),
+        });
 
-      window.location.reload();
+        if (!res.ok) throw new Error();
+
+        alert("Document uploaded successfully.");
+
+        window.location.reload();
+      };
+
+      reader.readAsDataURL(file);
 
     } catch {
 

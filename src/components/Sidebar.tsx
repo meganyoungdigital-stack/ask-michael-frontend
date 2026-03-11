@@ -75,23 +75,31 @@ export default function Sidebar() {
 
   async function deleteConversation(id: string) {
 
-    if (!confirm("Delete conversation?")) return;
+  if (!confirm("Delete conversation?")) return;
 
-    try {
-      await fetch(`/api/conversation/${id}`, {
-        method: "DELETE",
-      });
+  try {
 
-      setConversations((prev) =>
-        prev.filter((c) => c.conversationId !== id)
-      );
+    const res = await fetch(`/api/conversation/${id}`, {
+      method: "DELETE",
+    });
 
-      router.push("/portal");
-    } catch {
-      alert("Delete failed");
+    if (!res.ok) {
+      throw new Error();
     }
+
+    setConversations((prev) =>
+      prev.filter((c) => c.conversationId !== id)
+    );
+
+    if (activeId === id) {
+      router.push("/portal");
+    }
+
+  } catch {
+    alert("Delete failed");
   }
 
+}
   /* ---------------- PIN / UNPIN ---------------- */
 
   async function togglePin(conv: Conversation) {
