@@ -2,29 +2,51 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 
 export default function PortalPage() {
+
   const router = useRouter();
+  const { isLoaded, isSignedIn } = useUser();
 
   useEffect(() => {
+
+    if (!isLoaded) return;
+
+    if (!isSignedIn) {
+      router.push("/sign-in");
+      return;
+    }
+
     async function startConversation() {
+
       try {
+
         const res = await fetch("/api/conversation/new", {
           method: "POST",
         });
 
+        if (!res.ok) throw new Error();
+
         const data = await res.json();
 
-        if (data?.conversationId) {
-          router.replace(`/conversation/${data.conversationId}`);
-        }
+        router.push(`/conversation/${data.conversationId}`);
+
       } catch (err) {
-        console.error("Failed to create conversation");
+
+        console.error("Conversation start error:", err);
+
       }
+
     }
 
     startConversation();
-  }, [router]);
 
-  return null;
+  }, [isLoaded, isSignedIn, router]);
+
+  return (
+    <div className="flex items-center justify-center h-screen text-gray-400">
+      Loading AI Platform...
+    </div>
+  );
 }

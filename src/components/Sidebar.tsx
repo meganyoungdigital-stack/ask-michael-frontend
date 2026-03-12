@@ -238,7 +238,25 @@ export default function Sidebar() {
       <div className="p-4 border-b border-gray-800">
 
         <button
-          onClick={() => router.push("/portal")}
+          onClick={async () => {
+
+  try {
+
+    const res = await fetch("/api/conversation/new", {
+      method: "POST",
+    });
+
+    const data = await res.json();
+
+    router.push(`/conversation/${data.conversationId}`);
+
+  } catch {
+
+    alert("Failed to create chat");
+
+  }
+
+}}
           className="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded-lg font-semibold transition"
         >
           + New Chat
