@@ -1,10 +1,33 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
+import { useEffect } from "react";
 
 export default function PortalPage() {
 
   const router = useRouter();
+  const { isLoaded, isSignedIn } = useUser();
+
+  /* ========================
+     PROTECT THE PAGE
+  ======================== */
+
+  useEffect(() => {
+
+    if (isLoaded && !isSignedIn) {
+      router.push("/sign-in");
+    }
+
+  }, [isLoaded, isSignedIn, router]);
+
+  if (!isLoaded || !isSignedIn) {
+    return null;
+  }
+
+  /* ========================
+     CREATE CHAT
+  ======================== */
 
   async function createChat() {
 
@@ -53,4 +76,5 @@ export default function PortalPage() {
     </div>
 
   );
+
 }

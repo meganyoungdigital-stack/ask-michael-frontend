@@ -1,8 +1,11 @@
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+import { ratelimit } from "@/lib/ratelimit";
 import { auth } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 import OpenAI from "openai";
+
 import {
   recordUserUsage,
   getUserUsage,
@@ -10,6 +13,7 @@ import {
   getConversation,
   connectToDatabase,
 } from "@/lib/mongodb";
+
 import type { Db } from "mongodb";
 
 /* ============================
@@ -32,7 +36,6 @@ const MAX_MESSAGES = 12;
    DEV DAILY LIMIT
 ============================ */
 
-/* Increased so development does not constantly hit limits */
 const DAILY_FREE_LIMIT = 200;
 
 /* ============================
@@ -129,6 +132,19 @@ export async function POST(req: Request) {
 
     if (!userId) {
       return new Response("Unauthorized", { status: 401 });
+    }
+
+    /* ============================
+       RATE LIMIT (ANTI SPAM)
+    ============================ */
+
+    const { success } = await ratelimit.limit(userId);
+
+    if (!success) {
+      return NextResponse.json(
+        { error: "Too many requests" },
+        { status: 429 }
+      );
     }
 
     const safeUserId = userId;
@@ -252,9 +268,7 @@ export async function POST(req: Request) {
             }
           }
 
-          /* ============================
-             SAVE USER MESSAGE
-          ============================ */
+          /* SAVE USER MESSAGE */
 
           await appendMessageToConversation(
             conversationId,
@@ -266,9 +280,7 @@ export async function POST(req: Request) {
             }
           );
 
-          /* ============================
-             SAVE AI RESPONSE
-          ============================ */
+          /* SAVE AI RESPONSE */
 
           await appendMessageToConversation(
             conversationId,
@@ -280,9 +292,7 @@ export async function POST(req: Request) {
             }
           );
 
-          /* ============================
-             AUTO TITLE AFTER FIRST RESPONSE
-          ============================ */
+          /* AUTO TITLE */
 
           if (conversation.messages.length === 0) {
             try {
@@ -333,9 +343,7 @@ export async function POST(req: Request) {
             }
           }
 
-          /* ============================
-             RECORD DAILY USAGE
-          ============================ */
+          /* RECORD DAILY USAGE */
 
           await recordUserUsage(safeUserId);
 
