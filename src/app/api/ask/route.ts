@@ -29,6 +29,13 @@ type Message = {
 const MAX_MESSAGES = 12;
 
 /* ============================
+   DEV DAILY LIMIT
+============================ */
+
+/* Increased so development does not constantly hit limits */
+const DAILY_FREE_LIMIT = 200;
+
+/* ============================
    LAZY DB CONNECTION
 ============================ */
 
@@ -113,6 +120,7 @@ async function getAttachmentText(attachments: any[]) {
 
 export async function POST(req: Request) {
   try {
+
     /* ============================
        AUTH
     ============================ */
@@ -164,8 +172,6 @@ export async function POST(req: Request) {
     const attachments = conversation.attachments || [];
     const documentText = await getAttachmentText(attachments);
 
-    /* DOCUMENT ONLY ON FIRST MESSAGE */
-
     const documentContext =
       conversation.messages.length === 0 ? documentText : "";
 
@@ -181,16 +187,17 @@ export async function POST(req: Request) {
 
     const isPro = userRecord?.tier === "pro";
 
-    const DAILY_FREE_LIMIT = 10;
-
     const usageCount = await getUserUsage(safeUserId);
 
-    const limit = isPro ? 1000 : DAILY_FREE_LIMIT;
+    const limit = isPro ? 2000 : DAILY_FREE_LIMIT;
 
     if (usageCount >= limit) {
-      return new Response("Daily limit reached", {
-        status: 429,
-      });
+      return new Response(
+        JSON.stringify({
+          error: "Daily message limit reached",
+        }),
+        { status: 429 }
+      );
     }
 
     const latestUserMessage: Message =
@@ -230,19 +237,18 @@ export async function POST(req: Request) {
 
     const stream = new ReadableStream({
       async start(controller) {
+
         let fullResponse = "";
 
         try {
+
           for await (const chunk of completion) {
             const token =
               chunk.choices[0]?.delta?.content || "";
 
             if (token) {
               fullResponse += token;
-
-              controller.enqueue(
-                encoder.encode(token)
-              );
+              controller.enqueue(encoder.encode(token));
             }
           }
 
@@ -269,7 +275,7 @@ export async function POST(req: Request) {
             safeUserId,
             {
               role: "assistant",
-              content: fullResponse,
+              content: fullResponse || "No response generated.",
               createdAt: new Date(),
             }
           );
@@ -280,6 +286,7 @@ export async function POST(req: Request) {
 
           if (conversation.messages.length === 0) {
             try {
+
               const titleCompletion =
                 await openai.chat.completions.create({
                   model: "gpt-4o-mini",
@@ -320,11 +327,9 @@ export async function POST(req: Request) {
                   },
                 }
               );
+
             } catch (err) {
-              console.error(
-                "Title generation error:",
-                err
-              );
+              console.error("Title generation error:", err);
             }
           }
 
@@ -333,6 +338,7 @@ export async function POST(req: Request) {
           ============================ */
 
           await recordUserUsage(safeUserId);
+
         } catch (err) {
           console.error("Streaming error:", err);
         } finally {
@@ -346,14 +352,16 @@ export async function POST(req: Request) {
         "Content-Type": "text/plain; charset=utf-8",
         "Cache-Control": "no-cache",
         Connection: "keep-alive",
-        "Transfer-Encoding": "chunked",
       },
     });
+
   } catch (error) {
+
     console.error("[ASK_FATAL_ERROR]", error);
 
     return new Response("Internal server error", {
       status: 500,
     });
+
   }
 }
