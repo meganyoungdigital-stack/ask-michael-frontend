@@ -23,16 +23,22 @@ type Message = {
 };
 
 /* ============================
+   LIMIT MESSAGE HISTORY
+============================ */
+
+const MAX_MESSAGES = 12;
+
+/* ============================
    LAZY DB CONNECTION
 ============================ */
 
-let db: Db | null = null;
+let cachedDb: Db | null = null;
 
 async function getDb() {
-  if (!db) {
-    db = await connectToDatabase();
+  if (!cachedDb) {
+    cachedDb = await connectToDatabase();
   }
-  return db;
+  return cachedDb;
 }
 
 /* ============================
@@ -57,9 +63,8 @@ async function getPdfParser() {
   return pdfParse;
 }
 
-
 /* =====================================================
-   READ ATTACHMENT TEXT (PDF + TXT + DOC)
+   READ ATTACHMENT TEXT
 ===================================================== */
 
 async function getAttachmentText(attachments: any[]) {
@@ -70,7 +75,6 @@ async function getAttachmentText(attachments: any[]) {
 
     try {
       const res = await fetch(file.url);
-
       if (!res.ok) continue;
 
       const buffer = Buffer.from(await res.arrayBuffer());
@@ -90,7 +94,7 @@ async function getAttachmentText(attachments: any[]) {
         continue;
       }
 
-      /* TEXT / OTHER FILES */
+      /* TEXT FILES */
 
       const fileText = buffer.toString("utf-8");
 
@@ -104,12 +108,14 @@ async function getAttachmentText(attachments: any[]) {
 }
 
 /* =====================================================
-   MAIN API ROUTE
+   MAIN ROUTE
 ===================================================== */
 
 export async function POST(req: Request) {
   try {
-    /* AUTH */
+    /* ============================
+       AUTH
+    ============================ */
 
     const { userId } = await auth();
 
@@ -119,7 +125,9 @@ export async function POST(req: Request) {
 
     const safeUserId = userId;
 
-    /* BODY */
+    /* ============================
+       BODY
+    ============================ */
 
     const body = await req.json();
     const { messages, conversationId } = body;
@@ -128,7 +136,15 @@ export async function POST(req: Request) {
       return new Response("Invalid request body", { status: 400 });
     }
 
-    /* VERIFY CONVERSATION */
+    /* ============================
+       TRIM MESSAGE HISTORY
+    ============================ */
+
+    const trimmedMessages = messages.slice(-MAX_MESSAGES);
+
+    /* ============================
+       VERIFY CONVERSATION
+    ============================ */
 
     const conversation = await getConversation(
       conversationId,
@@ -141,28 +157,35 @@ export async function POST(req: Request) {
       });
     }
 
-    /* LOAD ATTACHMENTS */
+    /* ============================
+       LOAD ATTACHMENTS
+    ============================ */
 
     const attachments = conversation.attachments || [];
     const documentText = await getAttachmentText(attachments);
 
-    /* USAGE LIMIT */
+    /* DOCUMENT ONLY ON FIRST MESSAGE */
 
-    const usageCount = await getUserUsage(safeUserId);
+    const documentContext =
+      conversation.messages.length === 0 ? documentText : "";
+
+    /* ============================
+       USER PLAN + LIMIT
+    ============================ */
+
+    const db = await getDb();
+
+    const userRecord = await db.collection("users").findOne({
+      userId: safeUserId,
+    });
+
+    const isPro = userRecord?.tier === "pro";
 
     const DAILY_FREE_LIMIT = 10;
 
-/* CHECK USER PLAN */
+    const usageCount = await getUserUsage(safeUserId);
 
-const db = await getDb();
-
-const userRecord = await db.collection("users").findOne({
-  userId: safeUserId,
-});
-
-const isPro = userRecord?.plan === "pro";
-
-const limit = isPro ? 1000 : DAILY_FREE_LIMIT;
+    const limit = isPro ? 1000 : DAILY_FREE_LIMIT;
 
     if (usageCount >= limit) {
       return new Response("Daily limit reached", {
@@ -173,90 +196,29 @@ const limit = isPro ? 1000 : DAILY_FREE_LIMIT;
     const latestUserMessage: Message =
       messages[messages.length - 1];
 
-    /* TITLE GENERATION */
-
-    if (conversation.messages.length === 0) {
-      try {
-        const titleCompletion =
-          await openai.chat.completions.create({
-            model: "gpt-4o-mini",
-            messages: [
-              {
-                role: "system",
-                content:
-                  "Generate:\n" +
-                  "1) Short professional title (3-6 words)\n" +
-                  "2) Category from this list:\n" +
-                  "ISO 3834, WPS, Welding, Structural Design,\n" +
-                  "Steel Connection, Cost Estimation,\n" +
-                  "Quality Control, Inspection, General Engineering\n\n" +
-                  'Respond ONLY as JSON:\n{"title":"Title","category":"Category"}',
-              },
-              {
-                role: "user",
-                content: latestUserMessage.content,
-              },
-            ],
-            max_tokens: 100,
-          });
-
-        const raw =
-          titleCompletion.choices[0]?.message?.content || "";
-
-        let parsed: any = null;
-
-        try {
-          parsed = JSON.parse(raw);
-        } catch {
-          parsed = null;
-        }
-
-        const generatedTitle =
-          parsed?.title ||
-          latestUserMessage.content.slice(0, 40);
-
-        const generatedCategory =
-          parsed?.category || "General Engineering";
-
-        const db = await getDb();
-
-        await db.collection("conversations").updateOne(
-          { conversationId, userId: safeUserId },
-          {
-            $set: {
-              title:
-                "[" +
-                generatedCategory +
-                "] " +
-                generatedTitle,
-              projectType: generatedCategory,
-              updatedAt: new Date(),
-            },
-          }
-        );
-      } catch (err) {
-        console.error("Title generation failed:", err);
-      }
-    }
-
-    /* BUILD FINAL MESSAGE STACK */
+    /* ============================
+       BUILD MESSAGE STACK
+    ============================ */
 
     const finalMessages = [
       {
         role: "system",
         content:
-          "You are an engineering AI assistant.\n\n" +
-          "If documents are provided, use them to answer the user's question.\n\n" +
+          "You are an expert engineering AI assistant.\n\n" +
+          "If documents are provided, use them when answering.\n\n" +
           "DOCUMENT CONTENT:\n" +
-          documentText,
+          documentContext,
       },
-      ...messages.map((m: Message) => ({
+
+      ...trimmedMessages.map((m: Message) => ({
         role: m.role,
         content: m.content,
       })),
     ];
 
-    /* STREAM RESPONSE */
+    /* ============================
+       STREAM AI RESPONSE
+    ============================ */
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -277,11 +239,16 @@ const limit = isPro ? 1000 : DAILY_FREE_LIMIT;
 
             if (token) {
               fullResponse += token;
-              controller.enqueue(encoder.encode(token));
+
+              controller.enqueue(
+                encoder.encode(token)
+              );
             }
           }
 
-          /* SAVE USER MESSAGE */
+          /* ============================
+             SAVE USER MESSAGE
+          ============================ */
 
           await appendMessageToConversation(
             conversationId,
@@ -293,7 +260,9 @@ const limit = isPro ? 1000 : DAILY_FREE_LIMIT;
             }
           );
 
-          /* SAVE AI RESPONSE */
+          /* ============================
+             SAVE AI RESPONSE
+          ============================ */
 
           await appendMessageToConversation(
             conversationId,
@@ -305,7 +274,63 @@ const limit = isPro ? 1000 : DAILY_FREE_LIMIT;
             }
           );
 
-          /* RECORD USAGE */
+          /* ============================
+             AUTO TITLE AFTER FIRST RESPONSE
+          ============================ */
+
+          if (conversation.messages.length === 0) {
+            try {
+              const titleCompletion =
+                await openai.chat.completions.create({
+                  model: "gpt-4o-mini",
+
+                  messages: [
+                    {
+                      role: "system",
+                      content:
+                        "Generate a short professional chat title (3-6 words). Respond only with the title.",
+                    },
+                    {
+                      role: "user",
+                      content:
+                        latestUserMessage.content +
+                        "\n\n" +
+                        fullResponse,
+                    },
+                  ],
+
+                  max_tokens: 20,
+                });
+
+              const generatedTitle =
+                titleCompletion.choices[0]?.message?.content?.trim() ||
+                latestUserMessage.content.slice(0, 40);
+
+              const db = await getDb();
+
+              await db.collection("conversations").updateOne(
+                {
+                  conversationId,
+                  userId: safeUserId,
+                },
+                {
+                  $set: {
+                    title: generatedTitle,
+                    updatedAt: new Date(),
+                  },
+                }
+              );
+            } catch (err) {
+              console.error(
+                "Title generation error:",
+                err
+              );
+            }
+          }
+
+          /* ============================
+             RECORD DAILY USAGE
+          ============================ */
 
           await recordUserUsage(safeUserId);
         } catch (err) {
@@ -319,6 +344,9 @@ const limit = isPro ? 1000 : DAILY_FREE_LIMIT;
     return new Response(stream, {
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+        "Transfer-Encoding": "chunked",
       },
     });
   } catch (error) {

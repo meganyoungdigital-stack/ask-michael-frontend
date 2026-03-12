@@ -23,8 +23,9 @@ interface Attachment {
 }
 
 export default function ConversationPage() {
+
   const params = useParams();
-  const conversationId = params?.conversationId as string | undefined;
+  const conversationId = params?.id as string;
 
   const { user, isLoaded } = useUser();
 
@@ -59,10 +60,13 @@ export default function ConversationPage() {
   /* LOAD CONVERSATION */
 
   useEffect(() => {
+
     if (!conversationId) return;
 
     async function loadConversation() {
+
       try {
+
         const res = await fetch(`/api/conversation/${conversationId}`);
 
         if (!res.ok) throw new Error();
@@ -71,18 +75,23 @@ export default function ConversationPage() {
 
         setMessages(Array.isArray(data?.messages) ? data.messages : []);
         setAttachments(Array.isArray(data?.attachments) ? data.attachments : []);
+
       } catch {
+
         setMessages([]);
         setAttachments([]);
+
       }
     }
 
     loadConversation();
+
   }, [conversationId]);
 
   /* SEND MESSAGE */
 
   async function sendMessage() {
+
     if (!input.trim() || loading || !conversationId) return;
 
     if (!isPro && userMessageCount >= FREE_LIMIT) {
@@ -103,6 +112,7 @@ export default function ConversationPage() {
     setLoading(true);
 
     try {
+
       const response = await fetch(`/api/ask`, {
         method: "POST",
         headers: {
@@ -129,6 +139,7 @@ export default function ConversationPage() {
       if (!reader) return;
 
       while (true) {
+
         const { done, value } = await reader.read();
 
         if (done) break;
@@ -140,8 +151,32 @@ export default function ConversationPage() {
           updated[updated.length - 1].content = assistantText;
           return updated;
         });
+
       }
+
+      /* AUTO GENERATE TITLE (FIRST MESSAGE ONLY) */
+
+      if (updatedMessages.length === 1) {
+
+        try {
+
+          await fetch("/api/conversation/title", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              conversationId,
+              message: userMessage.content,
+            }),
+          });
+
+        } catch {}
+
+      }
+
     } catch {
+
       setMessages((prev) => [
         ...prev,
         {
@@ -149,19 +184,24 @@ export default function ConversationPage() {
           content: "⚠️ Something went wrong. Please try again.",
         },
       ]);
+
     } finally {
+
       setLoading(false);
+
     }
   }
 
   /* SHARE */
 
   async function handleShare() {
+
     if (!conversationId) return;
 
     setShareLoading(true);
 
     try {
+
       const res = await fetch(
         `/api/conversation/${conversationId}/share`,
         { method: "POST" }
@@ -171,25 +211,33 @@ export default function ConversationPage() {
 
       setShareUrl(data.shareUrl);
       setShowShareModal(true);
+
     } catch {
+
       setShareError("Failed to generate share link.");
+
     }
 
     setShareLoading(false);
+
   }
 
   /* WAIT FOR CLERK */
 
   if (!isLoaded) {
+
     return (
       <div className="flex items-center justify-center h-full">
         Loading...
       </div>
     );
+
   }
 
   return (
+
     <>
+
       <div className="flex flex-col h-screen bg-white">
 
         {/* HEADER */}
@@ -199,7 +247,9 @@ export default function ConversationPage() {
           <div className="flex items-center gap-4">
 
             {!isPro && (
+
               <>
+
                 <div className="text-sm text-gray-600">
                   {userMessageCount} / {FREE_LIMIT} Free Messages
                 </div>
@@ -212,7 +262,9 @@ export default function ConversationPage() {
                     }}
                   />
                 </div>
+
               </>
+
             )}
 
             {isPro && (
@@ -226,12 +278,14 @@ export default function ConversationPage() {
           <div className="flex gap-3">
 
             {!isPro && (
+
               <button
                 onClick={() => setIsUpgradeOpen(true)}
                 className="bg-yellow-500 text-white px-4 py-2 rounded-xl"
               >
                 Upgrade
               </button>
+
             )}
 
             <button
@@ -248,6 +302,7 @@ export default function ConversationPage() {
         {/* ATTACHMENTS */}
 
         {attachments.length > 0 && (
+
           <div className="max-w-3xl mx-auto w-full px-6 pt-4">
 
             <div className="text-xs text-gray-500 mb-2">
@@ -272,6 +327,7 @@ export default function ConversationPage() {
             </div>
 
           </div>
+
         )}
 
         {/* CHAT AREA */}
@@ -329,11 +385,11 @@ export default function ConversationPage() {
           <div className="flex items-end bg-gray-100 rounded-2xl px-4 py-3 gap-2 max-w-3xl mx-auto">
 
             <textarea
-  value={input}
-  onChange={(e) => setInput(e.target.value)}
-  placeholder="Message..."
-  rows={1}
-  className="flex-1 bg-transparent resize-none outline-none text-black"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Message..."
+              rows={1}
+              className="flex-1 bg-transparent resize-none outline-none text-black"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
@@ -343,15 +399,16 @@ export default function ConversationPage() {
             />
 
             {isPro ? (
-  <DocumentUpload conversationId={conversationId} />
-) : (
-  <button
-    onClick={() => setIsUpgradeOpen(true)}
-    className="text-sm text-gray-500 hover:text-black"
-  >
-    📄 Upload (Pro)
-  </button>
-)}
+              <DocumentUpload conversationId={conversationId} />
+            ) : (
+              <button
+                onClick={() => setIsUpgradeOpen(true)}
+                className="text-sm text-gray-500 hover:text-black"
+              >
+                📄 Upload (Pro)
+              </button>
+            )}
+
             <button
               onClick={sendMessage}
               disabled={loading}
@@ -414,6 +471,7 @@ export default function ConversationPage() {
         isOpen={isUpgradeOpen}
         onClose={() => setIsUpgradeOpen(false)}
       />
+
     </>
   );
 }

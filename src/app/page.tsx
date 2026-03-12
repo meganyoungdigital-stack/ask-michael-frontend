@@ -8,6 +8,7 @@ import {
 } from "framer-motion";
 import { useEffect, useRef } from "react";
 import Link from "next/link";
+import Footer from "@/components/Footer";
 
 export default function LandingPage() {
   const mouseX = useMotionValue(0);
@@ -149,6 +150,9 @@ export default function LandingPage() {
         </div>
 
       </section>
+
+      {/* Footer ONLY on homepage */}
+      <Footer />
 
     </main>
   );
