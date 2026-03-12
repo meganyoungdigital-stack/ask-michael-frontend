@@ -1,8 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useUser, UserButton } from "@clerk/nextjs";
 
 export default function Navbar() {
+
+  const { isSignedIn } = useUser();
+
   return (
     <nav className="fixed top-0 left-0 w-full z-50 backdrop-blur-md bg-blue-950/70 border-b border-blue-900">
 
@@ -35,12 +39,20 @@ export default function Navbar() {
 
         </div>
 
-        {/* Login */}
-        <Link href="/portal">
-          <button className="px-5 py-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm hover:scale-105 transition">
-            Login
-          </button>
-        </Link>
+        {/* Right Side */}
+        {isSignedIn ? (
+
+          <UserButton afterSignOutUrl="/" />
+
+        ) : (
+
+          <Link href="/portal">
+            <button className="px-5 py-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm hover:scale-105 transition">
+              Login
+            </button>
+          </Link>
+
+        )}
 
       </div>
 

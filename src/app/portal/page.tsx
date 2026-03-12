@@ -30,7 +30,10 @@ export default function PortalPage() {
 
     <div className="flex flex-col items-center justify-center h-full text-center">
 
-      <div className="text-5xl mb-4">🤖</div>
+      <img
+        src="/m-logo.png"
+        className="w-16 mb-4"
+      />
 
       <h1 className="text-3xl font-bold mb-2">
         Ask Michael
@@ -50,5 +53,4 @@ export default function PortalPage() {
     </div>
 
   );
-
 }
