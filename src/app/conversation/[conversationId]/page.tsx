@@ -25,7 +25,9 @@ interface Attachment {
 export default function ConversationPage() {
 
   const params = useParams();
-  const conversationId = params?.id as string;
+
+  /* FIXED PARAM */
+  const conversationId = params?.conversationId as string;
 
   const { user, isLoaded } = useUser();
 
@@ -124,9 +126,9 @@ export default function ConversationPage() {
         }),
       });
 
-      if (!response.ok) throw new Error();
+      if (!response.ok || !response.body) throw new Error();
 
-      const reader = response.body?.getReader();
+      const reader = response.body.getReader();
       const decoder = new TextDecoder();
 
       let assistantText = "";
@@ -135,8 +137,6 @@ export default function ConversationPage() {
         ...prev,
         { role: "assistant", content: "" },
       ]);
-
-      if (!reader) return;
 
       while (true) {
 
@@ -154,7 +154,7 @@ export default function ConversationPage() {
 
       }
 
-      /* AUTO GENERATE TITLE (FIRST MESSAGE ONLY) */
+      /* AUTO GENERATE TITLE */
 
       if (updatedMessages.length === 1) {
 
@@ -330,7 +330,7 @@ export default function ConversationPage() {
 
         )}
 
-        {/* CHAT AREA */}
+        {/* CHAT */}
 
         <div className="flex-1 overflow-y-auto">
 

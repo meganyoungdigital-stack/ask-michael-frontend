@@ -1,52 +1,54 @@
 "use client";
 
-import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
 
 export default function PortalPage() {
 
   const router = useRouter();
-  const { isLoaded, isSignedIn } = useUser();
 
-  useEffect(() => {
+  async function createChat() {
 
-    if (!isLoaded) return;
+    try {
 
-    if (!isSignedIn) {
-      router.push("/sign-in");
-      return;
-    }
+      const res = await fetch("/api/conversation/new", {
+        method: "POST",
+      });
 
-    async function startConversation() {
+      const data = await res.json();
 
-      try {
+      router.push(`/conversation/${data.conversationId}`);
 
-        const res = await fetch("/api/conversation/new", {
-          method: "POST",
-        });
+    } catch {
 
-        if (!res.ok) throw new Error();
-
-        const data = await res.json();
-
-        router.push(`/conversation/${data.conversationId}`);
-
-      } catch (err) {
-
-        console.error("Conversation start error:", err);
-
-      }
+      alert("Failed to start chat");
 
     }
 
-    startConversation();
-
-  }, [isLoaded, isSignedIn, router]);
+  }
 
   return (
-    <div className="flex items-center justify-center h-screen text-gray-400">
-      Loading AI Platform...
+
+    <div className="flex flex-col items-center justify-center h-full text-center">
+
+      <div className="text-5xl mb-4">🤖</div>
+
+      <h1 className="text-3xl font-bold mb-2">
+        Ask Michael
+      </h1>
+
+      <p className="text-gray-400 mb-8">
+        Your AI engineering assistant
+      </p>
+
+      <button
+        onClick={createChat}
+        className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-semibold"
+      >
+        + New Chat
+      </button>
+
     </div>
+
   );
+
 }
