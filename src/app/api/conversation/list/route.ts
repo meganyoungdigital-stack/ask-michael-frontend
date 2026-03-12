@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import clientPromise from "@/lib/mongodb";
+import { connectToDatabase } from "@/lib/mongodb";
 
 export async function GET() {
   try {
@@ -10,8 +10,7 @@ export async function GET() {
       return NextResponse.json({ conversations: [] });
     }
 
-    const client = await clientPromise;
-    const db = client.db("ask-michael");
+   const db = await connectToDatabase();
 
     const conversations = await db
       .collection("conversations")

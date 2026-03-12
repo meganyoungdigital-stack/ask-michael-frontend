@@ -1,4 +1,4 @@
-import { MongoClient, ObjectId } from "mongodb";
+import { MongoClient, ObjectId, Db } from "mongodb";
 
 /* ============================
    ENVIRONMENT
@@ -11,7 +11,17 @@ if (!uri) {
 }
 
 /* ============================
-   MONGODB CONNECTION (SAFE POOLING)
+   MONGODB CONNECTION OPTIONS
+============================ */
+
+const options = {
+  maxPoolSize: 10,
+  serverSelectionTimeoutMS: 10000,
+  family: 4 as const, // Forces IPv4 to avoid DNS ECONNREFUSED
+};
+
+/* ============================
+   SAFE GLOBAL CONNECTION
 ============================ */
 
 let client: MongoClient;
@@ -24,28 +34,27 @@ declare global {
 
 if (process.env.NODE_ENV === "development") {
   if (!global._mongoClientPromise) {
-    client = new MongoClient(uri);
+    client = new MongoClient(uri, options);
     global._mongoClientPromise = client.connect();
   }
+
   clientPromise = global._mongoClientPromise;
 } else {
-  client = new MongoClient(uri);
+  client = new MongoClient(uri, options);
   clientPromise = client.connect();
 }
-
-export default clientPromise;
 
 /* ============================
    DATABASE HELPER
 ============================ */
 
-async function getDb() {
+async function getDb(): Promise<Db> {
   const client = await clientPromise;
   return client.db("ask-michael");
 }
 
-/* 🔥 ADDED — compatibility helper for API routes */
-export async function connectDB() {
+/* Main export used by API routes */
+export async function connectToDatabase() {
   return getDb();
 }
 
@@ -122,10 +131,7 @@ export async function createConversation(userId: string) {
   return conversationId;
 }
 
-export async function getConversation(
-  conversationId: string,
-  userId: string
-) {
+export async function getConversation(conversationId: string, userId: string) {
   const db = await getDb();
 
   return db
@@ -244,7 +250,7 @@ export async function addAttachmentToConversation(
 }
 
 /* ============================
-   USER / TIER FUNCTIONS
+   USER FUNCTIONS
 ============================ */
 
 export async function getUser(userId: string) {
@@ -268,10 +274,7 @@ export async function upsertUser(userId: string) {
   );
 }
 
-export async function updateUserTier(
-  userId: string,
-  tier: "free" | "pro"
-) {
+export async function updateUserTier(userId: string, tier: "free" | "pro") {
   const db = await getDb();
 
   await db.collection<User>("users").updateOne(
@@ -289,9 +292,7 @@ export async function updateUserTier(
 export async function getUserUsage(userId: string) {
   const db = await getDb();
 
-  const usage = await db
-    .collection<Usage>("usage")
-    .findOne({ userId });
+  const usage = await db.collection<Usage>("usage").findOne({ userId });
 
   return usage?.count ?? 0;
 }
@@ -304,13 +305,4 @@ export async function recordUserUsage(userId: string) {
     { $inc: { count: 1 } },
     { upsert: true }
   );
-}
-
-/* ============================
-   DIRECT DB ACCESS
-============================ */
-
-export async function connectToDatabase() {
-  const client = await clientPromise;
-  return client.db("ask-michael");
 }

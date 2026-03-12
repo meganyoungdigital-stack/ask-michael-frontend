@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/mongodb";
+import { connectToDatabase } from "@/lib/mongodb";
 
 export async function POST(req: Request) {
 
-  const db = await connectDB();
+  const db = await connectToDatabase();
 
   const { conversationId, name, url, type } = await req.json();
 
