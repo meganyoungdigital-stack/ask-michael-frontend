@@ -1,11 +1,11 @@
-import "./globals.css";
-import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
-import Footer from "@/components/Footer";
+import { ClerkProvider } from "@clerk/nextjs";
+import Navbar from "@/components/Navbar";
+import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Ask Michael AI",
-  description: "Industrial AI intelligence platform",
+  title: "Ask Michael",
+  description: "AI Engineering Assistant",
 };
 
 export default function RootLayout({
@@ -16,13 +16,15 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en">
-        <body className="flex flex-col min-h-screen bg-black text-white">
+        <body className="bg-white text-gray-900">
 
-          <main className="flex-1 flex flex-col min-h-0">
+          {/* Global Navbar */}
+          <Navbar />
+
+          {/* Page Content */}
+          <main className="pt-16">
             {children}
           </main>
-
-          <Footer />
 
         </body>
       </html>

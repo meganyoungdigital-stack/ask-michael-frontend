@@ -329,11 +329,11 @@ export default function ConversationPage() {
           <div className="flex items-end bg-gray-100 rounded-2xl px-4 py-3 gap-2 max-w-3xl mx-auto">
 
             <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Message..."
-              rows={1}
-              className="flex-1 bg-transparent resize-none outline-none"
+  value={input}
+  onChange={(e) => setInput(e.target.value)}
+  placeholder="Message..."
+  rows={1}
+  className="flex-1 bg-transparent resize-none outline-none text-black"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
@@ -342,8 +342,16 @@ export default function ConversationPage() {
               }}
             />
 
-            <DocumentUpload conversationId={conversationId} />
-
+            {isPro ? (
+  <DocumentUpload conversationId={conversationId} />
+) : (
+  <button
+    onClick={() => setIsUpgradeOpen(true)}
+    className="text-sm text-gray-500 hover:text-black"
+  >
+    📄 Upload (Pro)
+  </button>
+)}
             <button
               onClick={sendMessage}
               disabled={loading}

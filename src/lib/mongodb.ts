@@ -17,7 +17,7 @@ if (!uri) {
 const options = {
   maxPoolSize: 10,
   serverSelectionTimeoutMS: 10000,
-  family: 4 as const, // Forces IPv4 to avoid DNS ECONNREFUSED
+  family: 4 as const,
 };
 
 /* ============================
@@ -28,7 +28,6 @@ let client: MongoClient;
 let clientPromise: Promise<MongoClient>;
 
 declare global {
-  // eslint-disable-next-line no-var
   var _mongoClientPromise: Promise<MongoClient> | undefined;
 }
 
@@ -53,7 +52,6 @@ async function getDb(): Promise<Db> {
   return client.db("ask-michael");
 }
 
-/* Main export used by API routes */
 export async function connectToDatabase() {
   return getDb();
 }
@@ -97,6 +95,7 @@ interface Usage {
   _id?: ObjectId;
   userId: string;
   count: number;
+  lastReset: Date;
 }
 
 interface User {
@@ -289,12 +288,44 @@ export async function updateUserTier(userId: string, tier: "free" | "pro") {
    USAGE TRACKING
 ============================ */
 
+const DAILY_LIMIT = 10;
+
 export async function getUserUsage(userId: string) {
   const db = await getDb();
 
   const usage = await db.collection<Usage>("usage").findOne({ userId });
 
-  return usage?.count ?? 0;
+  const now = new Date();
+
+  if (!usage) {
+    await db.collection<Usage>("usage").insertOne({
+      userId,
+      count: 0,
+      lastReset: now,
+    });
+
+    return 0;
+  }
+
+  const hoursSinceReset =
+    (now.getTime() - new Date(usage.lastReset).getTime()) /
+    (1000 * 60 * 60);
+
+  if (hoursSinceReset >= 24) {
+    await db.collection<Usage>("usage").updateOne(
+      { userId },
+      {
+        $set: {
+          count: 0,
+          lastReset: now,
+        },
+      }
+    );
+
+    return 0;
+  }
+
+  return usage.count;
 }
 
 export async function recordUserUsage(userId: string) {
@@ -302,7 +333,9 @@ export async function recordUserUsage(userId: string) {
 
   await db.collection<Usage>("usage").updateOne(
     { userId },
-    { $inc: { count: 1 } },
+    {
+      $inc: { count: 1 },
+    },
     { upsert: true }
   );
 }

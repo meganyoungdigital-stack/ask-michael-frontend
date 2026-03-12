@@ -150,10 +150,19 @@ export async function POST(req: Request) {
 
     const usageCount = await getUserUsage(safeUserId);
 
-    const DAILY_FREE_LIMIT = 50;
-    const isPro = false;
+    const DAILY_FREE_LIMIT = 10;
 
-    const limit = isPro ? 1000 : DAILY_FREE_LIMIT;
+/* CHECK USER PLAN */
+
+const db = await getDb();
+
+const userRecord = await db.collection("users").findOne({
+  userId: safeUserId,
+});
+
+const isPro = userRecord?.plan === "pro";
+
+const limit = isPro ? 1000 : DAILY_FREE_LIMIT;
 
     if (usageCount >= limit) {
       return new Response("Daily limit reached", {
