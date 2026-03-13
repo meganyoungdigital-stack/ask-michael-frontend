@@ -23,7 +23,13 @@ import type { Db } from "mongodb";
 type Message = {
   role: "user" | "assistant";
   content: string;
-  createdAt?: Date;
+};
+
+type VectorChunk = {
+  text: string;
+  documentId?: string;
+  page?: number;
+  score?: number;
 };
 
 /* ============================
@@ -39,12 +45,12 @@ const MAX_MESSAGES = 12;
 const DAILY_FREE_LIMIT = 200;
 
 /* ============================
-   LAZY DB CONNECTION
+   DB CACHE
 ============================ */
 
 let cachedDb: Db | null = null;
 
-async function getDb() {
+async function getDb(): Promise<Db> {
   if (!cachedDb) {
     cachedDb = await connectToDatabase();
   }
@@ -52,69 +58,82 @@ async function getDb() {
 }
 
 /* ============================
-   OPENAI CLIENT
+   OPENAI
 ============================ */
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY!,
 });
 
 /* ============================
-   LAZY PDF PARSER
+   VECTOR SEARCH
 ============================ */
 
-let pdfParse: any = null;
-
-async function getPdfParser() {
-  if (!pdfParse) {
-    const module: any = await import("pdf-parse");
-    pdfParse = module.default || module;
-  }
-  return pdfParse;
-}
-
-/* =====================================================
-   READ ATTACHMENT TEXT
-===================================================== */
-
-async function getAttachmentText(attachments: any[]) {
-  let text = "";
-
-  for (const file of attachments) {
-    if (!file?.url) continue;
-
-    try {
-      const res = await fetch(file.url);
-      if (!res.ok) continue;
-
-      const buffer = Buffer.from(await res.arrayBuffer());
-
-      /* PDF SUPPORT */
-
-      if (file.type === "application/pdf") {
-        try {
-          const pdf = await getPdfParser();
-          const pdfData = await pdf(buffer);
-
-          text += `\n\nPDF FILE: ${file.name}\n${pdfData.text}`;
-        } catch (err) {
-          console.error("PDF parse error:", err);
-        }
-
-        continue;
-      }
-
-      /* TEXT FILES */
-
-      const fileText = buffer.toString("utf-8");
-
-      text += `\n\nFILE: ${file.name}\n${fileText}`;
-    } catch (err) {
-      console.error("Attachment read error:", err);
+async function getVectorContext(
+  userId: string,
+  question: string
+): Promise<{ context: string; sources: VectorChunk[] }> {
+  try {
+    if (!question || question.length < 2) {
+      return { context: "", sources: [] };
     }
-  }
 
-  return text;
+    const db = await getDb();
+
+    const embedding = await openai.embeddings.create({
+      model: "text-embedding-3-small",
+      input: question,
+    });
+
+    const results = await db
+      .collection("document_chunks")
+      .aggregate([
+        {
+          $vectorSearch: {
+            index: "vector_index",
+            path: "embedding",
+            queryVector: embedding.data[0].embedding,
+            numCandidates: 50,
+            limit: 5,
+          },
+        },
+        {
+          $match: { userId },
+        },
+        {
+          $project: {
+            text: 1,
+            documentId: 1,
+            page: 1,
+            score: { $meta: "vectorSearchScore" },
+          },
+        },
+      ])
+      .toArray();
+
+    const typedResults = results as unknown as VectorChunk[];
+
+    if (!typedResults.length) {
+      return { context: "", sources: [] };
+    }
+
+    const context = typedResults
+      .map(
+        (r, i) =>
+          `[Source ${i + 1} | Doc:${r.documentId ?? "unknown"} | Page:${
+            r.page ?? "?"
+          }]\n${r.text}`
+      )
+      .join("\n\n");
+
+    return {
+      context,
+      sources: typedResults,
+    };
+  } catch (error) {
+    console.error("Vector search error:", error);
+    return { context: "", sources: [] };
+  }
 }
 
 /* =====================================================
@@ -123,7 +142,6 @@ async function getAttachmentText(attachments: any[]) {
 
 export async function POST(req: Request) {
   try {
-
     /* ============================
        AUTH
     ============================ */
@@ -135,7 +153,7 @@ export async function POST(req: Request) {
     }
 
     /* ============================
-       RATE LIMIT (ANTI SPAM)
+       RATE LIMIT
     ============================ */
 
     const { success } = await ratelimit.limit(userId);
@@ -147,16 +165,21 @@ export async function POST(req: Request) {
       );
     }
 
-    const safeUserId = userId;
-
     /* ============================
-       BODY
+       PARSE BODY
     ============================ */
 
-    const body = await req.json();
+    let body;
+
+    try {
+      body = await req.json();
+    } catch {
+      return new Response("Invalid JSON", { status: 400 });
+    }
+
     const { messages, conversationId } = body;
 
-    if (!messages || !conversationId || !Array.isArray(messages)) {
+    if (!Array.isArray(messages) || !conversationId) {
       return new Response("Invalid request body", { status: 400 });
     }
 
@@ -170,10 +193,7 @@ export async function POST(req: Request) {
        VERIFY CONVERSATION
     ============================ */
 
-    const conversation = await getConversation(
-      conversationId,
-      safeUserId
-    );
+    const conversation = await getConversation(conversationId, userId);
 
     if (!conversation) {
       return new Response("Conversation not found", {
@@ -182,28 +202,18 @@ export async function POST(req: Request) {
     }
 
     /* ============================
-       LOAD ATTACHMENTS
-    ============================ */
-
-    const attachments = conversation.attachments || [];
-    const documentText = await getAttachmentText(attachments);
-
-    const documentContext =
-      conversation.messages.length === 0 ? documentText : "";
-
-    /* ============================
-       USER PLAN + LIMIT
+       USER PLAN
     ============================ */
 
     const db = await getDb();
 
     const userRecord = await db.collection("users").findOne({
-      userId: safeUserId,
+      userId,
     });
 
     const isPro = userRecord?.tier === "pro";
 
-    const usageCount = await getUserUsage(safeUserId);
+    const usageCount = await getUserUsage(userId);
 
     const limit = isPro ? 2000 : DAILY_FREE_LIMIT;
 
@@ -216,11 +226,27 @@ export async function POST(req: Request) {
       );
     }
 
-    const latestUserMessage: Message =
-      messages[messages.length - 1];
+    /* ============================
+       LAST USER MESSAGE
+    ============================ */
+
+    const latestUserMessage: Message = messages[messages.length - 1];
+
+    if (!latestUserMessage?.content) {
+      return new Response("Empty message", { status: 400 });
+    }
 
     /* ============================
-       BUILD MESSAGE STACK
+       DOCUMENT CONTEXT
+    ============================ */
+
+    const { context } = await getVectorContext(
+      userId,
+      latestUserMessage.content
+    );
+
+    /* ============================
+       BUILD PROMPT
     ============================ */
 
     const finalMessages = [
@@ -228,11 +254,11 @@ export async function POST(req: Request) {
         role: "system",
         content:
           "You are an expert engineering AI assistant.\n\n" +
-          "If documents are provided, use them when answering.\n\n" +
-          "DOCUMENT CONTENT:\n" +
-          documentContext,
+          "Use provided document context when available.\n\n" +
+          "Cite references like [Source 1].\n\n" +
+          "DOCUMENT CONTEXT:\n" +
+          context,
       },
-
       ...trimmedMessages.map((m: Message) => ({
         role: m.role,
         content: m.content,
@@ -253,14 +279,12 @@ export async function POST(req: Request) {
 
     const stream = new ReadableStream({
       async start(controller) {
-
         let fullResponse = "";
 
         try {
-
           for await (const chunk of completion) {
             const token =
-              chunk.choices[0]?.delta?.content || "";
+              chunk.choices?.[0]?.delta?.content || "";
 
             if (token) {
               fullResponse += token;
@@ -270,83 +294,23 @@ export async function POST(req: Request) {
 
           /* SAVE USER MESSAGE */
 
-          await appendMessageToConversation(
-            conversationId,
-            safeUserId,
-            {
-              role: "user",
-              content: latestUserMessage.content,
-              createdAt: new Date(),
-            }
-          );
+          await appendMessageToConversation(conversationId, userId, {
+            role: "user",
+            content: latestUserMessage.content,
+            createdAt: new Date(),
+          });
 
           /* SAVE AI RESPONSE */
 
-          await appendMessageToConversation(
-            conversationId,
-            safeUserId,
-            {
-              role: "assistant",
-              content: fullResponse || "No response generated.",
-              createdAt: new Date(),
-            }
-          );
+          await appendMessageToConversation(conversationId, userId, {
+            role: "assistant",
+            content: fullResponse || "No response generated.",
+            createdAt: new Date(),
+          });
 
-          /* AUTO TITLE */
+          /* RECORD USAGE */
 
-          if (conversation.messages.length === 0) {
-            try {
-
-              const titleCompletion =
-                await openai.chat.completions.create({
-                  model: "gpt-4o-mini",
-
-                  messages: [
-                    {
-                      role: "system",
-                      content:
-                        "Generate a short professional chat title (3-6 words). Respond only with the title.",
-                    },
-                    {
-                      role: "user",
-                      content:
-                        latestUserMessage.content +
-                        "\n\n" +
-                        fullResponse,
-                    },
-                  ],
-
-                  max_tokens: 20,
-                });
-
-              const generatedTitle =
-                titleCompletion.choices[0]?.message?.content?.trim() ||
-                latestUserMessage.content.slice(0, 40);
-
-              const db = await getDb();
-
-              await db.collection("conversations").updateOne(
-                {
-                  conversationId,
-                  userId: safeUserId,
-                },
-                {
-                  $set: {
-                    title: generatedTitle,
-                    updatedAt: new Date(),
-                  },
-                }
-              );
-
-            } catch (err) {
-              console.error("Title generation error:", err);
-            }
-          }
-
-          /* RECORD DAILY USAGE */
-
-          await recordUserUsage(safeUserId);
-
+          await recordUserUsage(userId);
         } catch (err) {
           console.error("Streaming error:", err);
         } finally {
@@ -362,14 +326,11 @@ export async function POST(req: Request) {
         Connection: "keep-alive",
       },
     });
-
   } catch (error) {
-
     console.error("[ASK_FATAL_ERROR]", error);
 
     return new Response("Internal server error", {
       status: 500,
     });
-
   }
 }

@@ -7,21 +7,23 @@ import { MongoClient, ObjectId, Db } from "mongodb";
 const uri = process.env.MONGODB_URI;
 
 if (!uri) {
-  throw new Error("Please add your MONGODB_URI to environment variables");
+  throw new Error("Missing MONGODB_URI environment variable");
 }
 
 /* ============================
-   MONGODB CONNECTION OPTIONS
+   CONNECTION OPTIONS
 ============================ */
 
 const options = {
-  maxPoolSize: 10,
+  maxPoolSize: 20,
+  minPoolSize: 2,
   serverSelectionTimeoutMS: 10000,
+  socketTimeoutMS: 45000,
   family: 4 as const,
 };
 
 /* ============================
-   SAFE GLOBAL CONNECTION
+   GLOBAL CLIENT CACHE
 ============================ */
 
 let client: MongoClient;
@@ -36,7 +38,6 @@ if (process.env.NODE_ENV === "development") {
     client = new MongoClient(uri, options);
     global._mongoClientPromise = client.connect();
   }
-
   clientPromise = global._mongoClientPromise;
 } else {
   client = new MongoClient(uri, options);
@@ -52,7 +53,7 @@ async function getDb(): Promise<Db> {
   return client.db("ask-michael");
 }
 
-export async function connectToDatabase() {
+export async function connectToDatabase(): Promise<Db> {
   return getDb();
 }
 
@@ -83,10 +84,8 @@ interface Conversation {
   starred?: boolean;
   messages: Message[];
   attachments?: Attachment[];
-
   shareId?: string;
   isPublic?: boolean;
-
   createdAt: Date;
   updatedAt?: Date;
 }
@@ -102,6 +101,15 @@ interface User {
   _id?: ObjectId;
   userId: string;
   tier: "free" | "pro";
+  createdAt: Date;
+}
+
+export interface DocumentChunk {
+  _id?: ObjectId;
+  documentId: ObjectId;
+  userId: string;
+  text: string;
+  embedding: number[];
   createdAt: Date;
 }
 
@@ -130,7 +138,10 @@ export async function createConversation(userId: string) {
   return conversationId;
 }
 
-export async function getConversation(conversationId: string, userId: string) {
+export async function getConversation(
+  conversationId: string,
+  userId: string
+) {
   const db = await getDb();
 
   return db
@@ -288,13 +299,10 @@ export async function updateUserTier(userId: string, tier: "free" | "pro") {
    USAGE TRACKING
 ============================ */
 
-const DAILY_LIMIT = 10;
-
 export async function getUserUsage(userId: string) {
   const db = await getDb();
 
   const usage = await db.collection<Usage>("usage").findOne({ userId });
-
   const now = new Date();
 
   if (!usage) {
@@ -303,7 +311,6 @@ export async function getUserUsage(userId: string) {
       count: 0,
       lastReset: now,
     });
-
     return 0;
   }
 
@@ -321,7 +328,6 @@ export async function getUserUsage(userId: string) {
         },
       }
     );
-
     return 0;
   }
 
@@ -338,4 +344,25 @@ export async function recordUserUsage(userId: string) {
     },
     { upsert: true }
   );
+}
+
+/* ============================
+   DOCUMENT VECTOR FUNCTIONS
+============================ */
+
+export async function insertDocumentChunk(chunk: DocumentChunk) {
+  const db = await getDb();
+  return db.collection<DocumentChunk>("document_chunks").insertOne(chunk);
+}
+
+export async function deleteDocumentChunks(
+  documentId: ObjectId,
+  userId: string
+) {
+  const db = await getDb();
+
+  return db.collection<DocumentChunk>("document_chunks").deleteMany({
+    documentId,
+    userId,
+  });
 }
