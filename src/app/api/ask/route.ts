@@ -72,7 +72,7 @@ const openai = new OpenAI({
 });
 
 /* ============================
-VECTOR SEARCH
+VECTOR SEARCH (SAFE)
 ============================ */
 
 async function getVectorContext(
@@ -166,8 +166,6 @@ export async function POST(req: Request) {
         { status: 401 }
       );
     }
-
-    /* Ensure user exists */
 
     await upsertUser(userId);
 
@@ -277,13 +275,21 @@ export async function POST(req: Request) {
     }
 
     /* ============================
-    DOCUMENT CONTEXT
+    DOCUMENT CONTEXT (SAFE)
     ============================ */
 
-    const { context } = await getVectorContext(
-      userId,
-      latestUserMessage.content
-    );
+    let context = "";
+
+    try {
+      const vectorResult = await getVectorContext(
+        userId,
+        latestUserMessage.content
+      );
+
+      context = vectorResult.context || "";
+    } catch (err) {
+      console.log("Vector search skipped");
+    }
 
     /* ============================
     BUILD PROMPT
@@ -335,8 +341,6 @@ export async function POST(req: Request) {
             }
           }
 
-          /* SAVE USER MESSAGE */
-
           await appendMessageToConversation(
             conversationId,
             userId,
@@ -346,8 +350,6 @@ export async function POST(req: Request) {
               createdAt: new Date(),
             }
           );
-
-          /* SAVE AI RESPONSE */
 
           await appendMessageToConversation(
             conversationId,
@@ -360,8 +362,6 @@ export async function POST(req: Request) {
               createdAt: new Date(),
             }
           );
-
-          /* RECORD USAGE */
 
           await recordUserUsage(userId);
         } catch (err) {
