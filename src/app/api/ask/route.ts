@@ -12,6 +12,7 @@ import {
   appendMessageToConversation,
   getConversation,
   connectToDatabase,
+  upsertUser,
 } from "@/lib/mongodb";
 
 import type { Db } from "mongodb";
@@ -131,8 +132,9 @@ async function getVectorContext(
     const context = typedResults
       .map(
         (r, i) =>
-          `[Source ${i + 1} | Doc:${r.documentId ?? "unknown"} | Page:${r.page ?? "?"}]
-${r.text}`
+          `[Source ${i + 1} | Doc:${r.documentId ?? "unknown"} | Page:${
+            r.page ?? "?"
+          }]\n${r.text}`
       )
       .join("\n\n");
 
@@ -165,6 +167,10 @@ export async function POST(req: Request) {
       );
     }
 
+    /* Ensure user exists */
+
+    await upsertUser(userId);
+
     /* ============================
     RATE LIMIT
     ============================ */
@@ -193,7 +199,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { messages, conversationId } = body;
+    const { messages, conversationId } = body ?? {};
 
     if (!Array.isArray(messages) || !conversationId) {
       return NextResponse.json(
@@ -362,7 +368,9 @@ export async function POST(req: Request) {
           console.error("Streaming error:", err);
 
           controller.enqueue(
-            encoder.encode("\n\n[AI response interrupted]")
+            encoder.encode(
+              "\n\n[AI response interrupted]"
+            )
           );
         } finally {
           controller.close();
