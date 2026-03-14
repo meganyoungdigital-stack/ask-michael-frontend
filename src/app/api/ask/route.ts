@@ -36,7 +36,7 @@ type VectorChunk = {
 LIMIT MESSAGE HISTORY
 ============================ */
 
-const MAX_MESSAGES = 12;
+const MAX_MESSAGES = 8;
 
 /* ============================
 PLAN LIMITS
@@ -90,6 +90,12 @@ async function getVectorContext(
       input: question,
     });
 
+    const queryVector = embedding.data?.[0]?.embedding;
+
+    if (!queryVector) {
+      return { context: "", sources: [] };
+    }
+
     const results = await db
       .collection("document_chunks")
       .aggregate([
@@ -97,9 +103,9 @@ async function getVectorContext(
           $vectorSearch: {
             index: "vector_index",
             path: "embedding",
-            queryVector: embedding.data[0].embedding,
-            numCandidates: 50,
-            limit: 5,
+            queryVector,
+            numCandidates: 20,
+            limit: 4,
           },
         },
         {
@@ -125,9 +131,8 @@ async function getVectorContext(
     const context = typedResults
       .map(
         (r, i) =>
-          `[Source ${i + 1} | Doc:${r.documentId ?? "unknown"} | Page:${
-            r.page ?? "?"
-          }]\n${r.text}`
+          `[Source ${i + 1} | Doc:${r.documentId ?? "unknown"} | Page:${r.page ?? "?"}]
+${r.text}`
       )
       .join("\n\n");
 
@@ -181,7 +186,7 @@ export async function POST(req: Request) {
 
     try {
       body = await req.json();
-    } catch (err) {
+    } catch {
       return NextResponse.json(
         { error: "Invalid JSON body" },
         { status: 400 }
@@ -311,15 +316,6 @@ export async function POST(req: Request) {
       async start(controller) {
         let fullResponse = "";
 
-        /* STREAM TIMEOUT PROTECTION */
-
-        const timeout = setTimeout(() => {
-          controller.enqueue(
-            encoder.encode("\n\n[AI response timeout]")
-          );
-          controller.close();
-        }, 30000);
-
         try {
           for await (const chunk of completion) {
             const token =
@@ -332,8 +328,6 @@ export async function POST(req: Request) {
               );
             }
           }
-
-          clearTimeout(timeout);
 
           /* SAVE USER MESSAGE */
 
@@ -383,11 +377,13 @@ export async function POST(req: Request) {
         Connection: "keep-alive",
       },
     });
-  } catch (error) {
-    console.error("[ASK_FATAL_ERROR]", error);
+  } catch (error: any) {
+    console.error("ASK_API_ERROR:", error);
 
     return NextResponse.json(
-      { error: "Internal server error" },
+      {
+        error: error?.message || "Internal server error",
+      },
       { status: 500 }
     );
   }
