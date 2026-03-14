@@ -1,7 +1,7 @@
 import { MongoClient, ObjectId, Db } from "mongodb";
 
 /* ============================
-   ENVIRONMENT
+ENVIRONMENT
 ============================ */
 
 const uri = process.env.MONGODB_URI;
@@ -11,7 +11,7 @@ if (!uri) {
 }
 
 /* ============================
-   CONNECTION OPTIONS
+CONNECTION OPTIONS
 ============================ */
 
 const options = {
@@ -23,7 +23,7 @@ const options = {
 };
 
 /* ============================
-   GLOBAL CLIENT CACHE
+GLOBAL CLIENT CACHE
 ============================ */
 
 let client: MongoClient;
@@ -45,12 +45,28 @@ if (process.env.NODE_ENV === "development") {
 }
 
 /* ============================
-   DATABASE HELPER
+DATABASE HELPER
 ============================ */
+
+let indexesInitialized = false;
 
 async function getDb(): Promise<Db> {
   const client = await clientPromise;
-  return client.db("ask-michael");
+  const db = client.db("ask-michael");
+
+  /* Ensure indexes only once */
+  if (!indexesInitialized) {
+    await Promise.all([
+      db.collection("usage").createIndex({ userId: 1 }, { unique: true }),
+      db.collection("conversations").createIndex({ userId: 1 }),
+      db.collection("conversations").createIndex({ conversationId: 1 }),
+      db.collection("document_chunks").createIndex({ userId: 1 }),
+    ]);
+
+    indexesInitialized = true;
+  }
+
+  return db;
 }
 
 export async function connectToDatabase(): Promise<Db> {
@@ -58,7 +74,7 @@ export async function connectToDatabase(): Promise<Db> {
 }
 
 /* ============================
-   TYPES
+TYPES
 ============================ */
 
 export interface Message {
@@ -114,7 +130,7 @@ export interface DocumentChunk {
 }
 
 /* ============================
-   CONVERSATION FUNCTIONS
+CONVERSATION FUNCTIONS
 ============================ */
 
 export async function createConversation(userId: string) {
@@ -197,16 +213,6 @@ export async function getUserConversations(userId: string) {
   }));
 }
 
-export async function getConversationsForUser(userId: string) {
-  const db = await getDb();
-
-  return db
-    .collection<Conversation>("conversations")
-    .find({ userId })
-    .sort({ updatedAt: -1 })
-    .toArray();
-}
-
 export async function appendMessageToConversation(
   conversationId: string,
   userId: string,
@@ -223,44 +229,8 @@ export async function appendMessageToConversation(
   );
 }
 
-export async function updateConversationTitle(
-  conversationId: string,
-  userId: string,
-  title: string,
-  projectType?: string
-) {
-  const db = await getDb();
-
-  await db.collection<Conversation>("conversations").updateOne(
-    { conversationId, userId },
-    {
-      $set: {
-        title,
-        projectType,
-        updatedAt: new Date(),
-      },
-    }
-  );
-}
-
-export async function addAttachmentToConversation(
-  conversationId: string,
-  userId: string,
-  attachment: Attachment
-) {
-  const db = await getDb();
-
-  await db.collection<Conversation>("conversations").updateOne(
-    { conversationId, userId },
-    {
-      $push: { attachments: attachment },
-      $set: { updatedAt: new Date() },
-    }
-  );
-}
-
 /* ============================
-   USER FUNCTIONS
+USER FUNCTIONS
 ============================ */
 
 export async function getUser(userId: string) {
@@ -284,7 +254,10 @@ export async function upsertUser(userId: string) {
   );
 }
 
-export async function updateUserTier(userId: string, tier: "free" | "pro") {
+export async function updateUserTier(
+  userId: string,
+  tier: "free" | "pro"
+) {
   const db = await getDb();
 
   await db.collection<User>("users").updateOne(
@@ -296,13 +269,14 @@ export async function updateUserTier(userId: string, tier: "free" | "pro") {
 }
 
 /* ============================
-   USAGE TRACKING
+USAGE TRACKING
 ============================ */
 
 export async function getUserUsage(userId: string) {
   const db = await getDb();
 
   const usage = await db.collection<Usage>("usage").findOne({ userId });
+
   const now = new Date();
 
   if (!usage) {
@@ -311,6 +285,7 @@ export async function getUserUsage(userId: string) {
       count: 0,
       lastReset: now,
     });
+
     return 0;
   }
 
@@ -328,6 +303,7 @@ export async function getUserUsage(userId: string) {
         },
       }
     );
+
     return 0;
   }
 
@@ -341,18 +317,24 @@ export async function recordUserUsage(userId: string) {
     { userId },
     {
       $inc: { count: 1 },
+      $setOnInsert: {
+        lastReset: new Date(),
+      },
     },
     { upsert: true }
   );
 }
 
 /* ============================
-   DOCUMENT VECTOR FUNCTIONS
+DOCUMENT VECTOR FUNCTIONS
 ============================ */
 
 export async function insertDocumentChunk(chunk: DocumentChunk) {
   const db = await getDb();
-  return db.collection<DocumentChunk>("document_chunks").insertOne(chunk);
+
+  return db
+    .collection<DocumentChunk>("document_chunks")
+    .insertOne(chunk);
 }
 
 export async function deleteDocumentChunks(
@@ -361,8 +343,65 @@ export async function deleteDocumentChunks(
 ) {
   const db = await getDb();
 
-  return db.collection<DocumentChunk>("document_chunks").deleteMany({
-    documentId,
-    userId,
-  });
+  return db
+    .collection<DocumentChunk>("document_chunks")
+    .deleteMany({
+      documentId,
+      userId,
+    });
+}
+/* ============================
+ATTACHMENT FUNCTIONS
+============================ */
+
+export async function addAttachmentToConversation(
+  conversationId: string,
+  userId: string,
+  attachment: Attachment
+) {
+  const db = await getDb();
+
+  return db.collection<Conversation>("conversations").updateOne(
+    { conversationId, userId },
+    {
+      $push: { attachments: attachment },
+      $set: { updatedAt: new Date() },
+    }
+  );
+}
+
+/* ============================
+GET CONVERSATIONS FOR USER
+============================ */
+
+export async function getConversationsForUser(userId: string) {
+  const db = await getDb();
+
+  return db
+    .collection<Conversation>("conversations")
+    .find({ userId })
+    .sort({ updatedAt: -1 })
+    .toArray();
+}
+
+/* ============================
+UPDATE CONVERSATION TITLE
+============================ */
+
+export async function updateConversationTitle(
+  conversationId: string,
+  userId: string,
+  title: string
+) {
+  const db = await getDb();
+
+  return db.collection<Conversation>("conversations").updateOne(
+    { conversationId, userId },
+    {
+      $set: {
+        title,
+        updatedAt: new Date(),
+      },
+    }
+  );
 }

@@ -1,32 +1,78 @@
 export const runtime = "nodejs";
 
 import { auth } from "@clerk/nextjs/server";
-import { getUserUsage } from "@/lib/mongodb";
-import { getOrCreateUser } from "@/models/User";
+import { NextResponse } from "next/server";
+import {
+  getUserUsage,
+  upsertUser,
+  connectToDatabase,
+} from "@/lib/mongodb";
+
+/* ============================
+PLAN LIMITS
+============================ */
+
+const FREE_DAILY_LIMIT = 10;
+const PRO_DAILY_LIMIT = 500;
 
 export async function GET() {
   try {
+    /* ============================
+    AUTH
+    ============================ */
+
     const { userId } = await auth();
 
     if (!userId) {
-      return new Response("Unauthorized", { status: 401 });
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
     }
+
+    /* ============================
+    ENSURE USER EXISTS
+    ============================ */
+
+    await upsertUser(userId);
+
+    /* ============================
+    GET USAGE COUNT
+    ============================ */
 
     const usageCount = await getUserUsage(userId);
 
-    const user = await getOrCreateUser(userId);
+    /* ============================
+    GET USER PLAN
+    ============================ */
 
-    const dailyLimit = user.isPro ? 1000 : 50;
+    const db = await connectToDatabase();
 
-    return Response.json({
+    const user = await db
+      .collection("users")
+      .findOne({ userId });
+
+    const isPro = user?.tier === "pro";
+
+    const dailyLimit = isPro
+      ? PRO_DAILY_LIMIT
+      : FREE_DAILY_LIMIT;
+
+    /* ============================
+    RESPONSE
+    ============================ */
+
+    return NextResponse.json({
       usageCount,
-      isPro: user.isPro,
       dailyLimit,
+      isPro,
     });
   } catch (error) {
     console.error("[USAGE_API_ERROR]", error);
-    return new Response("Internal server error", {
-      status: 500,
-    });
+
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }

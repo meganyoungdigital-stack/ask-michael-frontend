@@ -17,7 +17,7 @@ import {
 import type { Db } from "mongodb";
 
 /* ============================
-   TYPES
+TYPES
 ============================ */
 
 type Message = {
@@ -33,19 +33,20 @@ type VectorChunk = {
 };
 
 /* ============================
-   LIMIT MESSAGE HISTORY
+LIMIT MESSAGE HISTORY
 ============================ */
 
 const MAX_MESSAGES = 12;
 
 /* ============================
-   DEV DAILY LIMIT
+PLAN LIMITS
 ============================ */
 
-const DAILY_FREE_LIMIT = 200;
+const FREE_DAILY_LIMIT = 10;
+const PRO_DAILY_LIMIT = 500;
 
 /* ============================
-   DB CACHE
+DB CACHE
 ============================ */
 
 let cachedDb: Db | null = null;
@@ -58,15 +59,19 @@ async function getDb(): Promise<Db> {
 }
 
 /* ============================
-   OPENAI
+OPENAI
 ============================ */
 
+if (!process.env.OPENAI_API_KEY) {
+  throw new Error("Missing OPENAI_API_KEY environment variable");
+}
+
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!,
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 /* ============================
-   VECTOR SEARCH
+VECTOR SEARCH
 ============================ */
 
 async function getVectorContext(
@@ -137,23 +142,26 @@ async function getVectorContext(
 }
 
 /* =====================================================
-   MAIN ROUTE
+MAIN ROUTE
 ===================================================== */
 
 export async function POST(req: Request) {
   try {
     /* ============================
-       AUTH
+    AUTH
     ============================ */
 
     const { userId } = await auth();
 
     if (!userId) {
-      return new Response("Unauthorized", { status: 401 });
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
     }
 
     /* ============================
-       RATE LIMIT
+    RATE LIMIT
     ============================ */
 
     const { success } = await ratelimit.limit(userId);
@@ -166,78 +174,99 @@ export async function POST(req: Request) {
     }
 
     /* ============================
-       PARSE BODY
+    PARSE BODY
     ============================ */
 
-    let body;
+    let body: any;
 
     try {
       body = await req.json();
-    } catch {
-      return new Response("Invalid JSON", { status: 400 });
+    } catch (err) {
+      return NextResponse.json(
+        { error: "Invalid JSON body" },
+        { status: 400 }
+      );
     }
 
     const { messages, conversationId } = body;
 
     if (!Array.isArray(messages) || !conversationId) {
-      return new Response("Invalid request body", { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid request body" },
+        { status: 400 }
+      );
+    }
+
+    if (messages.length === 0) {
+      return NextResponse.json(
+        { error: "No messages provided" },
+        { status: 400 }
+      );
     }
 
     /* ============================
-       TRIM MESSAGE HISTORY
+    TRIM MESSAGE HISTORY
     ============================ */
 
     const trimmedMessages = messages.slice(-MAX_MESSAGES);
 
     /* ============================
-       VERIFY CONVERSATION
+    VERIFY CONVERSATION
     ============================ */
 
-    const conversation = await getConversation(conversationId, userId);
+    const conversation = await getConversation(
+      conversationId,
+      userId
+    );
 
     if (!conversation) {
-      return new Response("Conversation not found", {
-        status: 404,
-      });
+      return NextResponse.json(
+        { error: "Conversation not found" },
+        { status: 404 }
+      );
     }
 
     /* ============================
-       USER PLAN
+    USER PLAN
     ============================ */
 
     const db = await getDb();
 
-    const userRecord = await db.collection("users").findOne({
-      userId,
-    });
+    const userRecord = await db
+      .collection("users")
+      .findOne({ userId });
 
     const isPro = userRecord?.tier === "pro";
 
     const usageCount = await getUserUsage(userId);
 
-    const limit = isPro ? 2000 : DAILY_FREE_LIMIT;
+    const limit = isPro
+      ? PRO_DAILY_LIMIT
+      : FREE_DAILY_LIMIT;
 
     if (usageCount >= limit) {
-      return new Response(
-        JSON.stringify({
-          error: "Daily message limit reached",
-        }),
+      return NextResponse.json(
+        { error: "Daily message limit reached" },
         { status: 429 }
       );
     }
 
     /* ============================
-       LAST USER MESSAGE
+    LAST USER MESSAGE
     ============================ */
 
-    const latestUserMessage: Message = messages[messages.length - 1];
+    const latestUserMessage: Message =
+      messages[messages.length - 1];
 
     if (!latestUserMessage?.content) {
-      return new Response("Empty message", { status: 400 });
+      return NextResponse.json(
+        { error: "Empty message" },
+        { status: 400 }
+      );
     }
 
     /* ============================
-       DOCUMENT CONTEXT
+    DOCUMENT CONTEXT
     ============================ */
 
     const { context } = await getVectorContext(
@@ -246,7 +275,7 @@ export async function POST(req: Request) {
     );
 
     /* ============================
-       BUILD PROMPT
+    BUILD PROMPT
     ============================ */
 
     const finalMessages = [
@@ -266,12 +295,13 @@ export async function POST(req: Request) {
     ];
 
     /* ============================
-       STREAM AI RESPONSE
+    STREAM AI RESPONSE
     ============================ */
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       stream: true,
+      max_tokens: 1200,
       messages: finalMessages as any,
     });
 
@@ -281,6 +311,15 @@ export async function POST(req: Request) {
       async start(controller) {
         let fullResponse = "";
 
+        /* STREAM TIMEOUT PROTECTION */
+
+        const timeout = setTimeout(() => {
+          controller.enqueue(
+            encoder.encode("\n\n[AI response timeout]")
+          );
+          controller.close();
+        }, 30000);
+
         try {
           for await (const chunk of completion) {
             const token =
@@ -288,31 +327,49 @@ export async function POST(req: Request) {
 
             if (token) {
               fullResponse += token;
-              controller.enqueue(encoder.encode(token));
+              controller.enqueue(
+                encoder.encode(token)
+              );
             }
           }
 
+          clearTimeout(timeout);
+
           /* SAVE USER MESSAGE */
 
-          await appendMessageToConversation(conversationId, userId, {
-            role: "user",
-            content: latestUserMessage.content,
-            createdAt: new Date(),
-          });
+          await appendMessageToConversation(
+            conversationId,
+            userId,
+            {
+              role: "user",
+              content: latestUserMessage.content,
+              createdAt: new Date(),
+            }
+          );
 
           /* SAVE AI RESPONSE */
 
-          await appendMessageToConversation(conversationId, userId, {
-            role: "assistant",
-            content: fullResponse || "No response generated.",
-            createdAt: new Date(),
-          });
+          await appendMessageToConversation(
+            conversationId,
+            userId,
+            {
+              role: "assistant",
+              content:
+                fullResponse ||
+                "No response generated.",
+              createdAt: new Date(),
+            }
+          );
 
           /* RECORD USAGE */
 
           await recordUserUsage(userId);
         } catch (err) {
           console.error("Streaming error:", err);
+
+          controller.enqueue(
+            encoder.encode("\n\n[AI response interrupted]")
+          );
         } finally {
           controller.close();
         }
@@ -329,8 +386,9 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error("[ASK_FATAL_ERROR]", error);
 
-    return new Response("Internal server error", {
-      status: 500,
-    });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }
