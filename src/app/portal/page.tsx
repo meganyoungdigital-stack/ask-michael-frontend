@@ -9,23 +9,33 @@ export default function PortalPage() {
   const router = useRouter();
   const { isLoaded, isSignedIn } = useUser();
 
+  /* =========================
+     REDIRECT IF NOT LOGGED IN
+  ========================= */
+
+  useEffect(() => {
+
+    if (isLoaded && !isSignedIn) {
+      router.push("/sign-in");
+    }
+
+  }, [isLoaded, isSignedIn, router]);
+
   /* WAIT FOR CLERK */
 
   if (!isLoaded) {
     return null;
   }
 
-  /* NOT SIGNED IN */
+  /* PREVENT FLASH BEFORE REDIRECT */
 
   if (!isSignedIn) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        Redirecting to login...
-      </div>
-    );
+    return null;
   }
 
-  /* CREATE CHAT */
+  /* =========================
+     CREATE CHAT
+  ========================= */
 
   async function createChat() {
 
@@ -35,9 +45,15 @@ export default function PortalPage() {
         method: "POST",
       });
 
-      if (!res.ok) throw new Error("Failed request");
+      if (!res.ok) {
+        throw new Error("Failed request");
+      }
 
       const data = await res.json();
+
+      if (!data?.conversationId) {
+        throw new Error("Invalid response");
+      }
 
       router.push(`/conversation/${data.conversationId}`);
 
@@ -49,6 +65,10 @@ export default function PortalPage() {
     }
 
   }
+
+  /* =========================
+     PAGE UI
+  ========================= */
 
   return (
 
