@@ -25,8 +25,6 @@ interface Attachment {
 export default function ConversationPage() {
 
   const params = useParams();
-
-  /* FIXED PARAM */
   const conversationId = params?.conversationId as string;
 
   const { user, isLoaded } = useUser();
@@ -71,15 +69,18 @@ export default function ConversationPage() {
 
         const res = await fetch(`/api/conversation/${conversationId}`);
 
-        if (!res.ok) throw new Error();
+        if (!res.ok) throw new Error("Failed to load");
 
         const data = await res.json();
 
         setMessages(Array.isArray(data?.messages) ? data.messages : []);
-        setAttachments(Array.isArray(data?.attachments) ? data.attachments : []);
+        setAttachments(
+          Array.isArray(data?.attachments) ? data.attachments : []
+        );
 
-      } catch {
+      } catch (err) {
 
+        console.error(err);
         setMessages([]);
         setAttachments([]);
 
@@ -126,7 +127,9 @@ export default function ConversationPage() {
         }),
       });
 
-      if (!response.ok || !response.body) throw new Error();
+      if (!response.ok || !response.body) {
+        throw new Error("Streaming failed");
+      }
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
@@ -147,9 +150,12 @@ export default function ConversationPage() {
         assistantText += decoder.decode(value);
 
         setMessages((prev) => {
+
           const updated = [...prev];
           updated[updated.length - 1].content = assistantText;
+
           return updated;
+
         });
 
       }
@@ -171,11 +177,17 @@ export default function ConversationPage() {
             }),
           });
 
-        } catch {}
+        } catch (err) {
+
+          console.error(err);
+
+        }
 
       }
 
-    } catch {
+    } catch (err) {
+
+      console.error(err);
 
       setMessages((prev) => [
         ...prev,
@@ -212,8 +224,9 @@ export default function ConversationPage() {
       setShareUrl(data.shareUrl);
       setShowShareModal(true);
 
-    } catch {
+    } catch (err) {
 
+      console.error(err);
       setShareError("Failed to generate share link.");
 
     }
@@ -268,9 +281,11 @@ export default function ConversationPage() {
             )}
 
             {isPro && (
+
               <div className="text-green-600 text-sm font-semibold">
                 Pro Plan Active
               </div>
+
             )}
 
           </div>
@@ -298,37 +313,6 @@ export default function ConversationPage() {
           </div>
 
         </div>
-
-        {/* ATTACHMENTS */}
-
-        {attachments.length > 0 && (
-
-          <div className="max-w-3xl mx-auto w-full px-6 pt-4">
-
-            <div className="text-xs text-gray-500 mb-2">
-              Attachments
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-
-              {attachments.map((file, i) => (
-
-                <a
-                  key={i}
-                  href={file.url}
-                  target="_blank"
-                  className="bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded-lg text-sm"
-                >
-                  📎 {file.name}
-                </a>
-
-              ))}
-
-            </div>
-
-          </div>
-
-        )}
 
         {/* CHAT */}
 
@@ -391,22 +375,28 @@ export default function ConversationPage() {
               rows={1}
               className="flex-1 bg-transparent resize-none outline-none text-black"
               onKeyDown={(e) => {
+
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
                   sendMessage();
                 }
+
               }}
             />
 
             {isPro ? (
+
               <DocumentUpload conversationId={conversationId} />
+
             ) : (
+
               <button
                 onClick={() => setIsUpgradeOpen(true)}
                 className="text-sm text-gray-500 hover:text-black"
               >
                 📄 Upload (Pro)
               </button>
+
             )}
 
             <button
@@ -422,50 +412,6 @@ export default function ConversationPage() {
         </div>
 
       </div>
-
-      {/* SHARE MODAL */}
-
-      {showShareModal && shareUrl && (
-
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
-
-          <div className="bg-white p-6 rounded-2xl w-[420px]">
-
-            <h2 className="font-semibold mb-4">
-              Share this conversation
-            </h2>
-
-            <div className="flex gap-2">
-
-              <input
-                value={shareUrl}
-                readOnly
-                className="border px-3 py-2 rounded-xl w-full"
-              />
-
-              <button
-                onClick={() =>
-                  navigator.clipboard.writeText(shareUrl)
-                }
-                className="bg-blue-600 text-white px-4 rounded-xl"
-              >
-                Copy
-              </button>
-
-            </div>
-
-            <button
-              onClick={() => setShowShareModal(false)}
-              className="mt-4 text-gray-500 text-sm"
-            >
-              Close
-            </button>
-
-          </div>
-
-        </div>
-
-      )}
 
       <UpgradeModal
         isOpen={isUpgradeOpen}

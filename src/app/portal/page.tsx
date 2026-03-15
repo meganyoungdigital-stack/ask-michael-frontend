@@ -1,13 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
+import { useUser, useClerk } from "@clerk/nextjs";
 import { useEffect } from "react";
 
 export default function PortalPage() {
 
   const router = useRouter();
   const { isLoaded, isSignedIn } = useUser();
+  const { redirectToSignIn } = useClerk();
 
   /* ========================
      PROTECT THE PAGE
@@ -16,10 +17,10 @@ export default function PortalPage() {
   useEffect(() => {
 
     if (isLoaded && !isSignedIn) {
-      router.push("/sign-in");
+      redirectToSignIn({ redirectUrl: "/portal" });
     }
 
-  }, [isLoaded, isSignedIn, router]);
+  }, [isLoaded, isSignedIn, redirectToSignIn]);
 
   if (!isLoaded || !isSignedIn) {
     return null;
@@ -37,12 +38,21 @@ export default function PortalPage() {
         method: "POST",
       });
 
+      if (!res.ok) {
+        throw new Error("Failed request");
+      }
+
       const data = await res.json();
+
+      if (!data?.conversationId) {
+        throw new Error("Invalid response");
+      }
 
       router.push(`/conversation/${data.conversationId}`);
 
-    } catch {
+    } catch (error) {
 
+      console.error(error);
       alert("Failed to start chat");
 
     }
@@ -56,6 +66,7 @@ export default function PortalPage() {
       <img
         src="/m-logo.png"
         className="w-16 mb-4"
+        alt="Michael AI"
       />
 
       <h1 className="text-3xl font-bold mb-2">
