@@ -1,34 +1,31 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useUser, useClerk } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
 import { useEffect } from "react";
 
 export default function PortalPage() {
 
   const router = useRouter();
   const { isLoaded, isSignedIn } = useUser();
-  const { redirectToSignIn } = useClerk();
 
-  /* ========================
-     PROTECT THE PAGE
-  ======================== */
+  /* WAIT FOR CLERK */
 
-  useEffect(() => {
-
-    if (isLoaded && !isSignedIn) {
-      redirectToSignIn({ redirectUrl: "/portal" });
-    }
-
-  }, [isLoaded, isSignedIn, redirectToSignIn]);
-
-  if (!isLoaded || !isSignedIn) {
+  if (!isLoaded) {
     return null;
   }
 
-  /* ========================
-     CREATE CHAT
-  ======================== */
+  /* NOT SIGNED IN */
+
+  if (!isSignedIn) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        Redirecting to login...
+      </div>
+    );
+  }
+
+  /* CREATE CHAT */
 
   async function createChat() {
 
@@ -38,21 +35,15 @@ export default function PortalPage() {
         method: "POST",
       });
 
-      if (!res.ok) {
-        throw new Error("Failed request");
-      }
+      if (!res.ok) throw new Error("Failed request");
 
       const data = await res.json();
 
-      if (!data?.conversationId) {
-        throw new Error("Invalid response");
-      }
-
       router.push(`/conversation/${data.conversationId}`);
 
-    } catch (error) {
+    } catch (err) {
 
-      console.error(error);
+      console.error(err);
       alert("Failed to start chat");
 
     }
@@ -61,7 +52,7 @@ export default function PortalPage() {
 
   return (
 
-    <div className="flex flex-col items-center justify-center h-full text-center">
+    <div className="flex flex-col items-center justify-center h-screen text-center">
 
       <img
         src="/m-logo.png"
