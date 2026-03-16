@@ -16,15 +16,15 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en">
-        <body className="bg-white text-gray-900">
+        <body className="bg-black text-white">
 
           {/* Global Navbar */}
           <Navbar />
 
           {/* Page Content */}
-          <div className="pt-16">
+          <main className="pt-16 min-h-screen">
             {children}
-          </div>
+          </main>
 
         </body>
       </html>
