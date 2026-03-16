@@ -3,7 +3,7 @@ import { connectToDatabase } from "@/lib/mongodb";
 
 export async function POST(req: Request) {
 
-  const db = await connectToDatabase();
+  const { db } = await connectToDatabase();
 
   const { conversationId, name, url, type } = await req.json();
 

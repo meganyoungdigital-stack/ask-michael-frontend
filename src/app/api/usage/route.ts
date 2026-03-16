@@ -46,7 +46,7 @@ export async function GET() {
     GET USER PLAN
     ============================ */
 
-    const db = await connectToDatabase();
+    const { db } = await connectToDatabase();
 
     const user = await db
       .collection("users")

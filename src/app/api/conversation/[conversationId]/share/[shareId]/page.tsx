@@ -7,7 +7,7 @@ export default async function SharePage({
 }: {
   params: { shareId: string };
 }) {
-  const db = await connectToDatabase();
+  const { db } = await connectToDatabase();
 
   const conversation = await db
     .collection("conversations")

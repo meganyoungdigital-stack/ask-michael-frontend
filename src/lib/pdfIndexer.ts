@@ -87,7 +87,7 @@ export async function indexPdfDocument(
   userId: string,
   documentId: string
 ) {
-  const db = await connectToDatabase();
+  const { db } = await connectToDatabase();
 
   /* ============================
      PARSE PDF

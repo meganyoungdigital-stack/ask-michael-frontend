@@ -7,7 +7,7 @@ export async function PATCH(
 ) {
   const { conversationId } = await context.params;
 
-  const db = await connectToDatabase();
+  const { db } = await connectToDatabase();
   const collection = db.collection("conversations");
 
   const conversation = await collection.findOne({ conversationId });

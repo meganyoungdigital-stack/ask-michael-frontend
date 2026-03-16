@@ -61,7 +61,7 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const db = await connectToDatabase();
+    const { db } = await connectToDatabase();
 
     const documents = await db
       .collection("documents")
@@ -101,7 +101,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const db = await connectToDatabase();
+    const { db } = await connectToDatabase();
 
     /* =========================
        SAVE DOCUMENT RECORD
@@ -220,7 +220,7 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: "Missing id" }, { status: 400 });
     }
 
-    const db = await connectToDatabase();
+    const { db } = await connectToDatabase();
 
     const objectId = new ObjectId(id);
 

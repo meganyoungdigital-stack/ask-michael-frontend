@@ -14,7 +14,7 @@ export async function PATCH(
 
     const { conversationId } = await params; // ✅ Next 16 fix
 
-    const db = await connectToDatabase();
+    const { db } = await connectToDatabase();
 
     const conversation = await db.collection("conversations").findOne({
       conversationId,

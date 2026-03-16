@@ -22,7 +22,7 @@ export async function POST(
     const body = await req.json();
     const starred = body.starred;
 
-    const db = await connectToDatabase();
+    const { db } = await connectToDatabase();
 
     await db.collection("conversations").updateOne(
       { conversationId, userId },

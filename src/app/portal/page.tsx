@@ -60,7 +60,7 @@ export default function PortalPage() {
 
       /* FIXED ROUTE */
 
-      router.push(`/conversation/${data.conversationId}`);
+      router.push(`/portal/conversation/${data.conversationId}`);
 
     } catch (err) {
 

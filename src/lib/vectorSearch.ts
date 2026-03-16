@@ -29,7 +29,8 @@ let cachedDb: Db | null = null;
 
 async function getDb(): Promise<Db> {
   if (!cachedDb) {
-    cachedDb = await connectToDatabase();
+    const { db } = await connectToDatabase();
+    cachedDb = db;
   }
   return cachedDb;
 }

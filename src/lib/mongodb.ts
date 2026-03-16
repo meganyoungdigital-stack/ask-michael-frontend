@@ -59,7 +59,10 @@ async function getDb(): Promise<Db> {
     await Promise.all([
       db.collection("usage").createIndex({ userId: 1 }, { unique: true }),
       db.collection("conversations").createIndex({ userId: 1 }),
-      db.collection("conversations").createIndex({ conversationId: 1 }),
+      db.collection("conversations").createIndex(
+  { conversationId: 1 },
+  { unique: true }
+),
       db.collection("document_chunks").createIndex({ userId: 1 }),
     ]);
 
@@ -69,8 +72,9 @@ async function getDb(): Promise<Db> {
   return db;
 }
 
-export async function connectToDatabase(): Promise<Db> {
-  return getDb();
+export async function connectToDatabase(): Promise<{ db: Db }> {
+  const db = await getDb();
+  return { db };
 }
 
 /* ============================

@@ -10,7 +10,7 @@ export async function GET() {
       return NextResponse.json({ conversations: [] });
     }
 
-   const db = await connectToDatabase();
+   const { db } = await connectToDatabase();
 
     const conversations = await db
       .collection("conversations")

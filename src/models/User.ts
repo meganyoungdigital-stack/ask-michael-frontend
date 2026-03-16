@@ -9,7 +9,7 @@ export interface AppUser {
 export async function getOrCreateUser(
   clerkId: string
 ): Promise<AppUser> {
-  const db = await connectToDatabase();
+  const { db } = await connectToDatabase();
 
   const existingUser = await db
     .collection<AppUser>("users")
@@ -33,7 +33,7 @@ export async function getOrCreateUser(
 export async function getUserByClerkId(
   clerkId: string
 ): Promise<AppUser | null> {
-  const db = await connectToDatabase();
+  const { db } = await connectToDatabase();
 
   return db
     .collection<AppUser>("users")

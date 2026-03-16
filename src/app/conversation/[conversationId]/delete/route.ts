@@ -19,7 +19,7 @@ export async function DELETE(
       );
     }
 
-    const db = await connectToDatabase();
+    const { db } = await connectToDatabase();
 
     await db.collection("conversations").deleteOne({
       conversationId,

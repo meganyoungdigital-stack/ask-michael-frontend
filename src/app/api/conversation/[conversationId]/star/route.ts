@@ -18,7 +18,7 @@ export async function PATCH(
     // ✅ Next 16 requires awaiting params
     const { conversationId } = await params;
 
-    const db = await connectToDatabase();
+    const { db } = await connectToDatabase();
 
     const conversation = await db
       .collection("conversations")

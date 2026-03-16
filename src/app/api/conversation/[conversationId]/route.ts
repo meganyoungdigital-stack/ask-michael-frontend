@@ -21,7 +21,7 @@ export async function GET(
 
     const { conversationId } = await context.params;
 
-    const db = await connectToDatabase();
+    const { db } = await connectToDatabase();
 
     const conversation = await db
       .collection("conversations")
@@ -66,7 +66,7 @@ export async function PATCH(
     const { conversationId } = await context.params;
     const body = await req.json();
 
-    const db = await connectToDatabase();
+    const { db } = await connectToDatabase();
 
     const result = await db.collection("conversations").updateOne(
       { conversationId, userId },
@@ -109,7 +109,7 @@ export async function DELETE(
 
     const { conversationId } = await context.params;
 
-    const db = await connectToDatabase();
+    const { db } = await connectToDatabase();
 
     const result = await db.collection("conversations").deleteOne({
       conversationId,
