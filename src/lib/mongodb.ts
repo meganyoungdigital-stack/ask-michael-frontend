@@ -54,16 +54,24 @@ async function getDb(): Promise<Db> {
   const client = await clientPromise;
   const db = client.db("ask-michael");
 
-  /* Ensure indexes only once */
   if (!indexesInitialized) {
     await Promise.all([
       db.collection("usage").createIndex({ userId: 1 }, { unique: true }),
+
       db.collection("conversations").createIndex({ userId: 1 }),
+
       db.collection("conversations").createIndex(
-  { conversationId: 1 },
-  { unique: true }
-),
+        { conversationId: 1 },
+        { unique: true }
+      ),
+
       db.collection("document_chunks").createIndex({ userId: 1 }),
+
+      /* NEW: query cache index for vector search optimization */
+      db.collection("query_cache").createIndex(
+        { queryHash: 1, userId: 1 },
+        { unique: true }
+      ),
     ]);
 
     indexesInitialized = true;
@@ -130,6 +138,16 @@ export interface DocumentChunk {
   userId: string;
   text: string;
   embedding: number[];
+  createdAt: Date;
+}
+
+/* NEW TYPE: QUERY CACHE */
+
+export interface QueryCache {
+  _id?: ObjectId;
+  queryHash: string;
+  userId: string;
+  context: string;
   createdAt: Date;
 }
 
@@ -354,6 +372,7 @@ export async function deleteDocumentChunks(
       userId,
     });
 }
+
 /* ============================
 ATTACHMENT FUNCTIONS
 ============================ */
@@ -407,5 +426,40 @@ export async function updateConversationTitle(
         updatedAt: new Date(),
       },
     }
+  );
+}
+
+/* ============================
+QUERY CACHE FUNCTIONS
+============================ */
+
+export async function getCachedQueryContext(
+  queryHash: string,
+  userId: string
+) {
+  const db = await getDb();
+
+  return db.collection<QueryCache>("query_cache").findOne({
+    queryHash,
+    userId,
+  });
+}
+
+export async function saveQueryContext(
+  queryHash: string,
+  userId: string,
+  context: string
+) {
+  const db = await getDb();
+
+  return db.collection<QueryCache>("query_cache").updateOne(
+    { queryHash, userId },
+    {
+      $set: {
+        context,
+        createdAt: new Date(),
+      },
+    },
+    { upsert: true }
   );
 }

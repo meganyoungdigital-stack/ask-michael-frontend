@@ -213,7 +213,7 @@ export default function Sidebar() {
       if (!data?.conversationId)
         throw new Error();
 
-      router.push(`/portal/conversation/${data.conversationId}`);
+      router.push(`/portal/chat/${data.conversationId}`);
 fetchConversations();
     } catch {
       alert("Failed to create chat");
@@ -325,7 +325,7 @@ fetchConversations();
         }`}
       >
         <Link
-          href={`/portal/conversation/${conv.conversationId}`}
+          href={`/portal/chat/${conv.conversationId}`}
           className="flex-1 truncate text-sm"
         >
           {conv.title || "Untitled Chat"}

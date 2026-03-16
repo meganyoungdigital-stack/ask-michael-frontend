@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 export default function ConversationPage() {
 
   const params = useParams();
-  const conversationId = params.conversationId;
+const conversationId = params?.conversationId as string;
 
   return (
     <div className="flex flex-col h-screen p-6">

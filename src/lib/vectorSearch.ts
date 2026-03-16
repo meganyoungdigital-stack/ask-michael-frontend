@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import crypto from "crypto";
 import { connectToDatabase } from "@/lib/mongodb";
 import type { Db } from "mongodb";
 
@@ -33,6 +34,17 @@ async function getDb(): Promise<Db> {
     cachedDb = db;
   }
   return cachedDb;
+}
+
+/* ============================
+   QUERY HASH (CACHE KEY)
+============================ */
+
+function hashQuery(query: string) {
+  return crypto
+    .createHash("sha256")
+    .update(query.trim().toLowerCase())
+    .digest("hex");
 }
 
 /* ============================
@@ -112,6 +124,23 @@ export async function buildDocumentContext(
   userId: string
 ): Promise<string> {
   try {
+    const db = await getDb();
+
+    /* ---------- CACHE CHECK ---------- */
+
+    const queryHash = hashQuery(query);
+
+    const cached = await db.collection("query_cache").findOne({
+      queryHash,
+      userId,
+    });
+
+    if (cached?.context) {
+      return cached.context;
+    }
+
+    /* ---------- VECTOR SEARCH ---------- */
+
     const chunks = await searchDocumentChunks(query, userId);
 
     if (!chunks.length) {
@@ -123,6 +152,19 @@ export async function buildDocumentContext(
         return `[Source ${i + 1} | Doc:${chunk.documentId ?? "unknown"}]\n${chunk.text}`;
       })
       .join("\n\n");
+
+    /* ---------- SAVE CACHE ---------- */
+
+    await db.collection("query_cache").updateOne(
+      { queryHash, userId },
+      {
+        $set: {
+          context,
+          createdAt: new Date(),
+        },
+      },
+      { upsert: true }
+    );
 
     return context;
   } catch (err) {
