@@ -61,7 +61,6 @@ export default function PortalPage() {
       /* FIXED ROUTE */
 
       router.push(`/portal/conversation/${data.conversationId}`);
-
     } catch (err) {
 
       console.error(err);

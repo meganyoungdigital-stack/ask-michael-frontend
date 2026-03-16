@@ -79,15 +79,9 @@ export default function Sidebar() {
   /* ---------------- AUTO REFRESH ---------------- */
 
   useEffect(() => {
-    fetchConversations();
-    fetchDocuments();
-
-    const interval = setInterval(() => {
-      fetchConversations();
-    }, 4000);
-
-    return () => clearInterval(interval);
-  }, []);
+  fetchConversations();
+  fetchDocuments();
+}, []);
 
   /* ---------------- DOCUMENT DELETE ---------------- */
 
@@ -220,6 +214,7 @@ export default function Sidebar() {
         throw new Error();
 
       router.push(`/portal/conversation/${data.conversationId}`);
+fetchConversations();
     } catch {
       alert("Failed to create chat");
     }
