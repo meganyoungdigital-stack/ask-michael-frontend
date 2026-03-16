@@ -15,12 +15,10 @@ const isProtectedRoute = createRouteMatcher([
    MIDDLEWARE
 ========================= */
 
-export default clerkMiddleware(async (auth, req) => {
-
+export default clerkMiddleware((auth, req) => {
   if (isProtectedRoute(req)) {
-    await auth.protect();
+    auth.protect();
   }
-
 });
 
 /* =========================
@@ -30,6 +28,6 @@ export default clerkMiddleware(async (auth, req) => {
 export const config = {
   matcher: [
     "/((?!_next|_vercel|.*\\..*).*)",
-    "/api/(.*)"
+    "/api/(.*)",
   ],
 };

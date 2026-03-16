@@ -14,20 +14,22 @@ export default function PortalPage() {
   ========================= */
 
   useEffect(() => {
-
     if (isLoaded && !isSignedIn) {
       router.push("/sign-in");
     }
-
   }, [isLoaded, isSignedIn, router]);
 
-  /* WAIT FOR CLERK */
+  /* =========================
+     LOADING STATE
+  ========================= */
 
   if (!isLoaded) {
-    return null;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p>Loading Ask Michael...</p>
+      </div>
+    );
   }
-
-  /* PREVENT FLASH BEFORE REDIRECT */
 
   if (!isSignedIn) {
     return null;
@@ -55,7 +57,7 @@ export default function PortalPage() {
         throw new Error("Invalid response");
       }
 
-      router.push(`/conversation/${data.conversationId}`);
+      router.push(`/portal/${data.conversationId}`);
 
     } catch (err) {
 
