@@ -44,8 +44,9 @@ export default function PortalPage() {
     try {
 
       const res = await fetch("/api/conversation/new", {
-        method: "POST",
-      });
+  method: "POST",
+  credentials: "include",
+});
 
       if (!res.ok) {
         throw new Error("Failed request");

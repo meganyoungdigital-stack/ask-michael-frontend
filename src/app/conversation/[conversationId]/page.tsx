@@ -61,13 +61,15 @@ export default function ConversationPage() {
 
   useEffect(() => {
 
-    if (!conversationId) return;
+    if (!conversationId || conversationId === "undefined") return;
 
     async function loadConversation() {
 
       try {
 
-        const res = await fetch(`/api/conversation/${conversationId}`);
+        const res = await fetch(`/api/conversation/${conversationId}`, {
+          credentials: "include",
+        });
 
         if (!res.ok) throw new Error("Failed to load");
 
@@ -95,7 +97,12 @@ export default function ConversationPage() {
 
   async function sendMessage() {
 
-    if (!input.trim() || loading || !conversationId) return;
+    if (!conversationId || conversationId === "undefined") {
+      console.error("Invalid conversationId");
+      return;
+    }
+
+    if (!input.trim() || loading) return;
 
     if (!isPro && userMessageCount >= FREE_LIMIT) {
       setIsUpgradeOpen(true);
@@ -118,6 +125,7 @@ export default function ConversationPage() {
 
       const response = await fetch(`/api/ask`, {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
@@ -168,6 +176,7 @@ export default function ConversationPage() {
 
           await fetch("/api/conversation/title", {
             method: "POST",
+            credentials: "include",
             headers: {
               "Content-Type": "application/json",
             },
@@ -216,7 +225,10 @@ export default function ConversationPage() {
 
       const res = await fetch(
         `/api/conversation/${conversationId}/share`,
-        { method: "POST" }
+        {
+          method: "POST",
+          credentials: "include",
+        }
       );
 
       const data = await res.json();
@@ -385,18 +397,14 @@ export default function ConversationPage() {
             />
 
             {isPro ? (
-
               <DocumentUpload conversationId={conversationId} />
-
             ) : (
-
               <button
                 onClick={() => setIsUpgradeOpen(true)}
                 className="text-sm text-gray-500 hover:text-black"
               >
                 📄 Upload (Pro)
               </button>
-
             )}
 
             <button
