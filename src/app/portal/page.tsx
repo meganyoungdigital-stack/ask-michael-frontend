@@ -57,7 +57,9 @@ export default function PortalPage() {
         throw new Error("Invalid response");
       }
 
-      router.push(`/portal/${data.conversationId}`);
+      /* FIXED ROUTE */
+
+      router.push(`/conversation/${data.conversationId}`);
 
     } catch (err) {
 
