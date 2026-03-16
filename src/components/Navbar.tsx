@@ -5,7 +5,12 @@ import { useUser, UserButton } from "@clerk/nextjs";
 
 export default function Navbar() {
 
-  const { isSignedIn } = useUser();
+  const { isLoaded, isSignedIn } = useUser();
+
+  // Prevent rendering before Clerk loads
+  if (!isLoaded) {
+    return null;
+  }
 
   return (
     <nav className="fixed top-0 left-0 w-full z-50 backdrop-blur-md bg-blue-950/70 border-b border-blue-900">
@@ -13,8 +18,11 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
 
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 text-white text-lg font-semibold">
-          <img src="/m-logo.png" className="w-8" />
+        <Link
+          href="/"
+          className="flex items-center gap-2 text-white text-lg font-semibold"
+        >
+          <img src="/m-logo.png" className="w-8" alt="Michael AI" />
           Ask Michael
         </Link>
 

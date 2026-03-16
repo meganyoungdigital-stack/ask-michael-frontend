@@ -22,9 +22,9 @@ export default function RootLayout({
           <Navbar />
 
           {/* Page Content */}
-          <main className="pt-16 min-h-screen">
+          <div className="pt-16">
             {children}
-          </main>
+          </div>
 
         </body>
       </html>

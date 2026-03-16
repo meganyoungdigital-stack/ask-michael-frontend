@@ -59,7 +59,7 @@ export default function PortalPage() {
 
       <SignedIn>
 
-        <div className="flex flex-col items-center justify-center h-screen text-center">
+        <div className="flex flex-col items-center justify-center h-full text-center">
 
           <img
             src="/m-logo.png"

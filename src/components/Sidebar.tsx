@@ -79,9 +79,9 @@ export default function Sidebar() {
   /* ---------------- AUTO REFRESH ---------------- */
 
   useEffect(() => {
-  fetchConversations();
-  fetchDocuments();
-}, []);
+    fetchConversations();
+    fetchDocuments();
+  }, []);
 
   /* ---------------- DOCUMENT DELETE ---------------- */
 
@@ -214,7 +214,8 @@ export default function Sidebar() {
         throw new Error();
 
       router.push(`/portal/chat/${data.conversationId}`);
-fetchConversations();
+
+      fetchConversations();
     } catch {
       alert("Failed to create chat");
     }
@@ -231,7 +232,8 @@ fetchConversations();
   /* ---------------- UI ---------------- */
 
   return (
-    <aside className="w-72 border-r border-gray-800 bg-neutral-950 text-white flex flex-col h-screen">
+    <aside className="w-72 border-r border-gray-800 bg-neutral-950 text-white flex flex-col h-full">
+
       {/* NEW CHAT */}
 
       <div className="p-4 border-b border-gray-800">
@@ -246,6 +248,7 @@ fetchConversations();
       {/* LIST */}
 
       <div className="flex-1 overflow-y-auto min-h-0 p-4">
+
         {/* DOCUMENTS */}
 
         <div className="mb-6">
@@ -333,13 +336,13 @@ fetchConversations();
 
         {hoveredId === conv.conversationId && (
           <div className="flex gap-2 text-xs ml-2">
+
             <button
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 togglePin(conv);
               }}
-              title="Pin / Unpin"
             >
               {conv.starred ? "📌" : "⭐"}
             </button>
@@ -350,7 +353,6 @@ fetchConversations();
                 e.stopPropagation();
                 renameConversation(conv);
               }}
-              title="Rename"
             >
               ✏
             </button>
@@ -359,14 +361,12 @@ fetchConversations();
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                deleteConversation(
-                  conv.conversationId
-                );
+                deleteConversation(conv.conversationId);
               }}
-              title="Delete"
             >
               🗑
             </button>
+
           </div>
         )}
       </div>
