@@ -16,12 +16,10 @@ interface Document {
 }
 
 export default function Sidebar() {
-
   const router = useRouter();
   const params = useParams();
 
-  const activeId =
-    (params?.conversationId as string) || "";
+  const activeId = (params?.conversationId as string) || "";
 
   const [conversations, setConversations] =
     useState<Conversation[]>([]);
@@ -32,134 +30,127 @@ export default function Sidebar() {
   const [hoveredId, setHoveredId] =
     useState<string | null>(null);
 
+  /* ---------------- SAFE JSON ---------------- */
+
+  async function safeJson(res: Response) {
+    try {
+      return await res.json();
+    } catch {
+      return null;
+    }
+  }
+
   /* ---------------- FETCH ---------------- */
 
   async function fetchConversations() {
-
     try {
+      const res = await fetch("/api/conversation/list", {
+        cache: "no-store",
+        credentials: "include",
+      });
 
-      const res = await fetch(
-        "/api/conversation/list",
-        { cache: "no-store" }
-      );
+      if (!res.ok) throw new Error();
 
-      const data = await res.json();
+      const data = await safeJson(res);
 
       setConversations(data?.conversations || []);
-
     } catch {
-
       setConversations([]);
-
     }
-
   }
 
   async function fetchDocuments() {
-
     try {
+      const res = await fetch("/api/documents", {
+        cache: "no-store",
+        credentials: "include",
+      });
 
-      const res = await fetch(
-        "/api/documents",
-        { cache: "no-store" }
-      );
+      if (!res.ok) throw new Error();
 
-      const data = await res.json();
+      const data = await safeJson(res);
 
       setDocuments(data?.documents || []);
-
     } catch {
-
       setDocuments([]);
-
     }
-
   }
 
   /* ---------------- AUTO REFRESH ---------------- */
 
   useEffect(() => {
-
     fetchConversations();
     fetchDocuments();
 
     const interval = setInterval(() => {
-
       fetchConversations();
-
-    }, 4000); // refresh chats every 4 seconds
+    }, 4000);
 
     return () => clearInterval(interval);
-
   }, []);
 
   /* ---------------- DOCUMENT DELETE ---------------- */
 
   async function deleteDocument(id: string) {
-
     if (!confirm("Delete document?")) return;
 
     try {
-
-      await fetch(`/api/documents?id=${id}`, {
+      const res = await fetch(`/api/documents?id=${id}`, {
         method: "DELETE",
+        credentials: "include",
       });
+
+      if (!res.ok) throw new Error();
 
       setDocuments((prev) =>
         prev.filter((d) => d._id !== id)
       );
-
     } catch {
-
       alert("Failed to delete document");
-
     }
-
   }
 
   /* ---------------- CONVERSATION DELETE ---------------- */
 
   async function deleteConversation(id: string) {
-
     if (!confirm("Delete conversation?")) return;
 
     try {
-
       const res = await fetch(
         `/api/conversation/${id}`,
-        { method: "DELETE" }
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
       );
 
       if (!res.ok) throw new Error();
 
       setConversations((prev) =>
-        prev.filter((c) =>
-          c.conversationId !== id
-        )
+        prev.filter((c) => c.conversationId !== id)
       );
 
       if (activeId === id) {
         router.push("/portal");
       }
-
     } catch {
-
       alert("Delete failed");
-
     }
-
   }
 
   /* ---------------- PIN / UNPIN ---------------- */
 
   async function togglePin(conv: Conversation) {
-
     try {
-
-      await fetch(
+      const res = await fetch(
         `/api/conversation/${conv.conversationId}/star`,
-        { method: "POST" }
+        {
+          method: "POST",
+          credentials: "include",
+        }
       );
+
+      if (!res.ok) throw new Error();
 
       setConversations((prev) =>
         prev.map((c) =>
@@ -168,19 +159,14 @@ export default function Sidebar() {
             : c
         )
       );
-
     } catch {
-
       alert("Pin action failed");
-
     }
-
   }
 
   /* ---------------- RENAME ---------------- */
 
   async function renameConversation(conv: Conversation) {
-
     const newTitle = prompt(
       "Rename conversation",
       conv.title
@@ -189,11 +175,11 @@ export default function Sidebar() {
     if (!newTitle || newTitle.trim() === "") return;
 
     try {
-
-      await fetch(
+      const res = await fetch(
         `/api/conversation/${conv.conversationId}/rename`,
         {
           method: "POST",
+          credentials: "include",
           headers: {
             "Content-Type": "application/json",
           },
@@ -203,6 +189,8 @@ export default function Sidebar() {
         }
       );
 
+      if (!res.ok) throw new Error();
+
       setConversations((prev) =>
         prev.map((c) =>
           c.conversationId === conv.conversationId
@@ -210,13 +198,33 @@ export default function Sidebar() {
             : c
         )
       );
-
     } catch {
-
       alert("Rename failed");
-
     }
+  }
 
+  /* ---------------- NEW CHAT ---------------- */
+
+  async function createNewChat() {
+    try {
+      const res = await fetch("/api/conversation/new", {
+        method: "POST",
+        credentials: "include",
+      });
+
+      if (!res.ok) throw new Error();
+
+      const data = await safeJson(res);
+
+      if (!data?.conversationId)
+        throw new Error();
+
+      router.push(
+        `/conversation/${data.conversationId}`
+      );
+    } catch {
+      alert("Failed to create chat");
+    }
   }
 
   /* ---------------- SORT ---------------- */
@@ -230,67 +238,39 @@ export default function Sidebar() {
   /* ---------------- UI ---------------- */
 
   return (
-
     <aside className="w-72 border-r border-gray-800 bg-neutral-950 text-white flex flex-col h-screen">
-
       {/* NEW CHAT */}
 
       <div className="p-4 border-b border-gray-800">
-
         <button
-          onClick={async () => {
-
-  try {
-
-    const res = await fetch("/api/conversation/new", {
-      method: "POST",
-    });
-
-    const data = await res.json();
-
-    router.push(`/conversation/${data.conversationId}`);
-
-  } catch {
-
-    alert("Failed to create chat");
-
-  }
-
-}}
+          onClick={createNewChat}
           className="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded-lg font-semibold transition"
         >
           + New Chat
         </button>
-
       </div>
 
       {/* LIST */}
 
       <div className="flex-1 overflow-y-auto min-h-0 p-4">
-
         {/* DOCUMENTS */}
 
         <div className="mb-6">
-
           <p className="text-xs text-gray-400 mb-2">
             Documents
           </p>
 
           {documents.length === 0 && (
-
             <p className="text-xs text-gray-500">
               No documents
             </p>
-
           )}
 
           {documents.map((doc) => (
-
             <div
               key={doc._id}
               className="flex items-center justify-between text-sm hover:bg-neutral-800 px-2 py-1 rounded"
             >
-
               <span className="truncate">
                 📄 {doc.name}
               </span>
@@ -303,27 +283,20 @@ export default function Sidebar() {
               >
                 ✕
               </button>
-
             </div>
-
           ))}
-
         </div>
 
         {/* PINNED */}
 
         {pinned.length > 0 && (
-
           <>
-
             <p className="text-xs text-gray-400 mb-2">
               Pinned
             </p>
 
             {pinned.map(renderConversation)}
-
           </>
-
         )}
 
         {/* ALL CHATS */}
@@ -333,22 +306,17 @@ export default function Sidebar() {
         </p>
 
         {normal.map(renderConversation)}
-
       </div>
-
     </aside>
-
   );
 
   /* ---------------- RENDER CONVERSATION ---------------- */
 
   function renderConversation(conv: Conversation) {
-
     const active =
       conv.conversationId === activeId;
 
     return (
-
       <div
         key={conv.conversationId}
         onMouseEnter={() =>
@@ -363,7 +331,6 @@ export default function Sidebar() {
             : "hover:bg-neutral-900"
         }`}
       >
-
         <Link
           href={`/conversation/${conv.conversationId}`}
           className="flex-1 truncate text-sm"
@@ -372,9 +339,7 @@ export default function Sidebar() {
         </Link>
 
         {hoveredId === conv.conversationId && (
-
           <div className="flex gap-2 text-xs ml-2">
-
             <button
               onClick={(e) => {
                 e.preventDefault();
@@ -409,15 +374,9 @@ export default function Sidebar() {
             >
               🗑
             </button>
-
           </div>
-
         )}
-
       </div>
-
     );
-
   }
-
 }

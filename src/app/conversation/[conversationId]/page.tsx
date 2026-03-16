@@ -25,7 +25,7 @@ interface Attachment {
 export default function ConversationPage() {
 
   const params = useParams();
-  const conversationId = params?.conversationId as string;
+  const conversationId = params?.conversationId as string | undefined;
 
   const { user, isLoaded } = useUser();
 
@@ -61,7 +61,10 @@ export default function ConversationPage() {
 
   useEffect(() => {
 
-    if (!conversationId || conversationId === "undefined") return;
+    if (!conversationId || conversationId === "undefined") {
+      console.error("Conversation not ready");
+      return;
+    }
 
     async function loadConversation() {
 
@@ -71,7 +74,9 @@ export default function ConversationPage() {
           credentials: "include",
         });
 
-        if (!res.ok) throw new Error("Failed to load");
+        if (!res.ok) {
+          throw new Error("Failed to load conversation");
+        }
 
         const data = await res.json();
 
@@ -82,7 +87,7 @@ export default function ConversationPage() {
 
       } catch (err) {
 
-        console.error(err);
+        console.error("Conversation load error:", err);
         setMessages([]);
         setAttachments([]);
 
@@ -98,7 +103,7 @@ export default function ConversationPage() {
   async function sendMessage() {
 
     if (!conversationId || conversationId === "undefined") {
-      console.error("Invalid conversationId");
+      alert("Chat not initialized. Please start a new chat.");
       return;
     }
 
@@ -135,8 +140,12 @@ export default function ConversationPage() {
         }),
       });
 
-      if (!response.ok || !response.body) {
-        throw new Error("Streaming failed");
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+
+      if (!response.body) {
+        throw new Error("Streaming response missing");
       }
 
       const reader = response.body.getReader();
@@ -160,7 +169,10 @@ export default function ConversationPage() {
         setMessages((prev) => {
 
           const updated = [...prev];
-          updated[updated.length - 1].content = assistantText;
+          updated[updated.length - 1] = {
+            role: "assistant",
+            content: assistantText,
+          };
 
           return updated;
 
@@ -188,7 +200,7 @@ export default function ConversationPage() {
 
         } catch (err) {
 
-          console.error(err);
+          console.error("Title generation failed:", err);
 
         }
 
@@ -196,7 +208,7 @@ export default function ConversationPage() {
 
     } catch (err) {
 
-      console.error(err);
+      console.error("Send message error:", err);
 
       setMessages((prev) => [
         ...prev,
@@ -247,7 +259,7 @@ export default function ConversationPage() {
 
   }
 
-  /* WAIT FOR CLERK */
+  /* WAIT FOR AUTH */
 
   if (!isLoaded) {
 
@@ -397,7 +409,7 @@ export default function ConversationPage() {
             />
 
             {isPro ? (
-              <DocumentUpload conversationId={conversationId} />
+              <DocumentUpload conversationId={conversationId || ""} />
             ) : (
               <button
                 onClick={() => setIsUpgradeOpen(true)}
@@ -410,7 +422,7 @@ export default function ConversationPage() {
             <button
               onClick={sendMessage}
               disabled={loading}
-              className="bg-blue-600 text-white px-4 py-2 rounded-xl"
+              className="bg-blue-600 text-white px-4 py-2 rounded-xl disabled:opacity-50"
             >
               Send
             </button>
