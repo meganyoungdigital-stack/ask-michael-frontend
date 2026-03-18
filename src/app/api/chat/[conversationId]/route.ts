@@ -11,7 +11,7 @@ const openai = new OpenAI({
 /* ================= POST ================= */
 export async function POST(
   req: NextRequest,
-  context: { params: Promise<{ conversationId: string }> }
+  context: { params: Promise<{ conversationId: string }> } // ✅ FIXED (Next.js 16)
 ) {
   try {
     const { userId } = await auth();
@@ -23,11 +23,11 @@ export async function POST(
       );
     }
 
-    const params = await context.params;
-    const conversationId = params.conversationId;
+    // ✅ MUST AWAIT params
+    const { conversationId } = await context.params;
 
     const body = await req.json();
-    const message = body.message;
+    const message = body.message?.trim();
 
     if (!message) {
       return NextResponse.json(
@@ -53,22 +53,24 @@ export async function POST(
       } as any
     );
 
-    /* ================= AUTO TITLE (FIRST MESSAGE) ================= */
-    await db.collection("conversations").updateOne(
-      {
-        conversationId,
-        userId,
-        $or: [
-          { title: { $exists: false } },
-          { title: "New Chat" },
-        ],
-      },
-      {
-        $set: {
-          title: message.slice(0, 40),
-        },
-      } as any
-    );
+    /* ================= AUTO TITLE ================= */
+    const conversation = await db
+      .collection("conversations")
+      .findOne({ conversationId, userId });
+
+    if (
+      conversation &&
+      (!conversation.title || conversation.title === "New Chat")
+    ) {
+      const autoTitle = message
+        .slice(0, 40)
+        .replace(/\n/g, " ");
+
+      await db.collection("conversations").updateOne(
+        { conversationId, userId },
+        { $set: { title: autoTitle } }
+      );
+    }
 
     /* ================= AI RESPONSE ================= */
     const completion = await openai.chat.completions.create({
@@ -87,7 +89,8 @@ export async function POST(
     });
 
     const aiReply =
-      completion.choices[0].message?.content || "No response";
+      completion?.choices?.[0]?.message?.content?.trim() ||
+      "I couldn’t generate a response.";
 
     /* ================= SAVE AI MESSAGE ================= */
     const aiMessage = {
@@ -100,6 +103,7 @@ export async function POST(
       { conversationId, userId },
       {
         $push: { messages: aiMessage },
+        $set: { updatedAt: new Date() }, // ✅ keep timestamps consistent
       } as any
     );
 

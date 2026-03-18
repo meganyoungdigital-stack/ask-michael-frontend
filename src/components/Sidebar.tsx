@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 
@@ -20,7 +20,7 @@ interface Document {
 /* ================= COMPONENT ================= */
 
 export default function Sidebar() {
-  const router = useRouter(); // ✅ CLEAN (no any)
+  const router = useRouter();
   const params = useParams();
 
   const activeId =
@@ -32,6 +32,34 @@ export default function Sidebar() {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
+  /* ================= CLOSE MENU ================= */
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpenMenuId(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  /* ================= LIVE REFRESH ================= */
+
+  useEffect(() => {
+    const refresh = () => loadSidebar();
+
+    window.addEventListener("refreshSidebar", refresh);
+
+    return () => {
+      window.removeEventListener("refreshSidebar", refresh);
+    };
+  }, []);
+
   /* ================= SAFE FETCH ================= */
 
   async function safeFetch(url: string, options?: RequestInit) {
@@ -42,12 +70,7 @@ export default function Sidebar() {
         ...options,
       });
 
-      let data: any = null;
-      try {
-        data = await res.json();
-      } catch {
-        data = null;
-      }
+      const data = await res.json().catch(() => null);
 
       if (!res.ok) {
         console.error("API ERROR:", res.status, data);
@@ -61,7 +84,7 @@ export default function Sidebar() {
     }
   }
 
-  /* ================= LOAD DATA ================= */
+  /* ================= LOAD ================= */
 
   async function loadSidebar() {
     setLoading(true);
@@ -71,17 +94,8 @@ export default function Sidebar() {
       safeFetch("/api/documents"),
     ]);
 
-    setConversations(
-      Array.isArray(convData?.conversations)
-        ? convData.conversations
-        : []
-    );
-
-    setDocuments(
-      Array.isArray(docData?.documents)
-        ? docData.documents
-        : []
-    );
+    setConversations(convData?.conversations || []);
+    setDocuments(docData?.documents || []);
 
     setLoading(false);
   }
@@ -90,79 +104,71 @@ export default function Sidebar() {
     loadSidebar();
   }, []);
 
-  /* ================= NEW CHAT ================= */
+  /* ================= ACTIONS ================= */
 
   async function createChat() {
-    try {
-      const res = await fetch("/api/conversation/new", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+    const res = await fetch("/api/conversation/new", {
+      method: "POST",
+      credentials: "include",
+    });
 
-      const data = await res.json();
+    const data = await res.json();
 
-      console.log("NEW CHAT RESPONSE:", data);
-
-      if (!res.ok || !data?.conversationId) {
-        alert(data?.error || "Failed to create chat");
-        return;
-      }
-
+    if (data?.conversationId) {
       router.push(`/portal/chat/${data.conversationId}`);
-    } catch (err) {
-      console.error("CREATE CHAT ERROR:", err);
-      alert("Network error creating chat");
+
+      // 🔥 instant refresh
+      window.dispatchEvent(new Event("refreshSidebar"));
     }
   }
-
-  /* ================= DELETE ================= */
 
   async function deleteConversation(id: string) {
     if (!confirm("Delete conversation?")) return;
 
-    try {
-      await fetch(`/api/conversation/${id}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
+    await fetch(`/api/conversation/${id}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
 
-      setConversations((prev) =>
-        prev.filter((c) => c.conversationId !== id)
-      );
+    setConversations((prev) =>
+      prev.filter((c) => c.conversationId !== id)
+    );
 
-      if (activeId === id) {
-        router.push("/portal");
-      }
-    } catch {
-      alert("Delete failed");
-    }
+    if (activeId === id) router.push("/portal");
   }
 
-  /* ================= PIN ================= */
-
   async function togglePin(conv: Conversation) {
-    try {
-      await fetch(
-        `/api/conversation/${conv.conversationId}/star`,
-        {
-          method: "POST",
-          credentials: "include",
-        }
-      );
+    await fetch(`/api/conversation/${conv.conversationId}/star`, {
+      method: "POST",
+      credentials: "include",
+    });
 
-      setConversations((prev) =>
-        prev.map((c) =>
-          c.conversationId === conv.conversationId
-            ? { ...c, starred: !c.starred }
-            : c
-        )
-      );
-    } catch {
-      alert("Pin failed");
-    }
+    setConversations((prev) =>
+      prev.map((c) =>
+        c.conversationId === conv.conversationId
+          ? { ...c, starred: !c.starred }
+          : c
+      )
+    );
+  }
+
+  async function renameConversation(conv: Conversation) {
+    const newTitle = prompt("Rename conversation:", conv.title);
+    if (!newTitle) return;
+
+    await fetch(`/api/conversation/${conv.conversationId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: newTitle }),
+    });
+
+    setConversations((prev) =>
+      prev.map((c) =>
+        c.conversationId === conv.conversationId
+          ? { ...c, title: newTitle }
+          : c
+      )
+    );
   }
 
   /* ================= SORT ================= */
@@ -170,7 +176,7 @@ export default function Sidebar() {
   const pinned = conversations.filter((c) => c.starred);
   const normal = conversations.filter((c) => !c.starred);
 
-  /* ================= RENDER ================= */
+  /* ================= ITEM ================= */
 
   function renderConversation(conv: Conversation) {
     const active = conv.conversationId === activeId;
@@ -178,8 +184,10 @@ export default function Sidebar() {
     return (
       <div
         key={conv.conversationId}
-        className={`flex items-center justify-between px-3 py-2 rounded mb-1 ${
-          active ? "bg-neutral-800" : "hover:bg-neutral-900"
+        className={`group relative flex items-center px-3 py-2 rounded mb-1 transition ${
+          active
+            ? "bg-blue-600 text-white"
+            : "hover:bg-neutral-900 text-gray-300"
         }`}
       >
         <Link
@@ -189,19 +197,55 @@ export default function Sidebar() {
           {conv.title || "Untitled Chat"}
         </Link>
 
-        <div className="flex gap-2 text-xs ml-2">
-          <button onClick={() => togglePin(conv)}>
-            {conv.starred ? "📌" : "⭐"}
-          </button>
+        {/* 3 DOT BUTTON (SHOW ON HOVER) */}
+        <button
+          onClick={() =>
+            setOpenMenuId((prev) =>
+              prev === conv.conversationId ? null : conv.conversationId
+            )
+          }
+          className="ml-2 opacity-0 group-hover:opacity-100 transition text-gray-400 hover:text-white"
+        >
+          ⋯
+        </button>
 
-          <button
-            onClick={() =>
-              deleteConversation(conv.conversationId)
-            }
+        {/* DROPDOWN */}
+        {openMenuId === conv.conversationId && (
+          <div
+            ref={menuRef}
+            className="absolute right-2 top-10 bg-neutral-900 border border-neutral-700 rounded shadow-lg z-20 text-sm w-32"
           >
-            🗑
-          </button>
-        </div>
+            <button
+              onClick={() => {
+                togglePin(conv);
+                setOpenMenuId(null);
+              }}
+              className="block w-full text-left px-4 py-2 hover:bg-neutral-800"
+            >
+              {conv.starred ? "Unpin" : "Pin"}
+            </button>
+
+            <button
+              onClick={() => {
+                renameConversation(conv);
+                setOpenMenuId(null);
+              }}
+              className="block w-full text-left px-4 py-2 hover:bg-neutral-800"
+            >
+              Rename
+            </button>
+
+            <button
+              onClick={() => {
+                deleteConversation(conv.conversationId);
+                setOpenMenuId(null);
+              }}
+              className="block w-full text-left px-4 py-2 hover:bg-red-600"
+            >
+              Delete
+            </button>
+          </div>
+        )}
       </div>
     );
   }
@@ -209,52 +253,22 @@ export default function Sidebar() {
   /* ================= UI ================= */
 
   return (
-    <aside className="group w-72 bg-neutral-950 border-r border-neutral-800 flex flex-col text-white relative">
-
-      {/* HOVER BAR */}
-
-      <div className="absolute top-0 left-0 right-0 h-12 bg-neutral-900 border-b border-neutral-800 flex items-center justify-between px-4 opacity-0 group-hover:opacity-100 transition duration-300 z-10">
-
-        <span className="text-xs text-gray-400">
-          Messages: 0
-        </span>
-
-        <div className="flex gap-3 text-xs">
-          <button className="hover:text-blue-400">
-            Upgrade
-          </button>
-
-          <button className="hover:text-blue-400">
-            Share
-          </button>
-        </div>
-
-      </div>
+    <aside className="w-72 bg-neutral-950 border-r border-neutral-800 flex flex-col text-white">
 
       {/* NEW CHAT */}
-
-      <div className="p-4 border-b border-neutral-800 mt-12">
+      <div className="p-4 border-b border-neutral-800">
         <button
           onClick={createChat}
-          className="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded-lg font-semibold"
+          className="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded-lg font-semibold transition"
         >
           + New Chat
         </button>
       </div>
 
       {/* CONTENT */}
-
       <div className="flex-1 overflow-y-auto p-4">
 
-        <p className="text-xs text-gray-400 mb-2">
-          Documents
-        </p>
-
-        {documents.length === 0 && (
-          <p className="text-xs text-gray-500 mb-4">
-            No documents
-          </p>
-        )}
+        <p className="text-xs text-gray-400 mb-2">Documents</p>
 
         {documents.map((doc) => (
           <div key={doc._id} className="text-sm truncate mb-1">
@@ -264,25 +278,18 @@ export default function Sidebar() {
 
         {pinned.length > 0 && (
           <>
-            <p className="text-xs text-gray-400 mt-6 mb-2">
-              Pinned
-            </p>
+            <p className="text-xs text-gray-400 mt-6 mb-2">Pinned</p>
             {pinned.map(renderConversation)}
           </>
         )}
 
-        <p className="text-xs text-gray-400 mt-6 mb-2">
-          Chats
-        </p>
+        <p className="text-xs text-gray-400 mt-6 mb-2">Chats</p>
 
         {loading && (
-          <p className="text-xs text-gray-500">
-            Loading chats...
-          </p>
+          <p className="text-xs text-gray-500">Loading chats...</p>
         )}
 
         {normal.map(renderConversation)}
-
       </div>
     </aside>
   );

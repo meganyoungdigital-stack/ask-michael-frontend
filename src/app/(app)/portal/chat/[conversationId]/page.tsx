@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
 
 interface Message {
@@ -15,6 +15,9 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [input, setInput] = useState("");
+  const [sending, setSending] = useState(false);
+
+  const bottomRef = useRef<HTMLDivElement | null>(null);
 
   /* =========================
      FETCH CONVERSATION
@@ -42,10 +45,19 @@ export default function ChatPage() {
   }, [conversationId]);
 
   /* =========================
+     AUTO SCROLL
+  ========================= */
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  /* =========================
      SEND MESSAGE
   ========================= */
   const sendMessage = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || sending) return;
+
+    setSending(true);
 
     const userMessage: Message = {
       role: "user",
@@ -61,7 +73,7 @@ export default function ChatPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ message: input }),
+        body: JSON.stringify({ message: userMessage.content }),
       });
 
       const data = await res.json();
@@ -72,9 +84,32 @@ export default function ChatPage() {
       };
 
       setMessages((prev) => [...prev, aiMessage]);
+
+      /* 🔥 LIVE SIDEBAR UPDATE */
+      window.dispatchEvent(new Event("refreshSidebar"));
+
     } catch (err) {
       console.error("Send error:", err);
+    } finally {
+      setSending(false);
     }
+  };
+
+  /* =========================
+     ENTER TO SEND
+  ========================= */
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
+  /* =========================
+     COPY FUNCTION
+  ========================= */
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
   };
 
   /* =========================
@@ -86,62 +121,63 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex flex-col h-full p-6 bg-white text-black">
-      
-      {/* HEADER + RENAME */}
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-semibold">
-          Chat
-        </h1>
-
-        <button
-          onClick={async () => {
-            const newTitle = prompt("Rename conversation:");
-            if (!newTitle) return;
-
-            await fetch(`/api/conversation/${conversationId}`, {
-              method: "PATCH",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ title: newTitle }),
-            });
-          }}
-          className="text-sm bg-blue-600 text-white px-3 py-1 rounded"
-        >
-          Rename
-        </button>
-      </div>
+    <div className="flex flex-col h-full bg-white text-black">
 
       {/* MESSAGES */}
-      <div className="flex-1 overflow-y-auto border rounded p-4 mb-4 bg-gray-50">
+      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
         {messages.length === 0 && (
-          <p className="text-gray-400">No messages yet</p>
+          <p className="text-gray-400">Start a conversation...</p>
         )}
 
         {messages.map((msg, i) => (
-          <div key={i} className="mb-3">
-            <strong>
-              {msg.role === "user" ? "You" : "AI"}:
-            </strong>{" "}
-            {msg.content}
+          <div
+            key={i}
+            className={`flex ${
+              msg.role === "user" ? "justify-end" : "justify-start"
+            }`}
+          >
+            <div
+              className={`max-w-xl p-3 rounded-lg ${
+                msg.role === "user"
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-200 text-black"
+              }`}
+            >
+              <div className="whitespace-pre-wrap">{msg.content}</div>
+
+              {/* COPY BUTTON (AI ONLY) */}
+              {msg.role === "assistant" && (
+                <button
+                  onClick={() => copyToClipboard(msg.content)}
+                  className="text-xs text-gray-500 mt-2 hover:text-black"
+                >
+                  Copy
+                </button>
+              )}
+            </div>
           </div>
         ))}
+
+        {/* AUTO SCROLL TARGET */}
+        <div ref={bottomRef} />
       </div>
 
       {/* INPUT */}
-      <div className="flex gap-2">
+      <div className="border-t p-4 flex gap-2">
         <input
-          className="flex-1 p-2 rounded border bg-white text-black"
+          className="flex-1 p-3 rounded border bg-white text-black"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Message..."
+          onKeyDown={handleKeyDown}
+          placeholder="Send a message..."
+          disabled={sending}
         />
         <button
           onClick={sendMessage}
-          className="bg-blue-600 px-4 py-2 rounded text-white"
+          disabled={sending}
+          className="bg-blue-600 px-4 py-2 rounded text-white disabled:opacity-50"
         >
-          Send
+          {sending ? "..." : "Send"}
         </button>
       </div>
     </div>
