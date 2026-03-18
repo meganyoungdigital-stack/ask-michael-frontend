@@ -6,7 +6,7 @@ export default function PortalLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex h-[calc(100vh-64px)] mt-16">
+    <div className="flex h-[calc(100vh-64px)]">
 
       <Sidebar />
 

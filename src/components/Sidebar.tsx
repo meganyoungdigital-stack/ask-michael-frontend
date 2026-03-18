@@ -28,21 +28,18 @@ export default function Sidebar() {
       ? params.conversationId
       : "";
 
-  const [conversations, setConversations] =
-    useState<Conversation[]>([]);
-
-  const [documents, setDocuments] =
-  useState<Document[]>([]);
-
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
 
   /* ================= SAFE FETCH ================= */
 
-  async function safeFetch(url: string) {
+  async function safeFetch(url: string, options?: RequestInit) {
     try {
       const res = await fetch(url, {
         credentials: "include",
         cache: "no-store",
+        ...options,
       });
 
       if (!res.ok) return null;
@@ -82,10 +79,12 @@ export default function Sidebar() {
     loadSidebar();
   }, []);
 
-  /* ================= NEW CHAT ================= */
+  /* ================= NEW CHAT (FIXED) ================= */
 
   async function createChat() {
-    const data = await safeFetch("/api/conversation/new");
+    const data = await safeFetch("/api/conversation/new", {
+      method: "POST", // ✅ FIXED
+    });
 
     if (!data?.conversationId) {
       alert("Failed to create chat");
@@ -144,20 +143,39 @@ export default function Sidebar() {
 
   /* ================= SORT ================= */
 
-  const pinned =
-    conversations.filter((c) => c.starred);
-
-  const normal =
-    conversations.filter((c) => !c.starred);
+  const pinned = conversations.filter((c) => c.starred);
+  const normal = conversations.filter((c) => !c.starred);
 
   /* ================= UI ================= */
 
   return (
-    <aside className="w-72 bg-neutral-950 border-r border-neutral-800 flex flex-col text-white">
+    <aside className="group w-72 bg-neutral-950 border-r border-neutral-800 flex flex-col text-white relative">
+
+      {/* 🔥 HOVER TOP BAR */}
+
+      <div className="absolute top-0 left-0 right-0 h-12 bg-neutral-900 border-b border-neutral-800 flex items-center justify-between px-4 opacity-0 group-hover:opacity-100 transition duration-300 z-10">
+
+        <span className="text-xs text-gray-400">
+          Messages: 0
+        </span>
+
+        <div className="flex gap-3 text-xs">
+
+          <button className="hover:text-blue-400">
+            Upgrade
+          </button>
+
+          <button className="hover:text-blue-400">
+            Share
+          </button>
+
+        </div>
+
+      </div>
 
       {/* NEW CHAT */}
 
-      <div className="p-4 border-b border-neutral-800">
+      <div className="p-4 border-b border-neutral-800 mt-2">
         <button
           onClick={createChat}
           className="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded-lg font-semibold"
@@ -246,9 +264,7 @@ export default function Sidebar() {
 
         <div className="flex gap-2 text-xs ml-2">
 
-          <button
-            onClick={() => togglePin(conv)}
-          >
+          <button onClick={() => togglePin(conv)}>
             {conv.starred ? "📌" : "⭐"}
           </button>
 
