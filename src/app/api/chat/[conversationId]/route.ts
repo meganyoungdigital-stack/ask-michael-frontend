@@ -11,7 +11,7 @@ const openai = new OpenAI({
 /* ================= POST ================= */
 export async function POST(
   req: NextRequest,
-  context: { params: Promise<{ conversationId: string }> } // ✅ FIXED (Next.js 16)
+  context: { params: Promise<{ conversationId: string }> } // ✅ Next.js 16
 ) {
   try {
     const { userId } = await auth();
@@ -23,7 +23,6 @@ export async function POST(
       );
     }
 
-    // ✅ MUST AWAIT params
     const { conversationId } = await context.params;
 
     const body = await req.json();
@@ -53,24 +52,25 @@ export async function POST(
       } as any
     );
 
-    /* ================= AUTO TITLE ================= */
-const conversation = await db
-  .collection("conversations")
-  .findOne({ conversationId, userId });
+    /* ================= AUTO TITLE (FIXED) ================= */
+    await db.collection("conversations").findOneAndUpdate(
+      {
+        conversationId,
+        userId,
+        $or: [
+          { title: { $exists: false } },
+          { title: "" },
+          { title: "New Chat" },
+          { title: "Untitled Chat" },
+        ],
+      },
+      {
+        $set: {
+          title: message.slice(0, 40).replace(/\n/g, " ").trim(),
+        },
+      }
+    );
 
-const currentTitle = conversation?.title?.trim();
-
-if (!currentTitle || currentTitle === "New Chat" || currentTitle === "Untitled Chat") {
-  const autoTitle = message
-    .slice(0, 40)
-    .replace(/\n/g, " ")
-    .trim();
-
-  await db.collection("conversations").updateOne(
-    { conversationId, userId },
-    { $set: { title: autoTitle } }
-  );
-}
     /* ================= AI RESPONSE ================= */
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -102,7 +102,7 @@ if (!currentTitle || currentTitle === "New Chat" || currentTitle === "Untitled C
       { conversationId, userId },
       {
         $push: { messages: aiMessage },
-        $set: { updatedAt: new Date() }, // ✅ keep timestamps consistent
+        $set: { updatedAt: new Date() },
       } as any
     );
 

@@ -1,29 +1,41 @@
 import { NextResponse } from "next/server";
-import { createConversation } from "@/lib/mongodb";
+import { connectToDatabase } from "@/lib/mongodb";
 import { auth } from "@clerk/nextjs/server";
+import { randomUUID } from "crypto";
 
+/* ================= POST ================= */
 export async function POST() {
   try {
     const { userId } = await auth();
 
-    console.log("USER ID:", userId);
-
     if (!userId) {
       return NextResponse.json(
-        { error: "Unauthorized - no userId" },
+        { error: "Unauthorized" },
         { status: 401 }
       );
     }
 
-    const conversationId = await createConversation(userId);
+    const { db } = await connectToDatabase();
+
+    const conversationId = randomUUID();
+
+    /* ================= CREATE CONVERSATION ================= */
+    await db.collection("conversations").insertOne({
+      conversationId,
+      userId,
+      title: "New Chat", // ✅ required for auto rename
+      messages: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
 
     return NextResponse.json({ conversationId });
 
   } catch (error) {
-    console.error("🔥 NEW CONVERSATION ERROR:", error);
+    console.error("NEW CONVERSATION ERROR:", error);
 
     return NextResponse.json(
-      { error: "Internal Server Error", details: String(error) },
+      { error: "Internal Server Error" },
       { status: 500 }
     );
   }
