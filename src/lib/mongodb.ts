@@ -11,7 +11,7 @@ if (!uri) {
 }
 
 /* ============================
-CONNECTION OPTIONS
+CONNECTION OPTIONS (FIXED)
 ============================ */
 
 const options = {
@@ -19,7 +19,6 @@ const options = {
   minPoolSize: 2,
   serverSelectionTimeoutMS: 10000,
   socketTimeoutMS: 45000,
-  family: 4 as const,
 };
 
 /* ============================
@@ -51,33 +50,40 @@ DATABASE HELPER
 let indexesInitialized = false;
 
 async function getDb(): Promise<Db> {
-  const client = await clientPromise;
-  const db = client.db("ask-michael");
+  try {
+    const client = await clientPromise;
+    const db = client.db("ask-michael");
 
-  if (!indexesInitialized) {
-    await Promise.all([
-      db.collection("usage").createIndex({ userId: 1 }, { unique: true }),
+    console.log("✅ MongoDB connected");
 
-      db.collection("conversations").createIndex({ userId: 1 }),
+    if (!indexesInitialized) {
+      await Promise.all([
+        db.collection("usage").createIndex({ userId: 1 }, { unique: true }),
 
-      db.collection("conversations").createIndex(
-        { conversationId: 1 },
-        { unique: true }
-      ),
+        db.collection("conversations").createIndex({ userId: 1 }),
 
-      db.collection("document_chunks").createIndex({ userId: 1 }),
+        db.collection("conversations").createIndex(
+          { conversationId: 1 },
+          { unique: true }
+        ),
 
-      /* NEW: query cache index for vector search optimization */
-      db.collection("query_cache").createIndex(
-        { queryHash: 1, userId: 1 },
-        { unique: true }
-      ),
-    ]);
+        db.collection("document_chunks").createIndex({ userId: 1 }),
 
-    indexesInitialized = true;
+        db.collection("query_cache").createIndex(
+          { queryHash: 1, userId: 1 },
+          { unique: true }
+        ),
+      ]);
+
+      indexesInitialized = true;
+    }
+
+    return db;
+
+  } catch (error) {
+    console.error("🔥 MONGODB CONNECTION ERROR:", error);
+    throw error;
   }
-
-  return db;
 }
 
 export async function connectToDatabase(): Promise<{ db: Db }> {
@@ -140,8 +146,6 @@ export interface DocumentChunk {
   embedding: number[];
   createdAt: Date;
 }
-
-/* NEW TYPE: QUERY CACHE */
 
 export interface QueryCache {
   _id?: ObjectId;
@@ -391,20 +395,6 @@ export async function addAttachmentToConversation(
       $set: { updatedAt: new Date() },
     }
   );
-}
-
-/* ============================
-GET CONVERSATIONS FOR USER
-============================ */
-
-export async function getConversationsForUser(userId: string) {
-  const db = await getDb();
-
-  return db
-    .collection<Conversation>("conversations")
-    .find({ userId })
-    .sort({ updatedAt: -1 })
-    .toArray();
 }
 
 /* ============================

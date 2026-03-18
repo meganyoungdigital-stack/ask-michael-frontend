@@ -1,7 +1,8 @@
 export async function GET(request: Request) {
   try {
     const { auth } = await import("@clerk/nextjs/server");
-    const { getConversation, getConversationsForUser } = await import("@/lib/mongodb");
+    const { getConversation, getUserConversations } =
+  await import("@/lib/mongodb");
 
     const { userId } = await auth();
 
@@ -24,7 +25,7 @@ export async function GET(request: Request) {
     }
 
     // ✅ If fetching all conversations (SIDEBAR)
-    const conversations = await getConversationsForUser(userId);
+    const conversations = await getUserConversations(userId);
 
     // 🔥 CRITICAL FIX — return the array directly
     return Response.json(conversations || [], { status: 200 });
