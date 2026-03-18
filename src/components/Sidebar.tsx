@@ -20,7 +20,7 @@ interface Document {
 /* ================= COMPONENT ================= */
 
 export default function Sidebar() {
-  const router = useRouter();
+  const router = useRouter(); // ✅ CLEAN (no any)
   const params = useParams();
 
   const activeId =
@@ -42,10 +42,21 @@ export default function Sidebar() {
         ...options,
       });
 
-      if (!res.ok) return null;
+      let data: any = null;
+      try {
+        data = await res.json();
+      } catch {
+        data = null;
+      }
 
-      return await res.json();
-    } catch {
+      if (!res.ok) {
+        console.error("API ERROR:", res.status, data);
+        return null;
+      }
+
+      return data;
+    } catch (err) {
+      console.error("FETCH ERROR:", err);
       return null;
     }
   }
@@ -79,19 +90,32 @@ export default function Sidebar() {
     loadSidebar();
   }, []);
 
-  /* ================= NEW CHAT (FIXED) ================= */
+  /* ================= NEW CHAT ================= */
 
   async function createChat() {
-    const data = await safeFetch("/api/conversation/new", {
-      method: "POST", // ✅ FIXED
-    });
+    try {
+      const res = await fetch("/api/conversation/new", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
-    if (!data?.conversationId) {
-      alert("Failed to create chat");
-      return;
+      const data = await res.json();
+
+      console.log("NEW CHAT RESPONSE:", data);
+
+      if (!res.ok || !data?.conversationId) {
+        alert(data?.error || "Failed to create chat");
+        return;
+      }
+
+      router.push(`/portal/chat/${data.conversationId}`);
+    } catch (err) {
+      console.error("CREATE CHAT ERROR:", err);
+      alert("Network error creating chat");
     }
-
-    router.push(`/portal/chat/${data.conversationId}`);
   }
 
   /* ================= DELETE ================= */
@@ -146,12 +170,48 @@ export default function Sidebar() {
   const pinned = conversations.filter((c) => c.starred);
   const normal = conversations.filter((c) => !c.starred);
 
+  /* ================= RENDER ================= */
+
+  function renderConversation(conv: Conversation) {
+    const active = conv.conversationId === activeId;
+
+    return (
+      <div
+        key={conv.conversationId}
+        className={`flex items-center justify-between px-3 py-2 rounded mb-1 ${
+          active ? "bg-neutral-800" : "hover:bg-neutral-900"
+        }`}
+      >
+        <Link
+          href={`/portal/chat/${conv.conversationId}`}
+          className="truncate text-sm flex-1"
+        >
+          {conv.title || "Untitled Chat"}
+        </Link>
+
+        <div className="flex gap-2 text-xs ml-2">
+          <button onClick={() => togglePin(conv)}>
+            {conv.starred ? "📌" : "⭐"}
+          </button>
+
+          <button
+            onClick={() =>
+              deleteConversation(conv.conversationId)
+            }
+          >
+            🗑
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   /* ================= UI ================= */
 
   return (
     <aside className="group w-72 bg-neutral-950 border-r border-neutral-800 flex flex-col text-white relative">
 
-      {/* 🔥 HOVER TOP BAR */}
+      {/* HOVER BAR */}
 
       <div className="absolute top-0 left-0 right-0 h-12 bg-neutral-900 border-b border-neutral-800 flex items-center justify-between px-4 opacity-0 group-hover:opacity-100 transition duration-300 z-10">
 
@@ -160,7 +220,6 @@ export default function Sidebar() {
         </span>
 
         <div className="flex gap-3 text-xs">
-
           <button className="hover:text-blue-400">
             Upgrade
           </button>
@@ -168,14 +227,13 @@ export default function Sidebar() {
           <button className="hover:text-blue-400">
             Share
           </button>
-
         </div>
 
       </div>
 
       {/* NEW CHAT */}
 
-      <div className="p-4 border-b border-neutral-800 mt-2">
+      <div className="p-4 border-b border-neutral-800 mt-12">
         <button
           onClick={createChat}
           className="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded-lg font-semibold"
@@ -188,8 +246,6 @@ export default function Sidebar() {
 
       <div className="flex-1 overflow-y-auto p-4">
 
-        {/* DOCUMENTS */}
-
         <p className="text-xs text-gray-400 mb-2">
           Documents
         </p>
@@ -201,27 +257,19 @@ export default function Sidebar() {
         )}
 
         {documents.map((doc) => (
-          <div
-            key={doc._id}
-            className="text-sm truncate mb-1"
-          >
+          <div key={doc._id} className="text-sm truncate mb-1">
             📄 {doc.name}
           </div>
         ))}
-
-        {/* PINNED */}
 
         {pinned.length > 0 && (
           <>
             <p className="text-xs text-gray-400 mt-6 mb-2">
               Pinned
             </p>
-
             {pinned.map(renderConversation)}
           </>
         )}
-
-        {/* CHATS */}
 
         <p className="text-xs text-gray-400 mt-6 mb-2">
           Chats
@@ -236,48 +284,6 @@ export default function Sidebar() {
         {normal.map(renderConversation)}
 
       </div>
-
     </aside>
   );
-
-  /* ================= RENDER ================= */
-
-  function renderConversation(conv: Conversation) {
-    const active =
-      conv.conversationId === activeId;
-
-    return (
-      <div
-        key={conv.conversationId}
-        className={`flex items-center justify-between px-3 py-2 rounded mb-1 ${
-          active
-            ? "bg-neutral-800"
-            : "hover:bg-neutral-900"
-        }`}
-      >
-        <Link
-          href={`/portal/chat/${conv.conversationId}`}
-          className="truncate text-sm flex-1"
-        >
-          {conv.title || "Untitled Chat"}
-        </Link>
-
-        <div className="flex gap-2 text-xs ml-2">
-
-          <button onClick={() => togglePin(conv)}>
-            {conv.starred ? "📌" : "⭐"}
-          </button>
-
-          <button
-            onClick={() =>
-              deleteConversation(conv.conversationId)
-            }
-          >
-            🗑
-          </button>
-
-        </div>
-      </div>
-    );
-  }
 }
