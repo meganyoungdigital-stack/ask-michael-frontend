@@ -1,14 +1,16 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { createConversation } from "@/lib/mongodb";
+import { auth } from "@clerk/nextjs/server";
 
 export async function POST() {
   try {
     const { userId } = await auth();
 
+    console.log("USER ID:", userId);
+
     if (!userId) {
       return NextResponse.json(
-        { error: "Unauthorized" },
+        { error: "Unauthorized - no userId" },
         { status: 401 }
       );
     }
@@ -18,10 +20,10 @@ export async function POST() {
     return NextResponse.json({ conversationId });
 
   } catch (error) {
-    console.error("CREATE_CONVERSATION_ERROR:", error);
+    console.error("🔥 NEW CONVERSATION ERROR:", error);
 
     return NextResponse.json(
-      { error: "Internal Server Error" },
+      { error: "Internal Server Error", details: String(error) },
       { status: 500 }
     );
   }
