@@ -33,7 +33,6 @@ export default function Sidebar() {
   const [loading, setLoading] = useState(true);
 
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-  const [hovered, setHovered] = useState(false);
 
   const menuRef = useRef<HTMLDivElement | null>(null);
 
@@ -183,8 +182,8 @@ export default function Sidebar() {
         key={conv.conversationId}
         className={`group relative flex items-center px-3 py-2 rounded mb-1 ${
           active
-            ? "bg-blue-600 text-white"
-            : "hover:bg-neutral-900 text-gray-300"
+            ? "text-white"
+            : "text-gray-400 hover:text-white hover:bg-neutral-900"
         }`}
       >
         <Link
@@ -248,17 +247,10 @@ export default function Sidebar() {
   /* ================= UI ================= */
 
   return (
-    <aside
-      className="w-72 bg-neutral-950 border-r border-neutral-800 flex flex-col text-white relative"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      {/* 🔥 HOVER TOP PANEL */}
-      <div
-        className={`absolute top-0 left-0 w-full bg-neutral-950 border-b border-neutral-800 p-4 space-y-3 transition-all duration-300 z-10 ${
-          hovered ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"
-        }`}
-      >
+    <aside className="w-72 bg-neutral-950 border-r border-neutral-800 flex flex-col text-white">
+      
+      {/* 🔥 STATIC TOP BAR */}
+      <div className="p-4 border-b border-neutral-800 space-y-3">
         <div className="text-xs text-gray-400">
           Messages: {conversations.length}
         </div>
@@ -275,7 +267,7 @@ export default function Sidebar() {
       </div>
 
       {/* NEW CHAT */}
-      <div className="p-4 border-b border-neutral-800 mt-2">
+      <div className="p-4 border-b border-neutral-800">
         <button
           onClick={createChat}
           className="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded-lg font-semibold"
@@ -285,7 +277,7 @@ export default function Sidebar() {
       </div>
 
       {/* CONTENT */}
-      <div className="flex-1 overflow-y-auto p-4 mt-2">
+      <div className="flex-1 overflow-y-auto p-4">
         <p className="text-xs text-gray-400 mb-2">Documents</p>
 
         {documents.map((doc) => (
