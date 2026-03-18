@@ -11,7 +11,7 @@ if (!uri) {
 }
 
 /* ============================
-CONNECTION OPTIONS (FIXED)
+CONNECTION OPTIONS
 ============================ */
 
 const options = {
@@ -49,6 +49,41 @@ DATABASE HELPER
 
 let indexesInitialized = false;
 
+/* ✅ SAFE INDEX CREATION (NO CRASHES) */
+async function ensureIndexes(db: Db) {
+  try {
+    await db.collection("usage").createIndex(
+      { userId: 1 },
+      { unique: true }
+    );
+
+    await db.collection("conversations").createIndex({ userId: 1 });
+
+    // 🔥 SAFE CHECK FOR EXISTING INDEX
+    const indexes = await db.collection("conversations").indexes();
+    const existing = indexes.find(
+      (i) => i.name === "conversationId_1"
+    );
+
+    if (!existing) {
+      await db.collection("conversations").createIndex(
+        { conversationId: 1 },
+        { unique: true }
+      );
+    }
+
+    await db.collection("document_chunks").createIndex({ userId: 1 });
+
+    await db.collection("query_cache").createIndex(
+      { queryHash: 1, userId: 1 },
+      { unique: true }
+    );
+
+  } catch (err) {
+    console.error("⚠️ Index creation warning:", err);
+  }
+}
+
 async function getDb(): Promise<Db> {
   try {
     const client = await clientPromise;
@@ -57,24 +92,7 @@ async function getDb(): Promise<Db> {
     console.log("✅ MongoDB connected");
 
     if (!indexesInitialized) {
-      await Promise.all([
-        db.collection("usage").createIndex({ userId: 1 }, { unique: true }),
-
-        db.collection("conversations").createIndex({ userId: 1 }),
-
-        db.collection("conversations").createIndex(
-          { conversationId: 1 },
-          { unique: true }
-        ),
-
-        db.collection("document_chunks").createIndex({ userId: 1 }),
-
-        db.collection("query_cache").createIndex(
-          { queryHash: 1, userId: 1 },
-          { unique: true }
-        ),
-      ]);
-
+      await ensureIndexes(db);
       indexesInitialized = true;
     }
 
