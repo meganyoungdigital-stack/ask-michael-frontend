@@ -54,24 +54,23 @@ export async function POST(
     );
 
     /* ================= AUTO TITLE ================= */
-    const conversation = await db
-      .collection("conversations")
-      .findOne({ conversationId, userId });
+const conversation = await db
+  .collection("conversations")
+  .findOne({ conversationId, userId });
 
-    if (
-      conversation &&
-      (!conversation.title || conversation.title === "New Chat")
-    ) {
-      const autoTitle = message
-        .slice(0, 40)
-        .replace(/\n/g, " ");
+const currentTitle = conversation?.title?.trim();
 
-      await db.collection("conversations").updateOne(
-        { conversationId, userId },
-        { $set: { title: autoTitle } }
-      );
-    }
+if (!currentTitle || currentTitle === "New Chat" || currentTitle === "Untitled Chat") {
+  const autoTitle = message
+    .slice(0, 40)
+    .replace(/\n/g, " ")
+    .trim();
 
+  await db.collection("conversations").updateOne(
+    { conversationId, userId },
+    { $set: { title: autoTitle } }
+  );
+}
     /* ================= AI RESPONSE ================= */
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",

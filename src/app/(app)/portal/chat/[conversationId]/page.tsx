@@ -19,9 +19,7 @@ export default function ChatPage() {
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
-  /* =========================
-     FETCH CONVERSATION
-  ========================= */
+  /* ================= FETCH CONVERSATION ================= */
   useEffect(() => {
     if (!conversationId) return;
 
@@ -32,7 +30,6 @@ export default function ChatPage() {
         if (!res.ok) throw new Error("Failed to fetch");
 
         const data = await res.json();
-
         setMessages(data.messages || []);
       } catch (err) {
         console.error("Fetch error:", err);
@@ -44,16 +41,12 @@ export default function ChatPage() {
     fetchConversation();
   }, [conversationId]);
 
-  /* =========================
-     AUTO SCROLL
-  ========================= */
+  /* ================= AUTO SCROLL ================= */
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  /* =========================
-     SEND MESSAGE
-  ========================= */
+  /* ================= SEND MESSAGE ================= */
   const sendMessage = async () => {
     if (!input.trim() || sending) return;
 
@@ -61,9 +54,10 @@ export default function ChatPage() {
 
     const userMessage: Message = {
       role: "user",
-      content: input,
+      content: input.trim(),
     };
 
+    // optimistic update
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
 
@@ -76,6 +70,10 @@ export default function ChatPage() {
         body: JSON.stringify({ message: userMessage.content }),
       });
 
+      if (!res.ok) {
+        throw new Error("Failed to send message");
+      }
+
       const data = await res.json();
 
       const aiMessage: Message = {
@@ -83,38 +81,46 @@ export default function ChatPage() {
         content: data.reply || "No response",
       };
 
+      // safe append
       setMessages((prev) => [...prev, aiMessage]);
 
-      /* 🔥 LIVE SIDEBAR UPDATE */
+      /* 🔥 LIVE SIDEBAR UPDATE (CORRECT PLACE) */
       window.dispatchEvent(new Event("refreshSidebar"));
 
     } catch (err) {
       console.error("Send error:", err);
+
+      // fallback message so UI doesn't feel broken
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: "Something went wrong. Please try again.",
+        },
+      ]);
     } finally {
       setSending(false);
     }
   };
 
-  /* =========================
-     ENTER TO SEND
-  ========================= */
+  /* ================= ENTER TO SEND ================= */
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
+    if (e.key === "Enter" && !sending) {
       e.preventDefault();
       sendMessage();
     }
   };
 
-  /* =========================
-     COPY FUNCTION
-  ========================= */
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
+  /* ================= COPY FUNCTION ================= */
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (err) {
+      console.error("Copy failed:", err);
+    }
   };
 
-  /* =========================
-     UI
-  ========================= */
+  /* ================= UI ================= */
 
   if (loading) {
     return <div className="p-6 text-black bg-white">Loading chat...</div>;

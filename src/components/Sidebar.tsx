@@ -254,7 +254,31 @@ export default function Sidebar() {
 
   return (
     <aside className="w-72 bg-neutral-950 border-r border-neutral-800 flex flex-col text-white">
+{/* ================= TOP BAR ================= */}
+<div className="p-4 border-b border-neutral-800 space-y-3">
 
+  {/* COLLAPSE BUTTON (placeholder for now) */}
+  <button className="text-xs text-gray-400 hover:text-white">
+    ☰ Collapse
+  </button>
+
+  {/* MESSAGE COUNT */}
+  <div className="text-xs text-gray-400">
+    Messages: {conversations.length}
+  </div>
+
+  {/* ACTION BUTTONS */}
+  <div className="flex gap-2">
+    <button className="flex-1 text-xs bg-neutral-800 hover:bg-neutral-700 py-1 rounded">
+      Share
+    </button>
+
+    <button className="flex-1 text-xs bg-blue-600 hover:bg-blue-700 py-1 rounded">
+      Upgrade
+    </button>
+  </div>
+
+</div>
       {/* NEW CHAT */}
       <div className="p-4 border-b border-neutral-800">
         <button
