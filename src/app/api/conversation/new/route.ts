@@ -2,8 +2,6 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { createConversation } from "@/lib/mongodb";
 
-export const runtime = "nodejs";
-
 export async function POST() {
   try {
     const { userId } = await auth();
@@ -20,7 +18,7 @@ export async function POST() {
     return NextResponse.json({ conversationId });
 
   } catch (error) {
-    console.error("Error creating conversation:", error);
+    console.error("CREATE_CONVERSATION_ERROR:", error);
 
     return NextResponse.json(
       { error: "Internal Server Error" },

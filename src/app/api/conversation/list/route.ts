@@ -10,7 +10,7 @@ export async function GET() {
       return NextResponse.json({ conversations: [] });
     }
 
-   const { db } = await connectToDatabase();
+    const { db } = await connectToDatabase();
 
     const conversations = await db
       .collection("conversations")
@@ -27,6 +27,7 @@ export async function GET() {
     });
   } catch (error) {
     console.error("[LIST_ERROR]", error);
+
     return NextResponse.json({ conversations: [] });
   }
 }

@@ -2,9 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import { auth } from "@clerk/nextjs/server";
 
-/* =====================================================
-   📥 GET CONVERSATION (🔥 THIS FIXES YOUR HISTORY)
-===================================================== */
+/* ================= GET ================= */
 export async function GET(
   req: NextRequest,
   context: { params: Promise<{ conversationId: string }> }
@@ -19,7 +17,7 @@ export async function GET(
       );
     }
 
-    const { conversationId } = await context.params;
+    const { conversationId } = await context.params; // ✅ THIS IS KEY
 
     const { db } = await connectToDatabase();
 
@@ -39,6 +37,7 @@ export async function GET(
     });
   } catch (error) {
     console.error("[CONVERSATION_GET_ERROR]", error);
+
     return NextResponse.json(
       { error: "Fetch failed" },
       { status: 500 }
@@ -46,9 +45,7 @@ export async function GET(
   }
 }
 
-/* =====================================================
-   ✏️ UPDATE CONVERSATION
-===================================================== */
+/* ================= PATCH ================= */
 export async function PATCH(
   req: NextRequest,
   context: { params: Promise<{ conversationId: string }> }
@@ -64,6 +61,7 @@ export async function PATCH(
     }
 
     const { conversationId } = await context.params;
+
     const body = await req.json();
 
     const { db } = await connectToDatabase();
@@ -83,6 +81,7 @@ export async function PATCH(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[CONVERSATION_PATCH_ERROR]", error);
+
     return NextResponse.json(
       { error: "Update failed" },
       { status: 500 }
@@ -90,9 +89,7 @@ export async function PATCH(
   }
 }
 
-/* =====================================================
-   🗑 DELETE CONVERSATION
-===================================================== */
+/* ================= DELETE ================= */
 export async function DELETE(
   req: NextRequest,
   context: { params: Promise<{ conversationId: string }> }
@@ -126,6 +123,7 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[CONVERSATION_DELETE_ERROR]", error);
+
     return NextResponse.json(
       { error: "Delete failed" },
       { status: 500 }
