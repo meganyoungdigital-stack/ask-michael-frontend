@@ -13,7 +13,7 @@ const openai = new OpenAI({
 /* ================= POST ================= */
 export async function POST(
   req: NextRequest,
-  context: { params: Promise<{ conversationId: string }> } // ✅ Next.js 16
+  context: { params: Promise<{ conversationId: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -24,14 +24,55 @@ export async function POST(
 
     const { conversationId } = await context.params;
 
-    const body = await req.json();
-    const message = body.message?.trim();
+    const { db } = await connectToDatabase();
+
+    /* ================= GET USER PLAN ================= */
+    const user = await db.collection("users").findOne({ userId });
+    const isPro = user?.tier === "pro";
+
+    /* ================= PARSE REQUEST (JSON + FORM DATA SAFE) ================= */
+    let message = "";
+    let files: File[] = [];
+
+    try {
+      const contentType = req.headers.get("content-type") || "";
+
+      if (contentType.includes("multipart/form-data")) {
+        const formData = await req.formData();
+
+        message = (formData.get("message") as string)?.trim() || "";
+        files = (formData.getAll("files") as File[]) || [];
+      } else {
+        const body = await req.json();
+        message = body.message?.trim();
+      }
+    } catch {
+      return new Response("Invalid request format", { status: 400 });
+    }
 
     if (!message) {
       return new Response("Message required", { status: 400 });
     }
 
-    const { db } = await connectToDatabase();
+    /* ================= BLOCK FILES FOR FREE USERS ================= */
+    if (!isPro && files.length > 0) {
+      return new Response("File uploads require Pro plan", { status: 403 });
+    }
+
+    /* ================= PROCESS FILES ================= */
+    let fileContext = "";
+
+    if (files.length > 0) {
+      for (const file of files) {
+        try {
+          const text = await file.text();
+
+          fileContext += `\n\n[FILE: ${file.name}]\n${text.slice(0, 2000)}`;
+        } catch (err) {
+          console.error("File read error:", err);
+        }
+      }
+    }
 
     /* ================= SAVE USER MESSAGE ================= */
     const userMessage = {
@@ -48,7 +89,7 @@ export async function POST(
       } as any
     );
 
-    /* ================= AUTO TITLE (KEEP YOUR LOGIC) ================= */
+    /* ================= AUTO TITLE ================= */
     await db.collection("conversations").findOneAndUpdate(
       {
         conversationId,
@@ -67,6 +108,13 @@ export async function POST(
       }
     );
 
+    /* ================= BUILD PROMPT ================= */
+    const systemPrompt =
+      "You are a professional AI assistant for structural engineering, ISO standards, and technical compliance.\n\n" +
+      "Use any provided file data when relevant.\n\n" +
+      "FILE DATA:\n" +
+      fileContext;
+
     /* ================= STREAM AI RESPONSE ================= */
     const stream = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -74,8 +122,7 @@ export async function POST(
       messages: [
         {
           role: "system",
-          content:
-            "You are a professional AI assistant for structural engineering, ISO standards, and technical compliance.",
+          content: systemPrompt,
         },
         {
           role: "user",
