@@ -30,7 +30,7 @@ export async function POST(
     const user = await db.collection("users").findOne({ userId });
     const isPro = user?.tier === "pro";
 
-    /* ================= PARSE REQUEST (JSON + FORM DATA SAFE) ================= */
+    /* ================= PARSE REQUEST ================= */
     let message = "";
     let files: File[] = [];
 
@@ -66,7 +66,6 @@ export async function POST(
       for (const file of files) {
         try {
           const text = await file.text();
-
           fileContext += `\n\n[FILE: ${file.name}]\n${text.slice(0, 2000)}`;
         } catch (err) {
           console.error("File read error:", err);
@@ -115,10 +114,9 @@ export async function POST(
       "FILE DATA:\n" +
       fileContext;
 
-    /* ================= STREAM AI RESPONSE ================= */
-    const stream = await openai.chat.completions.create({
+    /* ================= GET AI RESPONSE (NON-STREAMING) ================= */
+    const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
-      stream: true,
       messages: [
         {
           role: "system",
@@ -131,48 +129,28 @@ export async function POST(
       ],
     });
 
-    let fullReply = "";
-    const encoder = new TextEncoder();
+    const reply =
+      completion.choices?.[0]?.message?.content || "No response";
 
-    const readable = new ReadableStream({
-      async start(controller) {
-        try {
-          for await (const chunk of stream) {
-            const token =
-              chunk.choices?.[0]?.delta?.content || "";
+    /* ================= SAVE AI MESSAGE ================= */
+    await db.collection("conversations").updateOne(
+      { conversationId, userId },
+      {
+        $push: {
+          messages: {
+            role: "assistant",
+            content: reply,
+            createdAt: new Date(),
+          },
+        },
+        $set: { updatedAt: new Date() },
+      } as any
+    );
 
-            if (token) {
-              fullReply += token;
-              controller.enqueue(encoder.encode(token));
-            }
-          }
-
-          /* ================= SAVE AI MESSAGE ================= */
-          await db.collection("conversations").updateOne(
-            { conversationId, userId },
-            {
-              $push: {
-                messages: {
-                  role: "assistant",
-                  content: fullReply,
-                  createdAt: new Date(),
-                },
-              },
-              $set: { updatedAt: new Date() },
-            } as any
-          );
-
-          controller.close();
-        } catch (err) {
-          console.error("STREAM ERROR:", err);
-          controller.error(err);
-        }
-      },
-    });
-
-    return new Response(readable, {
+    /* ================= RETURN JSON ================= */
+    return new Response(JSON.stringify({ reply }), {
       headers: {
-        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Type": "application/json",
       },
     });
 
