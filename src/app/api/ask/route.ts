@@ -44,7 +44,7 @@ PLAN LIMITS
 ============================ */
 
 const FREE_DAILY_LIMIT = 10;
-const PRO_DAILY_LIMIT = 500;
+const PRO_DAILY_LIMIT = 200; // ✅ CHANGED FROM 500 → 200
 
 /* ============================
 DB CACHE
@@ -155,10 +155,6 @@ MAIN ROUTE
 
 export async function POST(req: Request) {
   try {
-    /* ============================
-    AUTH
-    ============================ */
-
     const { userId } = await auth();
 
     if (!userId) {
@@ -214,10 +210,6 @@ export async function POST(req: Request) {
       );
     }
 
-    /* ============================
-    TRIM MESSAGE HISTORY
-    ============================ */
-
     const trimmedMessages = messages.slice(-MAX_MESSAGES);
 
     /* ============================
@@ -237,7 +229,7 @@ export async function POST(req: Request) {
     }
 
     /* ============================
-    USER PLAN
+    USER PLAN + LIMIT
     ============================ */
 
     const db = await getDb();
@@ -254,7 +246,8 @@ export async function POST(req: Request) {
       ? PRO_DAILY_LIMIT
       : FREE_DAILY_LIMIT;
 
-    if (usageCount >= limit) {
+    // ✅ SAFETY: prevent undefined/null issues
+    if ((usageCount || 0) >= limit) {
       return NextResponse.json(
         { error: "Daily message limit reached" },
         { status: 429 }
@@ -276,7 +269,7 @@ export async function POST(req: Request) {
     }
 
     /* ============================
-    DOCUMENT CONTEXT (SAFE)
+    DOCUMENT CONTEXT
     ============================ */
 
     let context = "";
@@ -288,7 +281,7 @@ export async function POST(req: Request) {
       );
 
       context = vectorResult.context || "";
-    } catch (err) {
+    } catch {
       console.log("Vector search skipped");
     }
 

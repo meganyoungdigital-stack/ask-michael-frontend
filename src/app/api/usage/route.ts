@@ -13,7 +13,7 @@ PLAN LIMITS
 ============================ */
 
 const FREE_DAILY_LIMIT = 10;
-const PRO_DAILY_LIMIT = 500;
+const PRO_DAILY_LIMIT = 200; // ✅ CHANGED FROM 500 → 200
 
 export async function GET() {
   try {
@@ -54,19 +54,20 @@ export async function GET() {
 
     const isPro = user?.tier === "pro";
 
-    const dailyLimit = isPro
+    const limit = isPro
       ? PRO_DAILY_LIMIT
       : FREE_DAILY_LIMIT;
 
     /* ============================
-    RESPONSE
+    RESPONSE (STANDARDIZED)
     ============================ */
 
     return NextResponse.json({
-      usageCount,
-      dailyLimit,
+      count: usageCount || 0,
+      limit,
       isPro,
     });
+
   } catch (error) {
     console.error("[USAGE_API_ERROR]", error);
 

@@ -2,16 +2,60 @@
 
 import { useRouter } from "next/navigation";
 import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs";
+import { useEffect, useState } from "react";
 
 export default function PortalPage() {
 
   const router = useRouter();
 
   /* =========================
+     USAGE STATE
+  ========================= */
+
+  const [usage, setUsage] = useState({
+    count: 0,
+    limit: 10,
+    isPro: false,
+  });
+
+  const remaining = usage.limit - usage.count;
+  const isLimitReached = remaining <= 0;
+
+  /* =========================
+     FETCH USAGE
+  ========================= */
+
+  async function fetchUsage() {
+    try {
+      const res = await fetch("/api/usage", {
+        credentials: "include",
+      });
+
+      const data = await res.json();
+
+      setUsage({
+        count: data.count || 0,
+        limit: data.limit || 10,
+        isPro: data.isPro || false,
+      });
+
+    } catch (err) {
+      console.error("Failed to fetch usage");
+    }
+  }
+
+  useEffect(() => {
+    fetchUsage();
+  }, []);
+
+  /* =========================
      CREATE CHAT
   ========================= */
 
   async function createChat() {
+
+    // ✅ Prevent action if limit reached
+    if (isLimitReached) return;
 
     try {
 
@@ -71,15 +115,30 @@ export default function PortalPage() {
             Ask Michael
           </h1>
 
-          <p className="text-gray-400 mb-8">
+          <p className="text-gray-400 mb-4">
             Your AI engineering assistant
           </p>
 
+          {/* ✅ USAGE DISPLAY */}
+
+          <p className="text-sm text-gray-400 mb-6">
+            {isLimitReached
+              ? "Daily message limit reached"
+              : `${remaining} messages left today`}
+          </p>
+
+          {/* ✅ BUTTON WITH DISABLE */}
+
           <button
             onClick={createChat}
-            className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-semibold"
+            disabled={isLimitReached}
+            className={`px-6 py-3 rounded-lg font-semibold ${
+              isLimitReached
+                ? "bg-gray-600 cursor-not-allowed opacity-60"
+                : "bg-blue-600 hover:bg-blue-700"
+            }`}
           >
-            + New Chat
+            {isLimitReached ? "Limit Reached" : "+ New Chat"}
           </button>
 
         </div>

@@ -17,7 +17,33 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
 
+  /* ✅ USAGE STATE */
+  const [usage, setUsage] = useState({
+    count: 0,
+    limit: 10,
+  });
+
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]); // ✅ NEW FILE STATE
+
+  const remaining = usage.limit - usage.count;
+  const isLimitReached = remaining <= 0;
+
   const bottomRef = useRef<HTMLDivElement | null>(null);
+
+  /* ================= FETCH USAGE ================= */
+  const fetchUsage = async () => {
+    try {
+      const res = await fetch("/api/usage");
+      const data = await res.json();
+
+      setUsage({
+        count: data.count || 0,
+        limit: data.limit || 10,
+      });
+    } catch (err) {
+      console.error("Failed to fetch usage");
+    }
+  };
 
   /* ================= FETCH CONVERSATION ================= */
   useEffect(() => {
@@ -39,6 +65,7 @@ export default function ChatPage() {
     };
 
     fetchConversation();
+    fetchUsage();
   }, [conversationId]);
 
   /* ================= AUTO SCROLL ================= */
@@ -46,9 +73,16 @@ export default function ChatPage() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  /* ================= FILE HANDLER ================= */
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    setSelectedFiles(Array.from(e.target.files));
+  };
+
   /* ================= SEND MESSAGE ================= */
   const sendMessage = async () => {
-    if (!input.trim() || sending) return;
+    // ✅ BLOCK IF LIMIT REACHED
+    if (!input.trim() || sending || isLimitReached) return;
 
     setSending(true);
 
@@ -57,17 +91,21 @@ export default function ChatPage() {
       content: input.trim(),
     };
 
-    // optimistic update
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
 
     try {
+      const formData = new FormData();
+      formData.append("message", userMessage.content);
+
+      // ✅ Only allow files for Pro users
+      if (usage.limit > 10 && selectedFiles.length > 0) {
+        selectedFiles.forEach((file) => formData.append("files", file));
+      }
+
       const res = await fetch(`/api/chat/${conversationId}`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ message: userMessage.content }),
+        body: formData,
       });
 
       if (!res.ok) {
@@ -81,16 +119,19 @@ export default function ChatPage() {
         content: data.reply || "No response",
       };
 
-      // safe append
       setMessages((prev) => [...prev, aiMessage]);
 
-      /* 🔥 LIVE SIDEBAR UPDATE (CORRECT PLACE) */
+      setSelectedFiles([]); // ✅ Clear files after sending
+
+      /* 🔥 REFRESH USAGE AFTER MESSAGE */
+      await fetchUsage();
+
+      /* 🔥 SIDEBAR UPDATE */
       window.dispatchEvent(new Event("refreshSidebar"));
 
     } catch (err) {
       console.error("Send error:", err);
 
-      // fallback message so UI doesn't feel broken
       setMessages((prev) => [
         ...prev,
         {
@@ -105,7 +146,7 @@ export default function ChatPage() {
 
   /* ================= ENTER TO SEND ================= */
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && !sending) {
+    if (e.key === "Enter" && !sending && !isLimitReached) {
       e.preventDefault();
       sendMessage();
     }
@@ -121,7 +162,6 @@ export default function ChatPage() {
   };
 
   /* ================= UI ================= */
-
   if (loading) {
     return <div className="p-6 text-black bg-white">Loading chat...</div>;
   }
@@ -151,7 +191,6 @@ export default function ChatPage() {
             >
               <div className="whitespace-pre-wrap">{msg.content}</div>
 
-              {/* COPY BUTTON (AI ONLY) */}
               {msg.role === "assistant" && (
                 <button
                   onClick={() => copyToClipboard(msg.content)}
@@ -164,27 +203,52 @@ export default function ChatPage() {
           </div>
         ))}
 
-        {/* AUTO SCROLL TARGET */}
         <div ref={bottomRef} />
       </div>
 
-      {/* INPUT */}
-      <div className="border-t p-4 flex gap-2">
-        <input
-          className="flex-1 p-3 rounded border bg-white text-black"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Send a message..."
-          disabled={sending}
-        />
-        <button
-          onClick={sendMessage}
-          disabled={sending}
-          className="bg-blue-600 px-4 py-2 rounded text-white disabled:opacity-50"
-        >
-          {sending ? "..." : "Send"}
-        </button>
+      {/* INPUT + FILES + USAGE */}
+      <div className="border-t p-4 flex flex-col gap-2">
+
+        {/* ✅ FILE INPUT FOR PRO USERS */}
+        {usage.limit > 10 && (
+          <div className="flex items-center gap-2">
+            <input type="file" multiple onChange={handleFileChange} />
+            {selectedFiles.length > 0 && (
+              <span className="text-xs text-gray-500">
+                {selectedFiles.length} file(s) selected
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* ✅ USAGE DISPLAY */}
+        <p className="text-sm text-gray-500">
+          {isLimitReached
+            ? "Daily message limit reached"
+            : `${remaining} messages left today`}
+        </p>
+
+        <div className="flex gap-2">
+          <input
+            className="flex-1 p-3 rounded border bg-white text-black"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Send a message..."
+            disabled={sending || isLimitReached}
+          />
+          <button
+            onClick={sendMessage}
+            disabled={sending || isLimitReached}
+            className={`px-4 py-2 rounded text-white ${
+              isLimitReached
+                ? "bg-gray-500 cursor-not-allowed"
+                : "bg-blue-600"
+            }`}
+          >
+            {sending ? "..." : isLimitReached ? "Limit Reached" : "Send"}
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -49,17 +49,17 @@ DATABASE HELPER
 
 let indexesInitialized = false;
 
-/* ✅ SAFE INDEX CREATION (NO CRASHES) */
+/* ✅ SAFE INDEX CREATION (UPDATED) */
 async function ensureIndexes(db: Db) {
   try {
+    // ✅ CHANGED: now per-day usage
     await db.collection("usage").createIndex(
-      { userId: 1 },
+      { userId: 1, date: 1 },
       { unique: true }
     );
 
     await db.collection("conversations").createIndex({ userId: 1 });
 
-    // 🔥 SAFE CHECK FOR EXISTING INDEX
     const indexes = await db.collection("conversations").indexes();
     const existing = indexes.find(
       (i) => i.name === "conversationId_1"
@@ -145,8 +145,8 @@ interface Conversation {
 interface Usage {
   _id?: ObjectId;
   userId: string;
+  date: string; // ✅ CHANGED
   count: number;
-  lastReset: Date;
 }
 
 interface User {
@@ -313,57 +313,35 @@ export async function updateUserTier(
 }
 
 /* ============================
-USAGE TRACKING
+✅ FIXED USAGE TRACKING
 ============================ */
+
+function getTodayString() {
+  return new Date().toISOString().split("T")[0];
+}
 
 export async function getUserUsage(userId: string) {
   const db = await getDb();
 
-  const usage = await db.collection<Usage>("usage").findOne({ userId });
+  const today = getTodayString();
 
-  const now = new Date();
+  const usage = await db.collection<Usage>("usage").findOne({
+    userId,
+    date: today,
+  });
 
-  if (!usage) {
-    await db.collection<Usage>("usage").insertOne({
-      userId,
-      count: 0,
-      lastReset: now,
-    });
-
-    return 0;
-  }
-
-  const hoursSinceReset =
-    (now.getTime() - new Date(usage.lastReset).getTime()) /
-    (1000 * 60 * 60);
-
-  if (hoursSinceReset >= 24) {
-    await db.collection<Usage>("usage").updateOne(
-      { userId },
-      {
-        $set: {
-          count: 0,
-          lastReset: now,
-        },
-      }
-    );
-
-    return 0;
-  }
-
-  return usage.count;
+  return usage?.count || 0;
 }
 
 export async function recordUserUsage(userId: string) {
   const db = await getDb();
 
+  const today = getTodayString();
+
   await db.collection<Usage>("usage").updateOne(
-    { userId },
+    { userId, date: today },
     {
       $inc: { count: 1 },
-      $setOnInsert: {
-        lastReset: new Date(),
-      },
     },
     { upsert: true }
   );
