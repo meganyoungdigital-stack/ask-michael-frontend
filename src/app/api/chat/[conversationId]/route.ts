@@ -1,7 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import { auth } from "@clerk/nextjs/server";
 import OpenAI from "openai";
+
+export const runtime = "nodejs";
 
 /* ================= OPENAI ================= */
 const openai = new OpenAI({
@@ -17,10 +19,7 @@ export async function POST(
     const { userId } = await auth();
 
     if (!userId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return new Response("Unauthorized", { status: 401 });
     }
 
     const { conversationId } = await context.params;
@@ -29,10 +28,7 @@ export async function POST(
     const message = body.message?.trim();
 
     if (!message) {
-      return NextResponse.json(
-        { error: "Message required" },
-        { status: 400 }
-      );
+      return new Response("Message required", { status: 400 });
     }
 
     const { db } = await connectToDatabase();
@@ -52,7 +48,7 @@ export async function POST(
       } as any
     );
 
-    /* ================= AUTO TITLE (FIXED) ================= */
+    /* ================= AUTO TITLE (KEEP YOUR LOGIC) ================= */
     await db.collection("conversations").findOneAndUpdate(
       {
         conversationId,
@@ -71,9 +67,10 @@ export async function POST(
       }
     );
 
-    /* ================= AI RESPONSE ================= */
-    const completion = await openai.chat.completions.create({
+    /* ================= STREAM AI RESPONSE ================= */
+    const stream = await openai.chat.completions.create({
       model: "gpt-4o-mini",
+      stream: true,
       messages: [
         {
           role: "system",
@@ -87,35 +84,54 @@ export async function POST(
       ],
     });
 
-    const aiReply =
-      completion?.choices?.[0]?.message?.content?.trim() ||
-      "I couldn’t generate a response.";
+    let fullReply = "";
+    const encoder = new TextEncoder();
 
-    /* ================= SAVE AI MESSAGE ================= */
-    const aiMessage = {
-      role: "assistant",
-      content: aiReply,
-      createdAt: new Date(),
-    };
+    const readable = new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const chunk of stream) {
+            const token =
+              chunk.choices?.[0]?.delta?.content || "";
 
-    await db.collection("conversations").updateOne(
-      { conversationId, userId },
-      {
-        $push: { messages: aiMessage },
-        $set: { updatedAt: new Date() },
-      } as any
-    );
+            if (token) {
+              fullReply += token;
+              controller.enqueue(encoder.encode(token));
+            }
+          }
 
-    return NextResponse.json({
-      reply: aiReply,
+          /* ================= SAVE AI MESSAGE ================= */
+          await db.collection("conversations").updateOne(
+            { conversationId, userId },
+            {
+              $push: {
+                messages: {
+                  role: "assistant",
+                  content: fullReply,
+                  createdAt: new Date(),
+                },
+              },
+              $set: { updatedAt: new Date() },
+            } as any
+          );
+
+          controller.close();
+        } catch (err) {
+          console.error("STREAM ERROR:", err);
+          controller.error(err);
+        }
+      },
+    });
+
+    return new Response(readable, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+      },
     });
 
   } catch (error) {
     console.error("[CHAT_ERROR]", error);
 
-    return NextResponse.json(
-      { error: "Chat failed" },
-      { status: 500 }
-    );
+    return new Response("Chat failed", { status: 500 });
   }
 }
