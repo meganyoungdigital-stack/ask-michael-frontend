@@ -114,7 +114,7 @@ export async function POST(
       "FILE DATA:\n" +
       fileContext;
 
-    /* ================= GET AI RESPONSE (NON-STREAMING) ================= */
+    /* ================= AI RESPONSE ================= */
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
@@ -148,15 +148,31 @@ export async function POST(
     );
 
     /* ================= RETURN JSON ================= */
-    return new Response(JSON.stringify({ reply }), {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    return new Response(
+      JSON.stringify({
+        reply,
+        success: true, // ✅ helps frontend know request succeeded
+      }),
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
   } catch (error) {
     console.error("[CHAT_ERROR]", error);
 
-    return new Response("Chat failed", { status: 500 });
+    return new Response(
+      JSON.stringify({
+        error: "Chat failed",
+      }),
+      {
+        status: 500,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
   }
 }
