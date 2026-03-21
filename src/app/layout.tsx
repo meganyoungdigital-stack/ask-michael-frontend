@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import Navbar from "@/components/Navbar";
 import "./globals.css";
+import BackButton from "@/components/BackButton";
 
 export const metadata: Metadata = {
   title: "Ask Michael",
@@ -21,8 +22,13 @@ export default function RootLayout({
           {/* Global Navbar */}
           <Navbar />
 
+          {/* 🔥 BACK BUTTON */}
+          <div className="pt-16 px-6">
+            <BackButton />
+          </div>
+
           {/* Page Content */}
-          <main className="pt-16 min-h-screen">
+          <main className="min-h-screen px-6 pb-10">
             {children}
           </main>
 

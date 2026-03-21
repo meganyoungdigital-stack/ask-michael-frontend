@@ -6,7 +6,8 @@ ENVIRONMENT
 
 const uri = process.env.MONGODB_URI;
 
-if (!uri) {
+/* ✅ FIX: DON'T CRASH DURING BUILD */
+if (!uri && process.env.NEXT_PHASE !== "phase-production-build") {
   throw new Error("Missing MONGODB_URI environment variable");
 }
 
@@ -32,14 +33,17 @@ declare global {
   var _mongoClientPromise: Promise<MongoClient> | undefined;
 }
 
-if (process.env.NODE_ENV === "development") {
+/* ✅ FIX: PREVENT DB CONNECTION DURING BUILD */
+if (process.env.NEXT_PHASE === "phase-production-build") {
+  clientPromise = Promise.resolve({} as MongoClient);
+} else if (process.env.NODE_ENV === "development") {
   if (!global._mongoClientPromise) {
-    client = new MongoClient(uri, options);
+    client = new MongoClient(uri!, options);
     global._mongoClientPromise = client.connect();
   }
   clientPromise = global._mongoClientPromise;
 } else {
-  client = new MongoClient(uri, options);
+  client = new MongoClient(uri!, options);
   clientPromise = client.connect();
 }
 
@@ -49,10 +53,9 @@ DATABASE HELPER
 
 let indexesInitialized = false;
 
-/* ✅ SAFE INDEX CREATION (UPDATED) */
+/* ✅ SAFE INDEX CREATION */
 async function ensureIndexes(db: Db) {
   try {
-    // ✅ CHANGED: now per-day usage
     await db.collection("usage").createIndex(
       { userId: 1, date: 1 },
       { unique: true }
@@ -84,17 +87,27 @@ async function ensureIndexes(db: Db) {
   }
 }
 
+/* ============================
+GET DB (FIXED FOR BUILD)
+============================ */
+
 async function getDb(): Promise<Db> {
   try {
+    /* ✅ FIX: SKIP DB DURING BUILD */
+    if (process.env.NEXT_PHASE === "phase-production-build") {
+      console.warn("⚠️ Skipping MongoDB connection during build");
+      return {} as Db;
+    }
+
     const client = await clientPromise;
     const db = client.db("ask-michael");
-
-    console.log("✅ MongoDB connected");
 
     if (!indexesInitialized) {
       await ensureIndexes(db);
       indexesInitialized = true;
     }
+
+    console.log("✅ MongoDB connected");
 
     return db;
 
@@ -145,7 +158,7 @@ interface Conversation {
 interface Usage {
   _id?: ObjectId;
   userId: string;
-  date: string; // ✅ CHANGED
+  date: string;
   count: number;
 }
 
@@ -313,7 +326,7 @@ export async function updateUserTier(
 }
 
 /* ============================
-✅ FIXED USAGE TRACKING
+USAGE TRACKING
 ============================ */
 
 function getTodayString() {
