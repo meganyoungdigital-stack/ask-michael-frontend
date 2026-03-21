@@ -249,12 +249,8 @@ export default function Sidebar() {
   return (
     <aside className="w-72 bg-neutral-950 border-r border-neutral-800 flex flex-col text-white">
       
-      {/* 🔥 STATIC TOP BAR */}
-      <div className="p-4 border-b border-neutral-800 space-y-3">
-        <div className="text-xs text-gray-400">
-          Messages: {conversations.length}
-        </div>
-
+      {/* 🔥 TOP BAR (CLEANED) */}
+      <div className="p-4 border-b border-neutral-800">
         <div className="flex gap-2">
           <button className="flex-1 text-xs bg-neutral-800 hover:bg-neutral-700 py-1 rounded">
             Share
