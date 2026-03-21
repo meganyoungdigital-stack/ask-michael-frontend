@@ -22,11 +22,6 @@ export default function RootLayout({
           {/* Global Navbar */}
           <Navbar />
 
-          {/* 🔥 BACK BUTTON */}
-          <div className="pt-16 px-6">
-            <BackButton />
-          </div>
-
           {/* Page Content */}
           <main className="min-h-screen px-6 pb-10">
             {children}
