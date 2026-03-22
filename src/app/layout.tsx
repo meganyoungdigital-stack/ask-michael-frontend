@@ -3,6 +3,10 @@ import { ClerkProvider } from "@clerk/nextjs";
 import Navbar from "@/components/Navbar";
 import "./globals.css";
 import BackButton from "@/components/BackButton";
+import { Geist } from "next/font/google";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
   title: "Ask Michael",
@@ -16,7 +20,7 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider>
-      <html lang="en">
+      <html lang="en" className={cn("font-sans", geist.variable)}>
         <body className="bg-black text-white">
 
           {/* Global Navbar */}

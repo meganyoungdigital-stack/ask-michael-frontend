@@ -49,10 +49,17 @@ export default function Sidebar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  /* ================= LIVE REFRESH ================= */
+  /* ================= LIVE REFRESH (IMPROVED) ================= */
 
   useEffect(() => {
-    const refresh = () => loadSidebar();
+    const refresh = async () => {
+      // 🔥 Do NOT show loading spinner for silent refresh
+      const convData = await safeFetch("/api/conversation/list");
+
+      if (convData?.conversations) {
+        setConversations(convData.conversations);
+      }
+    };
 
     window.addEventListener("refreshSidebar", refresh);
 
@@ -249,7 +256,6 @@ export default function Sidebar() {
   return (
     <aside className="w-72 bg-neutral-950 border-r border-neutral-800 flex flex-col text-white">
       
-      {/* 🔥 TOP BAR (CLEANED) */}
       <div className="p-4 border-b border-neutral-800">
         <div className="flex gap-2">
           <button className="flex-1 text-xs bg-neutral-800 hover:bg-neutral-700 py-1 rounded">
@@ -262,7 +268,6 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* NEW CHAT */}
       <div className="p-4 border-b border-neutral-800">
         <button
           onClick={createChat}
@@ -272,7 +277,6 @@ export default function Sidebar() {
         </button>
       </div>
 
-      {/* CONTENT */}
       <div className="flex-1 overflow-y-auto p-4">
         <p className="text-xs text-gray-400 mb-2">Documents</p>
 

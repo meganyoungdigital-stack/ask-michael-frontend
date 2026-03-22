@@ -96,6 +96,8 @@ export default function ChatPage() {
       content: input.trim(),
     };
 
+    const isFirstMessage = messages.length === 0;
+
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
 
@@ -131,6 +133,27 @@ export default function ChatPage() {
 
       setMessages((prev) => [...prev, aiMessage]);
       setSelectedFiles([]);
+
+      /* ================= 🔥 SMART TITLE GENERATION ================= */
+      if (isFirstMessage) {
+        try {
+          await fetch("/api/generate-title", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              conversationId,
+              message: userMessage.content,
+            }),
+          });
+
+          // refresh sidebar titles
+          window.dispatchEvent(new Event("refreshSidebar"));
+        } catch (err) {
+          console.error("Title generation failed:", err);
+        }
+      }
 
       await fetchUsage();
 
@@ -222,7 +245,6 @@ export default function ChatPage() {
       {/* ================= INPUT AREA ================= */}
       <div className="border-t p-4 flex flex-col gap-2">
 
-        {/* FILE PREVIEW */}
         {selectedFiles.length > 0 && (
           <div className="text-xs text-gray-500">
             {selectedFiles.map((f, i) => (
@@ -231,17 +253,14 @@ export default function ChatPage() {
           </div>
         )}
 
-        {/* USAGE */}
         <p className="text-sm text-gray-500">
           {isLimitReached
             ? "Daily message limit reached"
             : `${remaining} messages left today`}
         </p>
 
-        {/* INPUT ROW */}
         <div className="flex gap-2 items-center">
 
-          {/* 📎 ATTACH BUTTON (PRO ONLY) */}
           {isPro && (
             <>
               <button
