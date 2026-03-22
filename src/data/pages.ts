@@ -1,5 +1,5 @@
 export const pages = {
-  "knowledge-engineering": {
+  "ai-knowledge-engineering": {
     title: "AI Knowledge Engineering Assistance",
     content: `
 AI Knowledge Engineering transforms operational knowledge into structured artificial intelligence systems.

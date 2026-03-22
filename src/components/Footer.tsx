@@ -70,7 +70,7 @@ Ask Michael
 </li>
 
 <li>
-<Link href="/knowledge-engineering" className="hover:text-white">
+<Link href="/ai-knowledge-engineering" className="hover:text-white">
 AI Knowledge Engineering
 </Link>
 </li>
