@@ -10,24 +10,10 @@ export default function KnowledgePage() {
     <div className="min-h-screen bg-background px-6 py-20">
 
       {/* NAV */}
-      <div className="max-w-6xl mx-auto mb-10 flex justify-between items-center">
+      <div className="max-w-6xl mx-auto mb-10 flex justify-start items-center">
         <Link href="/">
           <Button variant="outline">← Back Home</Button>
         </Link>
-
-        <div className="flex gap-4">
-          <Link href="/solutions">
-            <Button variant="outline">Solutions</Button>
-          </Link>
-
-          <Link href="/pricing">
-            <Button variant="outline">Pricing</Button>
-          </Link>
-
-          <Link href="/portal">
-            <Button>Go to Platform</Button>
-          </Link>
-        </div>
       </div>
 
       {/* HERO */}
