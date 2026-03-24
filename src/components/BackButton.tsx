@@ -1,18 +1,22 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+
 export default function BackButton() {
+  const router = useRouter();
+
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      router.back();
+    } else {
+      router.push("/");
+    }
+  };
+
   return (
-    <button
-      onClick={() => {
-        if (window.history.length > 1) {
-          window.history.back();
-        } else {
-          window.location.href = "/";
-        }
-      }}
-      className="mb-4 text-sm text-blue-400 hover:text-blue-300"
-    >
-      ← Back to Home
-    </button>
+    <Button variant="outline" onClick={handleBack}>
+      ← Back
+    </Button>
   );
 }

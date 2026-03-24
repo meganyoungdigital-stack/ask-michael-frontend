@@ -4,13 +4,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Check, X } from "lucide-react";
 import { motion } from "framer-motion";
+import Link from "next/link";
 
 export default function PricingPage() {
   const plans = [
     {
       name: "Free",
       price: "$0",
-      stripePriceId: "price_free",
+      plan: "free",
       features: {
         chat: true,
         rag: false,
@@ -23,7 +24,7 @@ export default function PricingPage() {
     {
       name: "Pro",
       price: "$49/mo",
-      stripePriceId: "price_pro",
+      plan: "pro",
       features: {
         chat: true,
         rag: true,
@@ -36,7 +37,7 @@ export default function PricingPage() {
     {
       name: "Pro+",
       price: "$129/mo",
-      stripePriceId: "price_pro_plus",
+      plan: "pro_plus",
       features: {
         chat: true,
         rag: true,
@@ -48,15 +49,27 @@ export default function PricingPage() {
     },
   ];
 
-  const handleCheckout = async (priceId: string) => {
-    const res = await fetch("/api/checkout", {
+  const handleCheckout = async (plan: string) => {
+    // Free users go straight into platform
+    if (plan === "free") {
+      window.location.href = "/portal";
+      return;
+    }
+
+    // Paid users go to Paystack
+    const res = await fetch("/api/paystack", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ priceId }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ plan }),
     });
 
     const data = await res.json();
-    window.location.href = data.url;
+
+    if (data.url) {
+      window.location.href = data.url;
+    }
   };
 
   const Feature = ({ value }: { value: boolean }) =>
@@ -68,6 +81,18 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen bg-background px-6 py-20">
+      
+      {/* NAV */}
+      <div className="max-w-6xl mx-auto mb-10 flex justify-between items-center">
+        <Link href="/">
+          <Button variant="outline">← Back Home</Button>
+        </Link>
+
+        <Link href="/portal">
+          <Button>Go to Platform</Button>
+        </Link>
+      </div>
+
       {/* HERO */}
       <div className="max-w-6xl mx-auto text-center mb-16">
         <motion.h1
@@ -109,7 +134,7 @@ export default function PricingPage() {
                 <Button
                   className="w-full"
                   size="lg"
-                  onClick={() => handleCheckout(plan.stripePriceId)}
+                  onClick={() => handleCheckout(plan.plan)}
                 >
                   Get Started
                 </Button>
@@ -184,7 +209,7 @@ export default function PricingPage() {
             <Card className="p-6 rounded-2xl shadow">
               <CardContent>
                 <p className="mb-4 text-muted-foreground">
-                  “This AI replaced hours of engineering analysis every day.”
+                  “This AI significantly reduced time spent on engineering analysis.”
                 </p>
                 <div className="font-semibold">Engineering Lead</div>
               </CardContent>
@@ -198,7 +223,10 @@ export default function PricingPage() {
         <h3 className="text-3xl font-semibold mb-4">
           Start Using AI in Your Engineering Workflow
         </h3>
-        <Button size="lg">Get Started</Button>
+
+        <Link href="/portal">
+          <Button size="lg">Get Started</Button>
+        </Link>
       </div>
     </div>
   );
