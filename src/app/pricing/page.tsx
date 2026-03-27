@@ -195,7 +195,11 @@ export default function PricingPage() {
           Custom deployments, private AI models, sensor integrations, and
           dedicated support.
         </p>
-        <Button size="lg">Contact Sales</Button>
+
+        {/* ✅ UPDATED BUTTON ONLY */}
+        <a href="mailto:askmichael@askmichaelai.org?subject=Sales%20Inquiry%20-%20Ask%20Michael%20AI&body=Hi,%0D%0A%0D%0AI%20am%20interested%20in%20your%20Enterprise%20plan%20and%20would%20like%20to%20speak%20to%20sales.%0D%0A%0D%0AThanks.">
+          <Button size="lg">Contact Sales</Button>
+        </a>
       </div>
 
       {/* TESTIMONIALS */}
