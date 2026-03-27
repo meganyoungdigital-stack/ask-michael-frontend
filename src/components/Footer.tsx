@@ -40,7 +40,7 @@ Ask Michael
 </div>
 
 <p className="text-sm text-gray-400">
-Industrial AI intelligence for engineering knowledge,
+Industrial AI intelligence for heavy metal engineering knowledge,
 procedures and operational decision support.
 </p>
 

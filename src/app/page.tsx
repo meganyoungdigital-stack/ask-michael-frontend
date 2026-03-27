@@ -113,7 +113,7 @@ export default function LandingPage() {
             transition={{ delay: 0.8 }}
             className="mt-6 text-xl text-gray-200 max-w-2xl"
           >
-            Enter the intelligence dimension.
+            Enter the intelligence dimension of AI-assisted heavy metal engineering.
           </motion.p>
 
           <motion.div
