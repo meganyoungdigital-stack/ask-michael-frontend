@@ -1,3 +1,4 @@
+import { predictFailure } from "@/lib/simulation/predictFailure";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -44,7 +45,14 @@ PLAN LIMITS
 ============================ */
 
 const FREE_DAILY_LIMIT = 10;
-const PRO_DAILY_LIMIT = 200; // ✅ CHANGED FROM 500 → 200
+const PRO_DAILY_LIMIT = 200;
+
+/* ============================
+🧠 NEW: RAG TUNING
+============================ */
+
+const MAX_CONTEXT_CHARS = 12000;
+const MIN_SCORE_THRESHOLD = 0.65;
 
 /* ============================
 DB CACHE
@@ -73,7 +81,16 @@ const openai = new OpenAI({
 });
 
 /* ============================
-VECTOR SEARCH (SAFE)
+🧠 NEW: CONTEXT TRIMMER
+============================ */
+
+function trimContext(context: string): string {
+  if (context.length <= MAX_CONTEXT_CHARS) return context;
+  return context.slice(0, MAX_CONTEXT_CHARS);
+}
+
+/* ============================
+VECTOR SEARCH (UPGRADED)
 ============================ */
 
 async function getVectorContext(
@@ -106,8 +123,8 @@ async function getVectorContext(
             index: "vector_index",
             path: "embedding",
             queryVector,
-            numCandidates: 20,
-            limit: 4,
+            numCandidates: 30,
+            limit: 8,
           },
         },
         {
@@ -124,20 +141,51 @@ async function getVectorContext(
       ])
       .toArray();
 
-    const typedResults = results as unknown as VectorChunk[];
+    let typedResults = results as unknown as VectorChunk[];
 
     if (!typedResults.length) {
       return { context: "", sources: [] };
     }
 
-    const context = typedResults
+    /* ============================
+    🧠 FILTER LOW QUALITY
+    ============================ */
+
+    typedResults = typedResults.filter(
+      (r) => (r.score || 0) >= MIN_SCORE_THRESHOLD
+    );
+
+    if (!typedResults.length) {
+      return { context: "", sources: [] };
+    }
+
+    /* ============================
+    🧠 SORT BEST FIRST
+    ============================ */
+
+    typedResults.sort(
+      (a, b) => (b.score || 0) - (a.score || 0)
+    );
+
+    /* ============================
+    🧠 BUILD CONTEXT
+    ============================ */
+
+    let context = typedResults
       .map(
         (r, i) =>
-          `[Source ${i + 1} | Doc:${r.documentId ?? "unknown"} | Page:${
-            r.page ?? "?"
-          }]\n${r.text}`
+          `[Source ${i + 1} | Score:${(r.score || 0).toFixed(
+            2
+          )} | Doc:${r.documentId ?? "unknown"}]\n${r.text}`
       )
       .join("\n\n");
+
+    context = trimContext(context);
+
+    console.log("RAG RESULTS:", {
+      chunks: typedResults.length,
+      topScore: typedResults[0]?.score,
+    });
 
     return {
       context,
@@ -166,10 +214,6 @@ export async function POST(req: Request) {
 
     await upsertUser(userId);
 
-    /* ============================
-    RATE LIMIT
-    ============================ */
-
     const { success } = await ratelimit.limit(userId);
 
     if (!success) {
@@ -178,10 +222,6 @@ export async function POST(req: Request) {
         { status: 429 }
       );
     }
-
-    /* ============================
-    PARSE BODY
-    ============================ */
 
     let body: any;
 
@@ -212,10 +252,6 @@ export async function POST(req: Request) {
 
     const trimmedMessages = messages.slice(-MAX_MESSAGES);
 
-    /* ============================
-    VERIFY CONVERSATION
-    ============================ */
-
     const conversation = await getConversation(
       conversationId,
       userId
@@ -227,10 +263,6 @@ export async function POST(req: Request) {
         { status: 404 }
       );
     }
-
-    /* ============================
-    USER PLAN + LIMIT
-    ============================ */
 
     const db = await getDb();
 
@@ -246,17 +278,12 @@ export async function POST(req: Request) {
       ? PRO_DAILY_LIMIT
       : FREE_DAILY_LIMIT;
 
-    // ✅ SAFETY: prevent undefined/null issues
     if ((usageCount || 0) >= limit) {
       return NextResponse.json(
         { error: "Daily message limit reached" },
         { status: 429 }
       );
     }
-
-    /* ============================
-    LAST USER MESSAGE
-    ============================ */
 
     const latestUserMessage: Message =
       messages[messages.length - 1];
@@ -269,10 +296,23 @@ export async function POST(req: Request) {
     }
 
     /* ============================
-    DOCUMENT CONTEXT
+    🧠 DOCUMENT CONTEXT
     ============================ */
 
     let context = "";
+    let simulationInsight = "";
+
+try {
+  const prediction = await predictFailure("sensor-1");
+
+  if (prediction) {
+    simulationInsight =
+      "\n\nSIMULATION DATA:\n" +
+      JSON.stringify(prediction, null, 2);
+  }
+} catch {
+  console.log("Simulation skipped");
+}
 
     try {
       const vectorResult = await getVectorContext(
@@ -286,7 +326,7 @@ export async function POST(req: Request) {
     }
 
     /* ============================
-    BUILD PROMPT
+    🧠 SMART PROMPT
     ============================ */
 
     const finalMessages = [
@@ -295,19 +335,18 @@ export async function POST(req: Request) {
         content:
           "You are an expert engineering AI assistant.\n\n" +
           "Use provided document context when available.\n\n" +
+          "If context is weak or missing, rely on your own knowledge.\n\n" +
+          "Always prioritize higher scoring sources.\n\n" +
           "Cite references like [Source 1].\n\n" +
           "DOCUMENT CONTEXT:\n" +
-          context,
+context +
+simulationInsight
       },
       ...trimmedMessages.map((m: Message) => ({
         role: m.role,
         content: m.content,
       })),
     ];
-
-    /* ============================
-    STREAM AI RESPONSE
-    ============================ */
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",

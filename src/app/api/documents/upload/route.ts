@@ -36,6 +36,51 @@ function chunkText(text: string) {
 }
 
 /* =========================
+   🧠 NEW: SAFE EMBEDDING
+========================= */
+
+async function safeCreateEmbedding(input: string) {
+  try {
+    const res = await openai.embeddings.create({
+      model: "text-embedding-3-small",
+      input,
+    });
+
+    return res.data[0].embedding;
+  } catch (err) {
+    console.error("Embedding failed for chunk:", err);
+    return null;
+  }
+}
+
+/* =========================
+   🧠 NEW: BATCH EMBEDDINGS
+========================= */
+
+async function createEmbeddingsBatch(chunks: string[]) {
+  try {
+    const res = await openai.embeddings.create({
+      model: "text-embedding-3-small",
+      input: chunks,
+    });
+
+    return res.data.map((d) => d.embedding);
+  } catch (err) {
+    console.error("Batch embedding failed, falling back to single:", err);
+
+    // fallback to individual processing
+    const results: (number[] | null)[] = [];
+
+    for (const chunk of chunks) {
+      const emb = await safeCreateEmbedding(chunk);
+      results.push(emb);
+    }
+
+    return results;
+  }
+}
+
+/* =========================
    LAZY PDF PARSER
 ========================= */
 
@@ -158,25 +203,25 @@ export async function POST(req: NextRequest) {
     }
 
     /* =========================
-       CREATE VECTOR EMBEDDINGS
+       🚀 CREATE EMBEDDINGS (BATCHED)
     ========================= */
+
+    const embeddings = await createEmbeddingsBatch(chunks);
 
     const chunkDocuments: any[] = [];
 
     for (let i = 0; i < chunks.length; i++) {
-      const chunk = chunks[i];
+      const embedding = embeddings[i];
 
-      const embedding = await openai.embeddings.create({
-        model: "text-embedding-3-small",
-        input: chunk,
-      });
+      if (!embedding) continue; // skip failed ones
 
       chunkDocuments.push({
         documentId,
         userId,
-        text: chunk,
+        text: chunks[i],
         chunkIndex: i,
-        embedding: embedding.data[0].embedding,
+        embedding,
+        tokenEstimate: Math.ceil(chunks[i].length / 4), // 🔥 useful later
         createdAt: new Date(),
       });
     }
@@ -185,7 +230,9 @@ export async function POST(req: NextRequest) {
        STORE CHUNKS
     ========================= */
 
-    await db.collection("document_chunks").insertMany(chunkDocuments);
+    if (chunkDocuments.length > 0) {
+      await db.collection("document_chunks").insertMany(chunkDocuments);
+    }
 
     return NextResponse.json({
       success: true,
