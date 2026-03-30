@@ -6,7 +6,21 @@ import { Check, X } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 
+/* ✅ NEW */
+import { useUser } from "@clerk/nextjs";
+import { useEffect } from "react";
+
 export default function PricingPage() {
+  const { user } = useUser();
+
+  /* ================= LOAD PAYSTACK SCRIPT ================= */
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://js.paystack.co/v1/inline.js";
+    script.async = true;
+    document.body.appendChild(script);
+  }, []);
+
   const plans = [
     {
       name: "Free",
@@ -49,27 +63,64 @@ export default function PricingPage() {
     },
   ];
 
+  /* ================= PAYSTACK CHECKOUT ================= */
   const handleCheckout = async (plan: string) => {
-    // Free users go straight into platform
+    if (!user) {
+      alert("Please sign in first");
+      return;
+    }
+
+    // Free plan → go straight in
     if (plan === "free") {
       window.location.href = "/portal";
       return;
     }
 
-    // Paid users go to Paystack
-    const res = await fetch("/api/paystack", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    const amount = plan === "pro" ? 4900 : 12900;
+
+    // @ts-ignore
+    const handler = window.PaystackPop.setup({
+      key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY,
+      email: user.primaryEmailAddress?.emailAddress,
+
+      /* ✅ SWITCHED TO SUBSCRIPTION PLAN (CRITICAL) */
+      plan:
+        plan === "pro"
+          ? process.env.NEXT_PUBLIC_PAYSTACK_PRO_PLAN
+          : process.env.NEXT_PUBLIC_PAYSTACK_PRO_PLUS_PLAN,
+
+      currency: "ZAR",
+
+      /* ✅ ADDED (WEBHOOK SUPPORT — DO NOT REMOVE) */
+      metadata: {
+        userId: user.id,
+        plan: plan,
       },
-      body: JSON.stringify({ plan }),
+
+      callback: async function (response: any) {
+        // Verify payment in backend
+        await fetch("/api/paystack/verify", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            reference: response.reference,
+            userId: user.id,
+            plan,
+          }),
+        });
+
+        // Redirect after success
+        window.location.href = "/portal";
+      },
+
+      onClose: function () {
+        console.log("Payment window closed");
+      },
     });
 
-    const data = await res.json();
-
-    if (data.url) {
-      window.location.href = data.url;
-    }
+    handler.openIframe();
   };
 
   const Feature = ({ value }: { value: boolean }) =>
@@ -196,7 +247,6 @@ export default function PricingPage() {
           dedicated support.
         </p>
 
-        {/* ✅ UPDATED BUTTON ONLY */}
         <a href="mailto:askmichael@askmichaelai.org?subject=Sales%20Inquiry%20-%20Ask%20Michael%20AI&body=Hi,%0D%0A%0D%0AI%20am%20interested%20in%20your%20Enterprise%20plan%20and%20would%20like%20to%20speak%20to%20sales.%0D%0A%0D%0AThanks.">
           <Button size="lg">Contact Sales</Button>
         </a>

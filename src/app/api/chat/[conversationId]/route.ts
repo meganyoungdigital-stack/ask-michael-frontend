@@ -3,6 +3,9 @@ import { connectToDatabase } from "@/lib/mongodb";
 import { auth } from "@clerk/nextjs/server";
 import OpenAI from "openai";
 
+/* ✅ NEW */
+import { getMessageLimit, hasFeature } from "@/lib/tiers";
+
 export const runtime = "nodejs";
 
 /* ================= OPENAI ================= */
@@ -30,6 +33,33 @@ export async function POST(
     const user = await db.collection("users").findOne({ userId });
     const isPro = user?.tier === "pro";
 
+    /* ✅ NEW: GET MESSAGE LIMIT */
+    const tier = (user?.tier || "free") as "free" | "pro" | "pro_plus";
+    const messageLimit = getMessageLimit(tier);
+
+    /* ================= USAGE CHECK ================= */
+    const today = new Date().toISOString().split("T")[0];
+
+    const usage = await db.collection("usage").findOne({
+      userId,
+      date: today,
+    });
+
+    const currentUsage = usage?.count || 0;
+
+    /* 🚫 BLOCK IF LIMIT REACHED */
+    if (currentUsage >= messageLimit) {
+      return new Response(
+        JSON.stringify({
+          error: "Daily message limit reached",
+        }),
+        {
+          status: 403,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
     /* ================= PARSE REQUEST ================= */
     let message = "";
     let files: File[] = [];
@@ -54,8 +84,11 @@ export async function POST(
       return new Response("Message required", { status: 400 });
     }
 
+    /* ================= FEATURE ACCESS ================= */
+    const canUsePriority = hasFeature(tier, "priority");
+
     /* ================= BLOCK FILES FOR FREE USERS ================= */
-    if (!isPro && files.length > 0) {
+    if (!hasFeature(tier, "priority") && files.length > 0) {
       return new Response("File uploads require Pro plan", { status: 403 });
     }
 
@@ -116,7 +149,7 @@ export async function POST(
 
     /* ================= AI RESPONSE ================= */
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: tier === "pro_plus" ? "gpt-4o" : "gpt-4o-mini",
       messages: [
         {
           role: "system",
@@ -147,11 +180,18 @@ export async function POST(
       } as any
     );
 
+    /* ✅ NEW: RECORD USAGE */
+    await db.collection("usage").updateOne(
+      { userId, date: today },
+      { $inc: { count: 1 } },
+      { upsert: true }
+    );
+
     /* ================= RETURN JSON ================= */
     return new Response(
       JSON.stringify({
         reply,
-        success: true, // ✅ helps frontend know request succeeded
+        success: true,
       }),
       {
         headers: {
