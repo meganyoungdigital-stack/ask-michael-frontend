@@ -15,9 +15,16 @@ export default function PricingPage() {
 
   /* ================= LOAD PAYSTACK SCRIPT ================= */
   useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    // جلوگیری از اضافه شدن چندباره اسکریپت
+    if (document.getElementById("paystack-script")) return;
+
     const script = document.createElement("script");
     script.src = "https://js.paystack.co/v1/inline.js";
     script.async = true;
+    script.id = "paystack-script";
+
     document.body.appendChild(script);
   }, []);
 
@@ -70,20 +77,31 @@ export default function PricingPage() {
       return;
     }
 
+    if (!user.primaryEmailAddress?.emailAddress) {
+      alert("No email found on your account");
+      return;
+    }
+
     // Free plan → go straight in
     if (plan === "free") {
       window.location.href = "/portal";
       return;
     }
 
+    // Ensure Paystack is loaded
+    if (typeof window === "undefined" || !(window as any).PaystackPop) {
+      alert("Payment system is still loading. Please try again.");
+      return;
+    }
+
     const amount = plan === "pro" ? 4900 : 12900;
 
     // @ts-ignore
-    const handler = window.PaystackPop.setup({
+    const handler = (window as any).PaystackPop.setup({
       key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY,
-      email: user.primaryEmailAddress?.emailAddress,
+      email: user.primaryEmailAddress.emailAddress,
 
-      /* ✅ SWITCHED TO SUBSCRIPTION PLAN (CRITICAL) */
+      /* ✅ SUBSCRIPTION PLAN */
       plan:
         plan === "pro"
           ? process.env.NEXT_PUBLIC_PAYSTACK_PRO_PLAN
@@ -91,28 +109,33 @@ export default function PricingPage() {
 
       currency: "ZAR",
 
-      /* ✅ ADDED (WEBHOOK SUPPORT — DO NOT REMOVE) */
       metadata: {
         userId: user.id,
         plan: plan,
       },
 
-      callback: async function (response: any) {
-        // Verify payment in backend
-        await fetch("/api/paystack/verify", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            reference: response.reference,
-            userId: user.id,
-            plan,
-          }),
-        });
+      /* ✅ FIXED CALLBACK (NOT ASYNC) */
+      callback: function (response: any) {
+        (async () => {
+          try {
+            await fetch("/api/paystack/verify", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                reference: response.reference,
+                userId: user.id,
+                plan,
+              }),
+            });
 
-        // Redirect after success
-        window.location.href = "/portal";
+            window.location.href = "/portal";
+          } catch (error) {
+            console.error("Verification failed:", error);
+            alert("Payment verification failed. Please contact support.");
+          }
+        })();
       },
 
       onClose: function () {

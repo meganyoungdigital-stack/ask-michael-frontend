@@ -148,7 +148,6 @@ export default function ChatPage() {
             }),
           });
 
-          // refresh sidebar titles
           window.dispatchEvent(new Event("refreshSidebar"));
         } catch (err) {
           console.error("Title generation failed:", err);
@@ -180,8 +179,8 @@ export default function ChatPage() {
   };
 
   /* ================= ENTER ================= */
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && !sending && !isLimitReached) {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey && !sending && !isLimitReached) {
       e.preventDefault();
       sendMessage();
     }
@@ -195,8 +194,6 @@ export default function ChatPage() {
       console.error("Copy failed");
     }
   };
-
-  /* ================= UI ================= */
 
   if (loading) {
     return <div className="p-6 text-black bg-white">Loading chat...</div>;
@@ -259,7 +256,7 @@ export default function ChatPage() {
             : `${remaining} messages left today`}
         </p>
 
-        <div className="flex gap-2 items-center">
+        <div className="flex gap-2 items-end">
 
           {isPro && (
             <>
@@ -280,13 +277,19 @@ export default function ChatPage() {
             </>
           )}
 
-          <input
-            className="flex-1 p-3 rounded border bg-white text-black"
+          <textarea
+            className="flex-1 p-3 rounded border bg-white text-black resize-none overflow-hidden max-h-40"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Send a message..."
             disabled={sending || isLimitReached}
+            rows={1}
+            onInput={(e) => {
+              const target = e.target as HTMLTextAreaElement;
+              target.style.height = "auto";
+              target.style.height = target.scrollHeight + "px";
+            }}
           />
 
           <button

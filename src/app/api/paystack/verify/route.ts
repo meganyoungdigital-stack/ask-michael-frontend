@@ -19,6 +19,28 @@ export async function POST(req: NextRequest) {
     }
 
     /* ============================
+    CONNECT DB EARLY
+    ============================ */
+
+    const { db } = await connectToDatabase();
+
+    /* ============================
+    PREVENT DUPLICATE PROCESSING
+    ============================ */
+
+    const existingTx = await db.collection("transactions").findOne({
+      reference,
+    });
+
+    if (existingTx) {
+      return NextResponse.json({
+        success: true,
+        message: "Transaction already processed",
+        tier: existingTx.tier,
+      });
+    }
+
+    /* ============================
     VERIFY WITH PAYSTACK
     ============================ */
 
@@ -41,23 +63,46 @@ export async function POST(req: NextRequest) {
     }
 
     /* ============================
+    EXTRA VALIDATION (IMPORTANT)
+    ============================ */
+
+    if (!data.amount || !data.customer?.email) {
+      return NextResponse.json(
+        { error: "Invalid payment data" },
+        { status: 400 }
+      );
+    }
+
+    /* ============================
+    TRUST PAYSTACK METADATA (NOT FRONTEND)
+    ============================ */
+
+    const paidPlan = data.metadata?.plan;
+
+    if (!paidPlan) {
+      return NextResponse.json(
+        { error: "Missing plan metadata" },
+        { status: 400 }
+      );
+    }
+
+    /* ============================
     DETERMINE TIER
     ============================ */
 
-    let tier: "free" | "pro" = "free";
+    let tier: "free" | "pro" | "pro_plus" = "free";
 
-    if (plan === "pro") {
+    if (paidPlan === "pro") {
       tier = "pro";
     }
 
-    // future: pro_plus support
-    // if (plan === "pro_plus") tier = "pro_plus";
+    if (paidPlan === "pro_plus") {
+      tier = "pro_plus";
+    }
 
     /* ============================
     UPDATE USER IN DATABASE
     ============================ */
-
-    const { db } = await connectToDatabase();
 
     await db.collection("users").updateOne(
       { userId },
@@ -70,6 +115,19 @@ export async function POST(req: NextRequest) {
     );
 
     /* ============================
+    STORE TRANSACTION (CRITICAL)
+    ============================ */
+
+    await db.collection("transactions").insertOne({
+      reference,
+      userId,
+      tier,
+      amount: data.amount,
+      email: data.customer.email,
+      createdAt: new Date(),
+    });
+
+    /* ============================
     SUCCESS RESPONSE
     ============================ */
 
@@ -79,7 +137,10 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (error: any) {
-    console.error("🔥 PAYSTACK VERIFY ERROR:", error?.response?.data || error);
+    console.error(
+      "🔥 PAYSTACK VERIFY ERROR:",
+      error?.response?.data || error
+    );
 
     return NextResponse.json(
       { error: "Verification failed" },

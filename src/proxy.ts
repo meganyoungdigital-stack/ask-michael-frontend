@@ -1,4 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
+import { connectToDatabase } from "@/lib/mongodb";
 
 /* =========================
    PROTECTED ROUTES
@@ -11,13 +13,63 @@ const isProtectedRoute = createRouteMatcher([
 ]);
 
 /* =========================
+   PORTAL ROUTE CHECK
+========================= */
+
+const isPortalRoute = createRouteMatcher([
+  "/portal(.*)",
+]);
+
+/* =========================
    MIDDLEWARE
 ========================= */
 
 export default clerkMiddleware(async (auth, req) => {
+  // 🔐 Protect routes (existing logic)
   if (isProtectedRoute(req)) {
     await auth.protect();
   }
+
+  /* =========================
+     TIER ENFORCEMENT (NEW)
+  ========================= */
+
+  if (isPortalRoute(req)) {
+    const { userId } = await auth(); // ✅ FIXED (await added)
+
+    if (!userId) {
+      return NextResponse.redirect(new URL("/sign-in", req.url));
+    }
+
+    try {
+      const { db } = await connectToDatabase();
+
+      const user = await db.collection("users").findOne({
+        userId,
+      });
+
+      const tier = user?.tier || "free";
+      const status = user?.subscriptionStatus || "inactive";
+
+      // 🚫 Free users → pricing
+      if (tier === "free") {
+        return NextResponse.redirect(new URL("/pricing", req.url));
+      }
+
+      // 🚫 Cancelled subscriptions → pricing
+      if (status === "cancelled") {
+        return NextResponse.redirect(new URL("/pricing", req.url));
+      }
+
+    } catch (error) {
+      console.error("Middleware DB error:", error);
+
+      // Fail-safe: allow access instead of breaking app
+      return NextResponse.next();
+    }
+  }
+
+  return NextResponse.next();
 });
 
 /* =========================

@@ -37,6 +37,28 @@ export async function POST(req: NextRequest) {
     const { db } = await connectToDatabase();
 
     /* ============================
+    IDEMPOTENCY CHECK (CRITICAL)
+    ============================ */
+
+    const eventId = event?.data?.id || event?.data?.reference;
+
+    if (eventId) {
+      const existingEvent = await db.collection("webhook_events").findOne({
+        eventId,
+      });
+
+      if (existingEvent) {
+        return new NextResponse("Already processed", { status: 200 });
+      }
+
+      await db.collection("webhook_events").insertOne({
+        eventId,
+        type: event.event,
+        createdAt: new Date(),
+      });
+    }
+
+    /* ============================
     HANDLE EVENTS
     ============================ */
 
@@ -44,8 +66,13 @@ export async function POST(req: NextRequest) {
       case "charge.success": {
         const data = event.data;
 
-        const email = data.customer?.email;
         const reference = data.reference;
+        const status = data.status;
+
+        if (!reference || status !== "success") {
+          console.warn("⚠️ Invalid charge event");
+          break;
+        }
 
         console.log("✅ Payment success:", reference);
 
@@ -72,6 +99,25 @@ export async function POST(req: NextRequest) {
               updatedAt: new Date(),
             },
           }
+        );
+
+        /* ============================
+        STORE TRANSACTION
+        ============================ */
+
+        await db.collection("transactions").updateOne(
+          { reference },
+          {
+            $set: {
+              reference,
+              userId,
+              tier,
+              amount: data.amount,
+              email: data.customer?.email,
+              updatedAt: new Date(),
+            },
+          },
+          { upsert: true }
         );
 
         break;
@@ -126,6 +172,7 @@ export async function POST(req: NextRequest) {
             $set: {
               subscriptionStatus: "active",
               lastPaymentAt: new Date(),
+              updatedAt: new Date(),
             },
           }
         );

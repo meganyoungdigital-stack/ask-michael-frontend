@@ -31,9 +31,7 @@ export async function POST(
 
     /* ================= GET USER PLAN ================= */
     const user = await db.collection("users").findOne({ userId });
-    const isPro = user?.tier === "pro";
 
-    /* ✅ NEW: GET MESSAGE LIMIT */
     const tier = (user?.tier || "free") as "free" | "pro" | "pro_plus";
     const messageLimit = getMessageLimit(tier);
 
@@ -52,6 +50,8 @@ export async function POST(
       return new Response(
         JSON.stringify({
           error: "Daily message limit reached",
+          limit: messageLimit,
+          used: currentUsage,
         }),
         {
           status: 403,
@@ -88,7 +88,7 @@ export async function POST(
     const canUsePriority = hasFeature(tier, "priority");
 
     /* ================= BLOCK FILES FOR FREE USERS ================= */
-    if (!hasFeature(tier, "priority") && files.length > 0) {
+    if (!canUsePriority && files.length > 0) {
       return new Response("File uploads require Pro plan", { status: 403 });
     }
 
@@ -180,10 +180,15 @@ export async function POST(
       } as any
     );
 
-    /* ✅ NEW: RECORD USAGE */
+    /* ✅ RECORD USAGE ONLY AFTER SUCCESS */
     await db.collection("usage").updateOne(
       { userId, date: today },
-      { $inc: { count: 1 } },
+      {
+        $inc: { count: 1 },
+        $setOnInsert: {
+          lastReset: new Date(),
+        },
+      },
       { upsert: true }
     );
 
@@ -192,6 +197,10 @@ export async function POST(
       JSON.stringify({
         reply,
         success: true,
+        usage: {
+          used: currentUsage + 1,
+          limit: messageLimit,
+        },
       }),
       {
         headers: {
