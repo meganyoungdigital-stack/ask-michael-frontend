@@ -94,11 +94,21 @@ export default function PricingPage() {
       return;
     }
 
+    /* ✅ ADDED: SAFE KEY HANDLING */
+    const paystackKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
+
+    console.log("PAYSTACK KEY:", paystackKey); // 🔍 debug
+
+    if (!paystackKey) {
+      alert("Payment system not configured correctly.");
+      return;
+    }
+
     const amount = plan === "pro" ? 4900 : 12900;
 
     // @ts-ignore
     const handler = (window as any).PaystackPop.setup({
-      key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY,
+      key: paystackKey, // ✅ FIXED
       email: user.primaryEmailAddress.emailAddress,
 
       /* ✅ SUBSCRIPTION PLAN */
