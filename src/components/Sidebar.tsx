@@ -53,7 +53,6 @@ export default function Sidebar() {
 
   useEffect(() => {
     const refresh = async () => {
-      // 🔥 Do NOT show loading spinner for silent refresh
       const convData = await safeFetch("/api/conversation/list");
 
       if (convData?.conversations) {
@@ -174,6 +173,27 @@ export default function Sidebar() {
     );
   }
 
+  /* ================= SHARE FUNCTION ================= */
+
+  async function handleShare() {
+    const url = "https://askmichaelai.org";
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: "Ask Michael AI",
+          text: "Check out this AI engineering assistant",
+          url,
+        });
+      } else {
+        await navigator.clipboard.writeText(url);
+        alert("Link copied to clipboard!");
+      }
+    } catch {
+      alert("Unable to share right now.");
+    }
+  }
+
   /* ================= SORT ================= */
 
   const pinned = conversations.filter((c) => c.starred);
@@ -258,12 +278,18 @@ export default function Sidebar() {
       
       <div className="p-4 border-b border-neutral-800">
         <div className="flex gap-2">
-          <button className="flex-1 text-xs bg-neutral-800 hover:bg-neutral-700 py-1 rounded">
+          <button 
+            onClick={handleShare}
+            className="flex-1 text-xs bg-neutral-800 hover:bg-neutral-700 py-1 rounded"
+          >
             Share
           </button>
 
-          <button className="flex-1 text-xs bg-blue-600 hover:bg-blue-700 py-1 rounded">
-            Upgrade
+          <button 
+            onClick={() => router.push("/subscription")}
+            className="flex-1 text-xs bg-blue-600 hover:bg-blue-700 py-1 rounded"
+          >
+            Subscription
           </button>
         </div>
       </div>
