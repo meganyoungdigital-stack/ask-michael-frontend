@@ -10,6 +10,10 @@ export default function SubscriptionPage() {
   const [status, setStatus] = useState("inactive");
   const [loading, setLoading] = useState(true);
 
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [company, setCompany] = useState("");
+
   /* ================= FETCH USER ================= */
 
   useEffect(() => {
@@ -23,6 +27,12 @@ export default function SubscriptionPage() {
 
         setTier(data?.tier || "free");
         setStatus(data?.subscriptionStatus || "inactive");
+
+        // ✅ PREFILL PROFILE
+        setName(data?.name || "");
+        setEmail(data?.email || "");
+        setCompany(data?.company || "");
+
       } catch {
         console.error("Failed to load user");
       } finally {
@@ -51,6 +61,24 @@ export default function SubscriptionPage() {
     }
   }
 
+  /* ================= SAVE PROFILE ================= */
+
+  async function handleSaveProfile() {
+    const res = await fetch("/api/user/update", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ name, email, company }),
+    });
+
+    if (res.ok) {
+      alert("Profile updated");
+    } else {
+      alert("Failed to update profile");
+    }
+  }
+
   if (loading) {
     return (
       <div className="p-10 text-white">
@@ -60,10 +88,12 @@ export default function SubscriptionPage() {
   }
 
   return (
-    <div className="p-10 text-white max-w-2xl mx-auto">
+    <div className="pt-24 p-10 text-white max-w-2xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">
         Subscription Management
       </h1>
+
+      {/* ================= SUBSCRIPTION ================= */}
 
       <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-lg">
         <p className="mb-2">
@@ -92,6 +122,42 @@ export default function SubscriptionPage() {
               Cancel Subscription
             </button>
           )}
+        </div>
+      </div>
+
+      {/* ================= PROFILE ================= */}
+
+      <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-lg mt-6">
+        <h2 className="text-lg font-semibold mb-4">Profile</h2>
+
+        <div className="flex flex-col gap-3">
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Name"
+            className="bg-neutral-800 p-2 rounded"
+          />
+
+          <input
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email"
+            className="bg-neutral-800 p-2 rounded"
+          />
+
+          <input
+            value={company}
+            onChange={(e) => setCompany(e.target.value)}
+            placeholder="Company"
+            className="bg-neutral-800 p-2 rounded"
+          />
+
+          <button
+            onClick={handleSaveProfile}
+            className="bg-blue-600 hover:bg-blue-700 py-2 rounded mt-2"
+          >
+            Save Profile
+          </button>
         </div>
       </div>
     </div>

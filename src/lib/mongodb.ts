@@ -77,6 +77,17 @@ async function ensureIndexes(db: Db) {
 
     await db.collection("document_chunks").createIndex({ userId: 1 });
 
+    /* 🔥 NEW: Company-aware index */
+    await db.collection("document_chunks").createIndex({
+      userId: 1,
+      company: 1,
+    });
+
+    /* 🔥 NEW: Metadata index (future filtering) */
+    await db.collection("document_chunks").createIndex({
+      "metadata.tag": 1,
+    });
+
     await db.collection("query_cache").createIndex(
       { queryHash: 1, userId: 1 },
       { unique: true }
@@ -93,7 +104,6 @@ GET DB (FIXED FOR BUILD)
 
 async function getDb(): Promise<Db> {
   try {
-    /* ✅ FIX: SKIP DB DURING BUILD */
     if (process.env.NEXT_PHASE === "phase-production-build") {
       console.warn("⚠️ Skipping MongoDB connection during build");
       return {} as Db;
@@ -169,12 +179,18 @@ interface User {
   createdAt: Date;
 }
 
+/* 🔥 UPDATED TYPE (NON-BREAKING) */
 export interface DocumentChunk {
   _id?: ObjectId;
-  documentId: ObjectId;
+  documentId: ObjectId | null;
   userId: string;
+  company?: string; // 🔥 NEW
   text: string;
   embedding: number[];
+  metadata?: {
+    tag?: string;
+    source?: string;
+  }; // 🔥 NEW
   createdAt: Date;
 }
 

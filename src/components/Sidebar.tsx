@@ -4,6 +4,9 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 
+/* ✅ NEW ICONS */
+import { Share2, CreditCard, User, Plus } from "lucide-react";
+
 /* ================= TYPES ================= */
 
 interface Conversation {
@@ -49,7 +52,7 @@ export default function Sidebar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  /* ================= LIVE REFRESH (IMPROVED) ================= */
+  /* ================= LIVE REFRESH ================= */
 
   useEffect(() => {
     const refresh = async () => {
@@ -173,7 +176,7 @@ export default function Sidebar() {
     );
   }
 
-  /* ================= SHARE FUNCTION ================= */
+  /* ================= SHARE ================= */
 
   async function handleShare() {
     const url = "https://askmichaelai.org";
@@ -207,9 +210,9 @@ export default function Sidebar() {
     return (
       <div
         key={conv.conversationId}
-        className={`group relative flex items-center px-3 py-2 rounded mb-1 ${
+        className={`group relative flex items-center px-3 py-2 rounded-lg mb-1 ${
           active
-            ? "text-white"
+            ? "bg-neutral-800 text-white"
             : "text-gray-400 hover:text-white hover:bg-neutral-900"
         }`}
       >
@@ -276,33 +279,37 @@ export default function Sidebar() {
   return (
     <aside className="w-72 bg-neutral-950 border-r border-neutral-800 flex flex-col text-white">
       
-      <div className="p-4 border-b border-neutral-800">
-        <div className="flex gap-2">
-          <button 
-            onClick={handleShare}
-            className="flex-1 text-xs bg-neutral-800 hover:bg-neutral-700 py-1 rounded"
-          >
-            Share
-          </button>
-
-          <button 
-            onClick={() => router.push("/subscription")}
-            className="flex-1 text-xs bg-blue-600 hover:bg-blue-700 py-1 rounded"
-          >
-            Subscription
-          </button>
-        </div>
-      </div>
-
-      <div className="p-4 border-b border-neutral-800">
+      {/* TOP ACTIONS */}
+      <div className="p-4 border-b border-neutral-800 space-y-2">
         <button
-          onClick={createChat}
-          className="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded-lg font-semibold"
+          onClick={handleShare}
+          className="w-full flex items-center justify-center gap-2 text-sm bg-neutral-800 hover:bg-neutral-700 py-2 rounded-lg"
         >
-          + New Chat
+          <Share2 size={16} />
+          Share
+        </button>
+
+        <button
+          onClick={() => router.push("/portal/subscription")}
+          className="w-full flex items-center justify-center gap-2 text-sm bg-blue-600 hover:bg-blue-700 py-2 rounded-lg font-medium"
+        >
+          <CreditCard size={16} />
+          Subscription
         </button>
       </div>
 
+      {/* NEW CHAT */}
+      <div className="p-4 border-b border-neutral-800">
+        <button
+          onClick={createChat}
+          className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 py-2 rounded-lg font-semibold"
+        >
+          <Plus size={16} />
+          New Chat
+        </button>
+      </div>
+
+      {/* CONTENT */}
       <div className="flex-1 overflow-y-auto p-4">
         <p className="text-xs text-gray-400 mb-2">Documents</p>
 
@@ -326,6 +333,17 @@ export default function Sidebar() {
         )}
 
         {normal.map(renderConversation)}
+      </div>
+
+      {/* BOTTOM */}
+      <div className="p-4 border-t border-neutral-800">
+        <Link
+          href="/portal/profile"
+          className="w-full flex items-center justify-center gap-2 text-sm bg-neutral-800 hover:bg-neutral-700 py-2 rounded-lg"
+        >
+          <User size={16} />
+          Profile
+        </Link>
       </div>
     </aside>
   );
