@@ -19,11 +19,22 @@ export async function POST(req: NextRequest) {
     }
 
     /* ============================
+    ENV VALIDATION (ADDED SAFELY)
+    ============================ */
+
+    const secret = process.env.PAYSTACK_SECRET_KEY;
+
+    if (!secret) {
+      console.error("❌ PAYSTACK_SECRET_KEY is not set");
+      return new NextResponse("Server misconfigured", { status: 500 });
+    }
+
+    /* ============================
     VERIFY SIGNATURE (CRITICAL)
     ============================ */
 
     const hash = crypto
-      .createHmac("sha512", process.env.PAYSTACK_SECRET_KEY!)
+      .createHmac("sha512", secret)
       .update(body)
       .digest("hex");
 
@@ -123,9 +134,6 @@ export async function POST(req: NextRequest) {
         break;
       }
 
-      /* ============================
-      SUBSCRIPTION CREATED / ENABLED
-      ============================ */
       case "subscription.create":
       case "subscription.enable": {
         const data = event.data;
@@ -155,9 +163,6 @@ export async function POST(req: NextRequest) {
         break;
       }
 
-      /* ============================
-      SUBSCRIPTION RENEWAL
-      ============================ */
       case "invoice.payment_succeeded": {
         const data = event.data;
         const metadata = data.metadata || {};
@@ -180,9 +185,6 @@ export async function POST(req: NextRequest) {
         break;
       }
 
-      /* ============================
-      SUBSCRIPTION CANCELLED
-      ============================ */
       case "subscription.disable": {
         const data = event.data;
         const metadata = data.metadata || {};

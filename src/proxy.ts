@@ -31,11 +31,11 @@ export default clerkMiddleware(async (auth, req) => {
   }
 
   /* =========================
-     TIER ENFORCEMENT (NEW)
+     TIER ENFORCEMENT (FIXED)
   ========================= */
 
   if (isPortalRoute(req)) {
-    const { userId } = await auth(); // ✅ FIXED (await added)
+    const { userId } = await auth();
 
     if (!userId) {
       return NextResponse.redirect(new URL("/sign-in", req.url));
@@ -51,13 +51,10 @@ export default clerkMiddleware(async (auth, req) => {
       const tier = user?.tier || "free";
       const status = user?.subscriptionStatus || "inactive";
 
-      // 🚫 Free users → pricing
-      if (tier === "free") {
-        return NextResponse.redirect(new URL("/pricing", req.url));
-      }
+      // ✅ Allow FREE users into portal (FIXED)
 
-      // 🚫 Cancelled subscriptions → pricing
-      if (status === "cancelled") {
+      // 🚫 Only block cancelled paid users
+      if (tier !== "free" && status === "cancelled") {
         return NextResponse.redirect(new URL("/pricing", req.url));
       }
 
