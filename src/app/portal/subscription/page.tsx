@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { ArrowLeft } from "lucide-react"; // ✅ added
 
 export default function SubscriptionPage() {
   const router = useRouter();
@@ -89,9 +90,23 @@ export default function SubscriptionPage() {
 
   return (
     <div className="pt-24 p-10 text-white max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">
-        Subscription Management
-      </h1>
+
+      {/* ✅ NEW HEADER WITH BACK BUTTON */}
+      <div className="flex items-center justify-between mb-6">
+        <button
+          onClick={() => router.push("/portal")}
+          className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition"
+        >
+          <ArrowLeft size={16} />
+          Back to Platform
+        </button>
+
+        <h1 className="text-2xl font-bold">
+          Subscription Management
+        </h1>
+
+        <div className="w-[140px]" />
+      </div>
 
       {/* ================= SUBSCRIPTION ================= */}
 
