@@ -9,6 +9,23 @@ import {
 } from "@/lib/mongodb";
 
 /* ============================
+🔥 LOCAL DATE FIX (MATCH CHAT ROUTE)
+============================ */
+function getTodayString(): string {
+  const now = new Date();
+
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+
+  const date = `${year}-${month}-${day}`;
+
+  console.log("USAGE API DATE:", date);
+
+  return date;
+}
+
+/* ============================
 PLAN LIMITS
 ============================ */
 
@@ -50,7 +67,8 @@ export async function GET() {
 
     const { db } = await connectToDatabase();
 
-    const today = new Date().toISOString().split("T")[0];
+    /* ✅ USE SAME LOCAL DATE FUNCTION */
+    const today = getTodayString();
 
     console.log("FETCH USAGE:", userId, today);
 

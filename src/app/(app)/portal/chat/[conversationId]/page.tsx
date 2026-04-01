@@ -33,22 +33,41 @@ export default function ChatPage() {
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
+  /* ================= 🔒 FETCH GUARD ================= */
+  const isFetchingUsageRef = useRef(false);
+
   /* ================= FETCH USAGE ================= */
   const fetchUsage = async () => {
     try {
+      if (isFetchingUsageRef.current) return; // 🔒 prevent overlapping/stale calls
+      isFetchingUsageRef.current = true;
+
       const res = await fetch("/api/usage");
       const data = await res.json();
 
       console.log("USAGE RESPONSE:", data);
 
       /* ✅ HARD SAFE SET (NO FALLBACK CONFUSION) */
-      setUsage({
-        count: typeof data.count === "number" ? data.count : 0,
-        limit: typeof data.limit === "number" ? data.limit : 10,
-      });
+      setUsage((prev) => {
+        const serverCount =
+          typeof data.count === "number" ? data.count : prev.count;
+        const serverLimit =
+          typeof data.limit === "number" ? data.limit : prev.limit;
 
+        /* 🔥 PREVENT STALE OVERWRITE */
+        if (serverCount < prev.count) {
+          return prev;
+        }
+
+        return {
+          count: serverCount,
+          limit: serverLimit,
+        };
+      });
     } catch (err) {
       console.error("Failed to fetch usage");
+    } finally {
+      isFetchingUsageRef.current = false;
     }
   };
 

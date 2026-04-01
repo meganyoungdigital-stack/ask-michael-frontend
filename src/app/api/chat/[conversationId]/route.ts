@@ -404,6 +404,21 @@ Format:
 `;
     }
 
+    /* ================= 🔥 USAGE INCREMENT BEFORE STREAM ================= */
+    let usageIncremented = false;
+
+    if (!usageIncremented) {
+      await db.collection("usage").updateOne(
+        { userId, date: today },
+        {
+          $inc: { count: 1 },
+          $setOnInsert: { userId, date: today },
+        },
+        { upsert: true }
+      );
+      usageIncremented = true;
+    }
+
     /* ================= STREAMING RESPONSE (UPDATED FOR IMAGES) ================= */
     const stream = await openai.chat.completions.create({
       model: tier === "pro_plus" ? "gpt-4o" : "gpt-4o-mini",
@@ -461,15 +476,18 @@ Format:
             { upsert: true }
           );
 
-          /* ✅ USAGE INCREMENT */
-          await db.collection("usage").updateOne(
-            { userId, date: today },
-            {
-              $inc: { count: 1 },
-              $setOnInsert: { userId, date: today },
-            },
-            { upsert: true }
-          );
+          /* ✅ USAGE INCREMENT (GUARDED) */
+          if (!usageIncremented) {
+            await db.collection("usage").updateOne(
+              { userId, date: today },
+              {
+                $inc: { count: 1 },
+                $setOnInsert: { userId, date: today },
+              },
+              { upsert: true }
+            );
+            usageIncremented = true;
+          }
 
           /* ================= 🧠 AI LEARNING WRITE-BACK ================= */
           try {
