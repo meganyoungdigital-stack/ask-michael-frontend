@@ -41,10 +41,12 @@ export default function ChatPage() {
 
       console.log("USAGE RESPONSE:", data);
 
-setUsage({
-  count: data.count,
-  limit: data.limit,
-});
+      /* ✅ HARD SAFE SET (NO FALLBACK CONFUSION) */
+      setUsage({
+        count: typeof data.count === "number" ? data.count : 0,
+        limit: typeof data.limit === "number" ? data.limit : 10,
+      });
+
     } catch (err) {
       console.error("Failed to fetch usage");
     }
@@ -135,7 +137,6 @@ setUsage({
       let done = false;
       let aiText = "";
 
-      /* create empty assistant message first */
       setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
       while (!done) {
@@ -145,7 +146,6 @@ setUsage({
         const chunk = decoder.decode(value || new Uint8Array());
         aiText += chunk;
 
-        /* update last message live */
         setMessages((prev) => {
           const updated = [...prev];
           updated[updated.length - 1] = {
@@ -178,7 +178,9 @@ setUsage({
         }
       }
 
+      /* ✅ ALWAYS SYNC WITH SERVER */
       await fetchUsage();
+
       window.dispatchEvent(new Event("refreshSidebar"));
 
     } catch (err) {
@@ -277,7 +279,7 @@ setUsage({
         <p className="text-sm text-gray-500">
           {isLimitReached
             ? "Daily message limit reached"
-            : `${remaining} messages left today`}
+            : `${usage.limit - usage.count} messages left today`}
         </p>
 
         <div className="flex gap-2 items-end">

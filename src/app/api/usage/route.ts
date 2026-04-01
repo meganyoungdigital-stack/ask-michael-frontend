@@ -42,6 +42,8 @@ export async function GET() {
 
     let usageCount = await getUserUsage(userId);
 
+    console.log("RAW USAGE (helper):", usageCount);
+
     /* ============================
     🔥 FIX: ENSURE DAILY USAGE (CRITICAL)
     ============================ */
@@ -59,8 +61,12 @@ export async function GET() {
 
     console.log("USAGE DOC:", usageDoc);
 
-    /* ✅ FORCE DAILY VALUE (OVERRIDE ANY HELPER) */
-    usageCount = usageDoc?.count || 0;
+    /* ✅ HARD OVERRIDE — ONLY TRUST DATE-BASED VALUE */
+    const dailyUsage = usageDoc?.count || 0;
+
+    usageCount = dailyUsage;
+
+    console.log("FINAL USAGE COUNT (USED):", usageCount);
 
     /* ============================
     GET USER PLAN
