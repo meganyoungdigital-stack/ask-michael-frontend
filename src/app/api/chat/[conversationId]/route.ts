@@ -12,7 +12,20 @@ export const runtime = "nodejs";
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
 });
+/* ================= 🔥 LOCAL DATE FIX ================= */
+function getTodayString(): string {
+  const now = new Date();
 
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+
+  const date = `${year}-${month}-${day}`;
+
+  console.log("CHAT API DATE:", date);
+
+  return date;
+}
 /* ================= 🔒 SANITIZATION ================= */
 function sanitizeKnowledge(text: string): string {
   if (!text) return "";
@@ -171,7 +184,7 @@ Instructions:
     }
 
     /* ================= USAGE CHECK ================= */
-    const today = new Date().toISOString().split("T")[0];
+    const today = getTodayString();
 
     const usage = await db.collection("usage").findOne({
       userId,
