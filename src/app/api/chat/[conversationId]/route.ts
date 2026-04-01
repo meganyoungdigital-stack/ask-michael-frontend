@@ -59,7 +59,7 @@ async function getRelevantKnowledge(
           path: "embedding",
           queryVector: queryEmbedding,
           numCandidates: 100,
-          limit: 10, // 🔥 increased for better ranking later
+          limit: 10,
           filter: {
             $or: [
               { company: company || null },
@@ -72,7 +72,6 @@ async function getRelevantKnowledge(
 
     if (!results.length) return { context: "", sources: [] };
 
-    // 🔥 LAYER 6: sort by score (if exists)
     results.sort((a: any, b: any) => (b.score || 0) - (a.score || 0));
 
     const topResults = results.slice(0, 5);
@@ -300,14 +299,29 @@ Upgrade to unlock more:
       return new Response("File uploads require Pro plan", { status: 403 });
     }
 
-    /* ================= PROCESS FILES ================= */
+    /* ================= 🔥 FIXED FILE PROCESSING (ONLY CHANGE) ================= */
     let fileContext = "";
+    let imageInputs: any[] = [];
 
     if (files.length > 0) {
       for (const file of files) {
         try {
-          const text = await file.text();
-          fileContext += `\n\n[FILE: ${file.name}]\n${text.slice(0, 2000)}`;
+          if (file.type.startsWith("image/")) {
+            const bytes = await file.arrayBuffer();
+            const base64 = Buffer.from(bytes).toString("base64");
+
+            imageInputs.push({
+              type: "image_url",
+              image_url: {
+                url: `data:${file.type};base64,${base64}`,
+              },
+            });
+
+            fileContext += `\n\n[IMAGE: ${file.name}]`;
+          } else {
+            const text = await file.text();
+            fileContext += `\n\n[FILE: ${file.name}]\n${text.slice(0, 2000)}`;
+          }
         } catch (err) {
           console.error("File read error:", err);
         }
@@ -364,11 +378,8 @@ Upgrade to unlock more:
 
     if (mode === "iso") {
       systemPrompt += `
-
 ISO GENERATION MODE:
-
 - Always output structured ISO document
-
 Format:
 1. Title
 2. Scope
@@ -376,17 +387,22 @@ Format:
 4. Procedure
 5. Safety
 6. References
-
 - Be formal, technical, and compliant
 `;
     }
 
-    /* ================= STREAMING RESPONSE ================= */
+    /* ================= STREAMING RESPONSE (UPDATED FOR IMAGES) ================= */
     const stream = await openai.chat.completions.create({
       model: tier === "pro_plus" ? "gpt-4o" : "gpt-4o-mini",
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: message },
+        {
+          role: "user",
+          content:
+            imageInputs.length > 0
+              ? [{ type: "text", text: message }, ...imageInputs]
+              : message,
+        },
       ],
       stream: true,
     });

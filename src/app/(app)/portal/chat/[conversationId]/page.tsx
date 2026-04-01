@@ -101,7 +101,7 @@ export default function ChatPage() {
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
 
-    /* ✅ OPTIMISTIC USAGE UPDATE */
+    /* optimistic usage */
     setUsage((prev) => ({
       ...prev,
       count: prev.count + 1,
@@ -122,19 +122,41 @@ export default function ChatPage() {
         body: formData,
       });
 
-      if (!res.ok) throw new Error("Failed to send message");
+      if (!res.ok || !res.body) {
+        throw new Error("Streaming failed");
+      }
 
-      const data = await res.json();
+      /* ================= STREAMING FIX ================= */
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
 
-      const aiMessage: Message = {
-        role: "assistant",
-        content: data.reply || "No response",
-      };
+      let done = false;
+      let aiText = "";
 
-      setMessages((prev) => [...prev, aiMessage]);
+      /* create empty assistant message first */
+      setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+
+      while (!done) {
+        const { value, done: doneReading } = await reader.read();
+        done = doneReading;
+
+        const chunk = decoder.decode(value || new Uint8Array());
+        aiText += chunk;
+
+        /* update last message live */
+        setMessages((prev) => {
+          const updated = [...prev];
+          updated[updated.length - 1] = {
+            role: "assistant",
+            content: aiText,
+          };
+          return updated;
+        });
+      }
+
       setSelectedFiles([]);
 
-      /* ================= 🔥 SMART TITLE GENERATION ================= */
+      /* ================= TITLE GENERATION ================= */
       if (isFirstMessage) {
         try {
           await fetch("/api/generate-title", {
@@ -155,8 +177,8 @@ export default function ChatPage() {
       }
 
       await fetchUsage();
-
       window.dispatchEvent(new Event("refreshSidebar"));
+
     } catch (err) {
       console.error("Send error:", err);
 
@@ -168,7 +190,7 @@ export default function ChatPage() {
         },
       ]);
 
-      /* rollback usage if failed */
+      /* rollback usage */
       setUsage((prev) => ({
         ...prev,
         count: Math.max(prev.count - 1, 0),
