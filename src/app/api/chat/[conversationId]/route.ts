@@ -534,7 +534,16 @@ ${fullResponse}
     );
 
   } catch (error) {
-    console.error("[CHAT_ERROR]", error);
+    console.error("=================================");
+console.error("🚨 CHAT ERROR (FULL)");
+console.error("=================================");
+console.error(error);
+console.error("=================================");
+
+if (error instanceof Error) {
+  console.error("MESSAGE:", error.message);
+  console.error("STACK:", error.stack);
+}
 
     return new Response(
       JSON.stringify({
