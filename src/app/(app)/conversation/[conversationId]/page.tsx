@@ -128,16 +128,15 @@ export default function ConversationPage() {
 
     try {
 
-      const response = await fetch(`/api/ask`, {
+      const response = await fetch(`/api/chat/${conversationId}`, {
         method: "POST",
         credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          conversationId,
-          messages: updatedMessages,
-        }),
+  message: userMessage.content,
+}),
       });
 
       if (!response.ok) {
