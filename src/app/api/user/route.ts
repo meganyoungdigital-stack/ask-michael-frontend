@@ -24,6 +24,7 @@ export async function GET() {
       company: user?.company || "",
       name: user?.name || "",
       email: user?.email || "",
+      occupation: user?.occupation || "", // ✅ NEW
     });
 
   } catch (error) {
@@ -37,7 +38,7 @@ export async function GET() {
 }
 
 /* =========================
-UPDATE USER (NEW)
+UPDATE USER
 ========================= */
 
 export async function POST(req: Request) {
@@ -54,6 +55,7 @@ export async function POST(req: Request) {
       name,
       company,
       email,
+      occupation, // ✅ NEW
     } = body;
 
     const { db } = await connectToDatabase();
@@ -69,6 +71,7 @@ export async function POST(req: Request) {
     if (name !== undefined) updateData.name = name;
     if (company !== undefined) updateData.company = company;
     if (email !== undefined) updateData.email = email;
+    if (occupation !== undefined) updateData.occupation = occupation; // ✅ NEW
 
     /* =========================
        UPSERT USER

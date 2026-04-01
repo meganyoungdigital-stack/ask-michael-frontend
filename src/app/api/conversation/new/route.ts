@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { connectToDatabase } from "@/lib/mongodb";
 import { auth } from "@clerk/nextjs/server";
 import { randomUUID } from "crypto";
 
@@ -15,19 +14,11 @@ export async function POST() {
       );
     }
 
-    const { db } = await connectToDatabase();
-
+    /* ================= CREATE ID ONLY (NO DB WRITE) ================= */
     const conversationId = randomUUID();
 
-    /* ================= CREATE CONVERSATION ================= */
-    await db.collection("conversations").insertOne({
-      conversationId,
-      userId,
-      title: "New Chat", // ✅ required for auto rename
-      messages: [],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
+    // ❌ DO NOT create conversation here anymore
+    // It will be created on FIRST MESSAGE inside chat route
 
     return NextResponse.json({ conversationId });
 

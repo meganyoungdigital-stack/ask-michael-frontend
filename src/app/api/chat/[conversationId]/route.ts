@@ -1,9 +1,9 @@
-import { NextRequest } from "next/server"; 
+import { NextRequest } from "next/server";    
 import { connectToDatabase } from "@/lib/mongodb";
 import { auth } from "@clerk/nextjs/server";
 import OpenAI from "openai";
 
-/* ✅ NEW */
+/* ✅ EXISTING */
 import { getMessageLimit, hasFeature } from "@/lib/tiers";
 
 export const runtime = "nodejs";
@@ -12,6 +12,94 @@ export const runtime = "nodejs";
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
 });
+
+/* ================= 🔒 SANITIZATION ================= */
+function sanitizeKnowledge(text: string): string {
+  if (!text) return "";
+
+  return text
+    .replace(/\b(Pty Ltd|Ltd|Inc|LLC|Corporation|Company)\b/gi, "")
+    .replace(/\S+@\S+\.\S+/g, "")
+    .replace(/\+?\d[\d\s-]{7,}/g, "")
+    .replace(/\b[A-Z]{2,}\b/g, "")
+    .trim();
+}
+
+/* ================= 🧠 EMBEDDING ================= */
+async function createEmbedding(text: string): Promise<number[]> {
+  const res = await openai.embeddings.create({
+    model: "text-embedding-3-small",
+    input: text.slice(0, 2000),
+  });
+
+  return res.data[0].embedding;
+}
+
+/* ================= 🧠 QUERY HASH ================= */
+function hashQuery(query: string) {
+  return require("crypto")
+    .createHash("md5")
+    .update(query.toLowerCase().trim())
+    .digest("hex");
+}
+
+/* ================= 🧠 VECTOR SEARCH ================= */
+async function getRelevantKnowledge(
+  db: any,
+  message: string,
+  company?: string
+) {
+  try {
+    const queryEmbedding = await createEmbedding(message);
+
+    const results = await db.collection("knowledge_base").aggregate([
+      {
+        $vectorSearch: {
+          index: "default",
+          path: "embedding",
+          queryVector: queryEmbedding,
+          numCandidates: 100,
+          limit: 10, // 🔥 increased for better ranking later
+          filter: {
+            $or: [
+              { company: company || null },
+              { company: null }
+            ]
+          }
+        },
+      },
+    ]).toArray();
+
+    if (!results.length) return { context: "", sources: [] };
+
+    // 🔥 LAYER 6: sort by score (if exists)
+    results.sort((a: any, b: any) => (b.score || 0) - (a.score || 0));
+
+    const topResults = results.slice(0, 5);
+
+    return {
+      context: `
+ENGINEERING KNOWLEDGE (MULTI-SOURCE):
+
+${topResults.map((doc: any, i: number) => 
+  `SOURCE ${i + 1}:\n${sanitizeKnowledge(doc.content)}`
+).join("\n\n")}
+
+INSTRUCTIONS:
+- Compare all sources
+- Identify best practices
+- Resolve conflicts
+- Highlight risks if methods differ
+- Synthesize into ONE clear engineering answer
+`,
+      sources: topResults.map((doc: any) => doc._id),
+    };
+
+  } catch (err) {
+    console.error("Vector search error:", err);
+    return { context: "", sources: [] };
+  }
+}
 
 /* ================= POST ================= */
 export async function POST(
@@ -59,6 +147,10 @@ Instructions:
 - Provide expert-level analysis
 - Include optimization strategies and risk predictions
 - Think like a senior engineering consultant
+- Perform cross-document reasoning
+- Identify contradictions between sources
+- Highlight engineering risks clearly
+- Suggest optimized, real-world solutions
 `;
     }
 
@@ -89,7 +181,6 @@ Instructions:
 
     const currentUsage = usage?.count || 0;
 
-    /* 🔥 UPGRADE TRIGGER (REPLACED BLOCK) */
     if (currentUsage >= messageLimit) {
       const upgradeMessage = `
 ⚡ You've reached your daily limit (${messageLimit} messages).
@@ -119,6 +210,7 @@ Upgrade to unlock more:
     /* ================= PARSE REQUEST ================= */
     let message = "";
     let files: File[] = [];
+    let mode = "default";
 
     try {
       const contentType = req.headers.get("content-type") || "";
@@ -128,9 +220,11 @@ Upgrade to unlock more:
 
         message = (formData.get("message") as string)?.trim() || "";
         files = (formData.getAll("files") as File[]) || [];
+        mode = (formData.get("mode") as string) || "default";
       } else {
         const body = await req.json();
         message = body.message?.trim();
+        mode = body.mode || "default";
       }
     } catch {
       return new Response("Invalid request format", { status: 400 });
@@ -138,6 +232,65 @@ Upgrade to unlock more:
 
     if (!message) {
       return new Response("Message required", { status: 400 });
+    }
+
+    /* ================= ⚡ QUERY CACHE ================= */
+    const queryHash = hashQuery(
+      message + (user?.company || "") + mode
+    );
+
+    let cached = await db.collection("query_cache").findOne({
+      queryHash,
+      userId,
+    });
+
+    let finalKnowledgeContext = "";
+    let cachedResponse = "";
+    let sourcesUsed: any[] = [];
+
+    if (cached) {
+      console.log("⚡ CACHE HIT");
+      finalKnowledgeContext = cached.context || "";
+      cachedResponse = cached.response || "";
+    } else {
+      console.log("🧠 CACHE MISS");
+
+      const knowledge = await getRelevantKnowledge(
+        db,
+        message,
+        user?.company
+      );
+
+      finalKnowledgeContext = knowledge.context;
+      sourcesUsed = knowledge.sources;
+
+      await db.collection("query_cache").updateOne(
+        { queryHash, userId },
+        {
+          $set: {
+            context: finalKnowledgeContext,
+            sourcesUsed,
+            createdAt: new Date(),
+          },
+        },
+        { upsert: true }
+      );
+    }
+
+    /* ================= 🔥 AUTO-CREATE CONVERSATION ================= */
+    const existingConversation = await db
+      .collection("conversations")
+      .findOne({ conversationId, userId });
+
+    if (!existingConversation) {
+      await db.collection("conversations").insertOne({
+        conversationId,
+        userId,
+        title: "New Chat",
+        messages: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
     }
 
     /* ================= FEATURE ACCESS ================= */
@@ -196,81 +349,139 @@ Upgrade to unlock more:
     );
 
     /* ================= BUILD PROMPT ================= */
-    const systemPrompt =
+    let systemPrompt =
       "You are a professional AI assistant for structural engineering, ISO standards, and technical compliance.\n\n" +
       userContext + "\n\n" +
-      companyMemory + "\n\n" +   // 🔥 COMPANY MEMORY INJECTION
+      companyMemory + "\n\n" +
+      finalKnowledgeContext + "\n\n" +
+      "STRICT RULES:\n" +
+      "- Never mention company names or identifiable details\n" +
+      "- Never expose proprietary or sensitive information\n" +
+      "- Generalize all knowledge into industry best practices\n\n" +
       "Use any provided file data when relevant.\n\n" +
       "FILE DATA:\n" +
       fileContext;
 
-    /* ================= AI RESPONSE ================= */
-    const completion = await openai.chat.completions.create({
-      model: tier === "pro_plus" ? "gpt-4o" : "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: systemPrompt,
-        },
-        {
-          role: "user",
-          content: message,
-        },
-      ],
-    });
+    if (mode === "iso") {
+      systemPrompt += `
 
-    const reply =
-      completion.choices?.[0]?.message?.content || "No response";
+ISO GENERATION MODE:
 
-    /* ================= SAVE AI MESSAGE ================= */
-    await db.collection("conversations").updateOne(
-      { conversationId, userId },
-      {
-        $push: {
-          messages: {
-            role: "assistant",
-            content: reply,
-            createdAt: new Date(),
-          },
-        },
-        $set: { updatedAt: new Date() },
-      } as any
-    );
+- Always output structured ISO document
 
-    /* ================= SAVE COMPANY MEMORY ================= */
-    if (user?.company && message.length > 50) {
-      await db.collection("company_memory").insertOne({
-        company: user.company,
-        content: message,
-        createdAt: new Date(),
-      });
+Format:
+1. Title
+2. Scope
+3. Responsibilities
+4. Procedure
+5. Safety
+6. References
+
+- Be formal, technical, and compliant
+`;
     }
 
-    /* ================= USAGE TRACK ================= */
-    await db.collection("usage").updateOne(
-      { userId, date: today },
-      {
-        $inc: { count: 1 },
-        $setOnInsert: {
-          lastReset: new Date(),
-        },
-      },
-      { upsert: true }
-    );
+    /* ================= STREAMING RESPONSE ================= */
+    const stream = await openai.chat.completions.create({
+      model: tier === "pro_plus" ? "gpt-4o" : "gpt-4o-mini",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: message },
+      ],
+      stream: true,
+    });
 
-    /* ================= RETURN ================= */
+    const encoder = new TextEncoder();
+
     return new Response(
-      JSON.stringify({
-        reply,
-        success: true,
-        usage: {
-          used: currentUsage + 1,
-          limit: messageLimit,
+      new ReadableStream({
+        async start(controller) {
+          let fullResponse = "";
+
+          for await (const chunk of stream) {
+            const token = chunk.choices?.[0]?.delta?.content || "";
+            fullResponse += token;
+            controller.enqueue(encoder.encode(token));
+          }
+
+          /* ✅ SAVE AI RESPONSE + SOURCES */
+          await db.collection("conversations").updateOne(
+            { conversationId, userId },
+            {
+              $push: {
+                messages: {
+                  role: "assistant",
+                  content: fullResponse,
+                  sourcesUsed,
+                  createdAt: new Date(),
+                },
+              },
+              $set: { updatedAt: new Date() },
+            } as any
+          );
+
+          /* ✅ CACHE FULL RESPONSE */
+          await db.collection("query_cache").updateOne(
+            { queryHash, userId },
+            {
+              $set: {
+                response: fullResponse,
+                createdAt: new Date(),
+              },
+            },
+            { upsert: true }
+          );
+
+          /* ✅ USAGE INCREMENT */
+          await db.collection("usage").updateOne(
+            { userId, date: today },
+            {
+              $inc: { count: 1 },
+              $setOnInsert: { userId, date: today },
+            },
+            { upsert: true }
+          );
+
+          /* ================= 🧠 AI LEARNING WRITE-BACK ================= */
+          try {
+            const learningPrompt = `
+Extract reusable engineering knowledge from this response.
+Only return if high-quality and generally applicable.
+Return concise best-practice knowledge only.
+
+RESPONSE:
+${fullResponse}
+`;
+
+            const learningRes = await openai.chat.completions.create({
+              model: "gpt-4o-mini",
+              messages: [{ role: "user", content: learningPrompt }],
+            });
+
+            const learningText =
+              learningRes.choices?.[0]?.message?.content?.trim();
+
+            if (learningText && learningText.length > 50) {
+              const embedding = await createEmbedding(learningText);
+
+              await db.collection("ai_learnings").insertOne({
+                content: learningText,
+                embedding,
+                source: "ai_generated",
+                confidence: 0.8,
+                createdAt: new Date(),
+              });
+            }
+          } catch (err) {
+            console.error("AI learning error:", err);
+          }
+
+          controller.close();
         },
       }),
       {
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "text/plain; charset=utf-8",
         },
       }
     );

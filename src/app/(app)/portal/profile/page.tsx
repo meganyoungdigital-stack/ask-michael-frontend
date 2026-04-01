@@ -13,6 +13,7 @@ export default function ProfilePage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [company, setCompany] = useState("");
+  const [occupation, setOccupation] = useState(""); // ✅ NEW
 
   /* ================= FETCH USER ================= */
 
@@ -31,6 +32,7 @@ export default function ProfilePage() {
         setName(data?.name || "");
         setEmail(data?.email || "");
         setCompany(data?.company || "");
+        setOccupation(data?.occupation || ""); // ✅ NEW
       } catch {
         console.error("Failed to load user");
       } finally {
@@ -67,7 +69,7 @@ export default function ProfilePage() {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ name, email, company }),
+      body: JSON.stringify({ name, email, company, occupation }), // ✅ NEW
     });
 
     if (res.ok) {
@@ -82,86 +84,97 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="pt-24 p-10 text-white max-w-2xl mx-auto relative">
+    <div className="min-h-screen overflow-y-auto text-white">
+      <div className="pt-24 p-10 max-w-2xl mx-auto relative">
 
-      {/* 🔥 BACK BUTTON */}
-      <button
-        onClick={() => router.push("/portal")}
-        className="absolute top-6 left-6 text-sm text-gray-400 hover:text-white"
-      >
-        ← Back to Platform
-      </button>
+        {/* 🔥 BACK BUTTON */}
+        <button
+          onClick={() => router.push("/portal")}
+          className="absolute top-6 left-6 text-sm text-gray-400 hover:text-white"
+        >
+          ← Back to Platform
+        </button>
 
-      <h1 className="text-2xl font-bold mb-6">
-        Account & Subscription
-      </h1>
+        <h1 className="text-2xl font-bold mb-6">
+          Account & Subscription
+        </h1>
 
-      {/* ================= SUBSCRIPTION ================= */}
+        {/* ================= SUBSCRIPTION ================= */}
 
-      <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-lg">
-        <p className="mb-2">
-          <span className="text-gray-400">Current Plan:</span>{" "}
-          <span className="font-semibold capitalize">{tier}</span>
-        </p>
+        <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-lg">
+          <p className="mb-2">
+            <span className="text-gray-400">Current Plan:</span>{" "}
+            <span className="font-semibold capitalize">{tier}</span>
+          </p>
 
-        <p className="mb-6">
-          <span className="text-gray-400">Status:</span>{" "}
-          <span className="font-semibold capitalize">{status}</span>
-        </p>
+          <p className="mb-6">
+            <span className="text-gray-400">Status:</span>{" "}
+            <span className="font-semibold capitalize">{status}</span>
+          </p>
 
-        <div className="flex gap-3">
-          <button
-            onClick={() => router.push("/pricing")}
-            className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded"
-          >
-            Upgrade Plan
-          </button>
-
-          {tier !== "free" && (
+          <div className="flex gap-3 flex-wrap">
             <button
-              onClick={handleCancel}
-              className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded"
+              onClick={() => router.push("/pricing")}
+              className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded"
             >
-              Cancel Subscription
+              Upgrade Plan
             </button>
-          )}
+
+            {tier !== "free" && (
+              <button
+                onClick={handleCancel}
+                className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded"
+              >
+                Cancel Subscription
+              </button>
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* ================= PROFILE ================= */}
+        {/* ================= PROFILE ================= */}
 
-      <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-lg mt-6">
-        <h2 className="text-lg font-semibold mb-4">Profile</h2>
+        <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-lg mt-6 mb-16">
+          <h2 className="text-lg font-semibold mb-4">Profile</h2>
 
-        <div className="flex flex-col gap-3">
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Name"
-            className="bg-neutral-800 p-2 rounded"
-          />
+          <div className="flex flex-col gap-3">
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Name"
+              className="bg-neutral-800 p-2 rounded"
+            />
 
-          <input
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email"
-            className="bg-neutral-800 p-2 rounded"
-          />
+            <input
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email"
+              className="bg-neutral-800 p-2 rounded"
+            />
 
-          <input
-            value={company}
-            onChange={(e) => setCompany(e.target.value)}
-            placeholder="Company"
-            className="bg-neutral-800 p-2 rounded"
-          />
+            <input
+              value={company}
+              onChange={(e) => setCompany(e.target.value)}
+              placeholder="Company"
+              className="bg-neutral-800 p-2 rounded"
+            />
 
-          <button
-            onClick={handleSaveProfile}
-            className="bg-blue-600 hover:bg-blue-700 py-2 rounded mt-2"
-          >
-            Save Profile
-          </button>
+            {/* ✅ NEW OCCUPATION FIELD */}
+            <input
+              value={occupation}
+              onChange={(e) => setOccupation(e.target.value)}
+              placeholder="Occupation (e.g. Engineer, Manager, Welder)"
+              className="bg-neutral-800 p-2 rounded"
+            />
+
+            <button
+              onClick={handleSaveProfile}
+              className="bg-blue-600 hover:bg-blue-700 py-2 rounded mt-2"
+            >
+              Save Profile
+            </button>
+          </div>
         </div>
+
       </div>
     </div>
   );

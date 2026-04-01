@@ -12,6 +12,11 @@ type VectorChunk = {
   documentId?: string;
   page?: number;
   score?: number;
+
+  /* 🔥 NEW (Layer 6 learning signals) */
+  knowledgeScore?: number;
+  uses?: number;
+  success?: number;
 };
 
 /* ============================
@@ -48,7 +53,7 @@ function hashQuery(query: string) {
 }
 
 /* ============================
-   🧠 COSINE SIMILARITY (NEW)
+   🧠 COSINE SIMILARITY
 ============================ */
 
 function cosineSimilarity(a: number[], b: number[]) {
@@ -83,7 +88,7 @@ export async function createEmbedding(text: string): Promise<number[]> {
 }
 
 /* ============================
-   🧠 FALLBACK SEARCH (NEW)
+   🧠 FALLBACK SEARCH
 ============================ */
 
 async function fallbackSearch(
@@ -96,7 +101,7 @@ async function fallbackSearch(
   const allChunks = await db
     .collection("document_chunks")
     .find({ userId })
-    .limit(200) // safety cap
+    .limit(200)
     .toArray();
 
   const scored = allChunks.map((chunk: any) => {
@@ -107,6 +112,9 @@ async function fallbackSearch(
       documentId: chunk.documentId,
       page: chunk.page,
       score,
+      knowledgeScore: chunk.score || 0,
+      uses: chunk.uses || 0,
+      success: chunk.success || 0,
     };
   });
 
@@ -116,7 +124,7 @@ async function fallbackSearch(
 }
 
 /* ============================
-   🧠 HYBRID SEARCH (NEW)
+   🧠 HYBRID SEARCH
 ============================ */
 
 function keywordBoost(query: string, text: string) {
@@ -130,6 +138,24 @@ function keywordBoost(query: string, text: string) {
   }
 
   return score;
+}
+
+/* ============================
+   🧠 LEARNING BOOST (NEW)
+============================ */
+
+function learningBoost(chunk: VectorChunk) {
+  const knowledgeScore = chunk.knowledgeScore || 0;
+  const uses = chunk.uses || 0;
+  const success = chunk.success || 0;
+
+  const successRate = uses > 0 ? success / uses : 0;
+
+  return (
+    knowledgeScore * 0.1 +   // feedback score
+    successRate * 0.2 +      // reliability
+    Math.log(uses + 1) * 0.05 // popularity
+  );
 }
 
 /* ============================
@@ -159,8 +185,8 @@ export async function searchDocumentChunks(
               index: "vector_index",
               path: "embedding",
               queryVector: queryEmbedding,
-              numCandidates: 50,
-              limit: limit,
+              numCandidates: 80,
+              limit: limit * 2, // 🔥 pull more for ranking
             },
           },
           {
@@ -172,13 +198,18 @@ export async function searchDocumentChunks(
               documentId: 1,
               page: 1,
               score: { $meta: "vectorSearchScore" },
+
+              /* 🔥 bring learning signals */
+              knowledgeScore: "$score",
+              uses: "$uses",
+              success: "$success",
             },
           },
         ])
         .toArray()) as VectorChunk[];
     } catch (err) {
       console.warn("Mongo vector failed, using fallback...");
-      results = await fallbackSearch(queryEmbedding, userId, limit);
+      results = await fallbackSearch(queryEmbedding, userId, limit * 2);
     }
 
     /* ---------- HYBRID BOOST ---------- */
@@ -187,20 +218,23 @@ export async function searchDocumentChunks(
       ...r,
       score:
         (r.score || 0) +
-        keywordBoost(query, r.text),
+        keywordBoost(query, r.text) +
+        learningBoost(r),
     }));
 
     /* ---------- FILTER ---------- */
 
     const filtered = results.filter(
-      (r) => (r.score ?? 0) > 0.6
+      (r) => (r.score ?? 0) > 0.5
     );
 
     /* ---------- SORT ---------- */
 
-    return filtered.sort(
+    const sorted = filtered.sort(
       (a, b) => (b.score || 0) - (a.score || 0)
     );
+
+    return sorted.slice(0, limit);
   } catch (err) {
     console.error("Vector search failed:", err);
     return [];
@@ -242,8 +276,6 @@ export async function buildDocumentContext(
         )} | Doc:${chunk.documentId ?? "unknown"}]\n${chunk.text}`;
       })
       .join("\n\n");
-
-    /* ---------- CONTEXT LIMIT ---------- */
 
     if (context.length > 10000) {
       context = context.slice(0, 10000);

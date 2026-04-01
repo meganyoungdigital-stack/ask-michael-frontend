@@ -10,21 +10,58 @@ interface ChatMessageProps {
   role: "user" | "assistant";
   content: string;
   isTyping?: boolean;
+
+  /* ✅ NEW (optional - won't break anything) */
+  messageId?: string;
+  conversationId?: string;
 }
 
 export default function ChatMessage({
   role,
   content,
   isTyping = false,
+  messageId,
+  conversationId,
 }: ChatMessageProps) {
 
   const isAssistant = role === "assistant";
   const [copied, setCopied] = useState(false);
 
+  /* ================= 👍👎 FEEDBACK STATE ================= */
+  const [feedback, setFeedback] = useState<null | "up" | "down">(null);
+  const [loading, setLoading] = useState(false);
+
   const copyToClipboard = async () => {
     await navigator.clipboard.writeText(content);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  /* ================= SEND FEEDBACK ================= */
+  const sendFeedback = async (type: "up" | "down") => {
+    if (!messageId || !conversationId) return;
+
+    try {
+      setLoading(true);
+
+      await fetch("/api/feedback", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          conversationId,
+          messageId,
+          rating: type === "up" ? 1 : -1,
+        }),
+      });
+
+      setFeedback(type);
+    } catch (err) {
+      console.error("Feedback error:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -71,6 +108,37 @@ export default function ChatMessage({
               <ClipboardIcon className="h-5 w-5 text-gray-400 hover:text-gray-600" />
             )}
           </button>
+        )}
+
+        {/* ================= 👍👎 FEEDBACK UI ================= */}
+        {!isTyping && isAssistant && messageId && conversationId && (
+          <div className="flex gap-2 mt-2 opacity-0 group-hover:opacity-100 transition">
+
+            <button
+              onClick={() => sendFeedback("up")}
+              disabled={loading}
+              className={`text-sm px-2 py-1 rounded border transition ${
+                feedback === "up"
+                  ? "bg-green-100 border-green-400 text-green-700"
+                  : "bg-white border-gray-200 hover:bg-gray-100"
+              }`}
+            >
+              👍
+            </button>
+
+            <button
+              onClick={() => sendFeedback("down")}
+              disabled={loading}
+              className={`text-sm px-2 py-1 rounded border transition ${
+                feedback === "down"
+                  ? "bg-red-100 border-red-400 text-red-700"
+                  : "bg-white border-gray-200 hover:bg-gray-100"
+              }`}
+            >
+              👎
+            </button>
+
+          </div>
         )}
 
       </div>

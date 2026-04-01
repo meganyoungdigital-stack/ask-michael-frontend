@@ -93,6 +93,39 @@ async function ensureIndexes(db: Db) {
       { unique: true }
     );
 
+    /* ============================
+    🔥 KNOWLEDGE BASE INDEXES (VECTOR READY)
+    ============================ */
+
+    await db.collection("knowledge_base").createIndex({
+      type: 1,
+    });
+
+    await db.collection("knowledge_base").createIndex({
+      createdAt: -1,
+    });
+
+    /* 🔥 TEXT SEARCH (fallback / hybrid) */
+    await db.collection("knowledge_base").createIndex({
+      content: "text",
+    });
+
+    /* 🔥 NEW: TAG FILTERING */
+    await db.collection("knowledge_base").createIndex({
+      tags: 1,
+    });
+
+    /* 🔥 NEW: COMPANY ISOLATION */
+    await db.collection("knowledge_base").createIndex({
+      company: 1,
+    });
+
+    /* 🔥 IMPORTANT:
+       Vector index is NOT created here.
+       It is created in MongoDB Atlas UI:
+       embedding → vector index
+    */
+
   } catch (err) {
     console.error("⚠️ Index creation warning:", err);
   }
@@ -184,13 +217,27 @@ export interface DocumentChunk {
   _id?: ObjectId;
   documentId: ObjectId | null;
   userId: string;
-  company?: string; // 🔥 NEW
+  company?: string;
   text: string;
   embedding: number[];
   metadata?: {
     tag?: string;
     source?: string;
-  }; // 🔥 NEW
+  };
+  createdAt: Date;
+}
+
+/* ============================
+🔥 UPDATED: KNOWLEDGE BASE TYPE
+============================ */
+export interface KnowledgeBaseEntry {
+  _id?: ObjectId;
+  type: "iso_template" | "repair_procedure";
+  content: string;
+  embedding?: number[];
+  tags?: string[];       // 🔥 ADDED
+  company?: string;      // 🔥 ADDED
+  userId?: string;       // 🔥 ADDED
   createdAt: Date;
 }
 
