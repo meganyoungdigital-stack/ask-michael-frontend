@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 
 /* ✅ NEW ICONS */
-import { Share2, CreditCard, User, Plus } from "lucide-react";
+import { Share2, User, Plus } from "lucide-react";
 
 /* ================= TYPES ================= */
 
@@ -289,13 +289,7 @@ export default function Sidebar() {
           Share
         </button>
 
-        <button
-          onClick={() => router.push("/portal/subscription")}
-          className="w-full flex items-center justify-center gap-2 text-sm bg-blue-600 hover:bg-blue-700 py-2 rounded-lg font-medium"
-        >
-          <CreditCard size={16} />
-          Subscription
-        </button>
+        
       </div>
 
       {/* NEW CHAT */}
@@ -339,7 +333,7 @@ export default function Sidebar() {
       <div className="p-4 border-t border-neutral-800">
         <Link
           href="/portal/profile"
-          className="w-full flex items-center justify-center gap-2 text-sm bg-neutral-800 hover:bg-neutral-700 py-2 rounded-lg"
+          className="w-full flex items-center justify-center gap-2 text-sm bg-gradient-to-r from-neutral-800 to-neutral-700 hover:from-neutral-700 hover:to-neutral-600 py-2 rounded-lg"
         >
           <User size={16} />
           Profile

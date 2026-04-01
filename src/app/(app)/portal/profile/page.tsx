@@ -1,19 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function ProfilePage() {
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-
-  const [name, setName] = useState("");
-  const [company, setCompany] = useState("");
-  const [email, setEmail] = useState("");
+  const router = useRouter();
 
   const [tier, setTier] = useState("free");
   const [status, setStatus] = useState("inactive");
+  const [loading, setLoading] = useState(true);
 
-  /* ================= LOAD USER ================= */
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [company, setCompany] = useState("");
+
+  /* ================= FETCH USER ================= */
 
   useEffect(() => {
     async function load() {
@@ -24,13 +25,14 @@ export default function ProfilePage() {
 
         const data = await res.json();
 
-        setName(data?.name || "");
-        setCompany(data?.company || "");
-        setEmail(data?.email || "");
         setTier(data?.tier || "free");
         setStatus(data?.subscriptionStatus || "inactive");
+
+        setName(data?.name || "");
+        setEmail(data?.email || "");
+        setCompany(data?.company || "");
       } catch {
-        console.error("Failed to load profile");
+        console.error("Failed to load user");
       } finally {
         setLoading(false);
       }
@@ -39,123 +41,127 @@ export default function ProfilePage() {
     load();
   }, []);
 
-  /* ================= SAVE ================= */
+  /* ================= CANCEL ================= */
 
-  async function handleSave() {
-    setSaving(true);
+  async function handleCancel() {
+    if (!confirm("Cancel your subscription?")) return;
 
-    try {
-      const res = await fetch("/api/user", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name,
-          company,
-          email,
-        }),
-      });
+    const res = await fetch("/api/subscription/cancel", {
+      method: "POST",
+    });
 
-      if (!res.ok) throw new Error();
-
-      alert("Profile updated successfully");
-    } catch {
-      alert("Failed to save profile");
-    } finally {
-      setSaving(false);
+    if (res.ok) {
+      alert("Subscription cancelled");
+      setTier("free");
+      setStatus("cancelled");
+    } else {
+      alert("Failed to cancel");
     }
   }
 
-  /* ================= UI ================= */
+  /* ================= SAVE PROFILE ================= */
+
+  async function handleSaveProfile() {
+    const res = await fetch("/api/user/update", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ name, email, company }),
+    });
+
+    if (res.ok) {
+      alert("Profile updated");
+    } else {
+      alert("Failed to update profile");
+    }
+  }
 
   if (loading) {
-    return (
-      <div className="p-10 text-white">
-        Loading profile...
-      </div>
-    );
+    return <div className="p-10 text-white">Loading profile...</div>;
   }
 
   return (
-    <div className="pt-24 p-10 text-white max-w-2xl mx-auto">
-      
+    <div className="pt-24 p-10 text-white max-w-2xl mx-auto relative">
+
+      {/* 🔥 BACK BUTTON */}
+      <button
+        onClick={() => router.push("/portal")}
+        className="absolute top-6 left-6 text-sm text-gray-400 hover:text-white"
+      >
+        ← Back to Platform
+      </button>
+
       <h1 className="text-2xl font-bold mb-6">
-        Profile Settings
+        Account & Subscription
       </h1>
-
-      {/* ================= PROFILE CARD ================= */}
-
-      <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-lg space-y-4">
-        
-        <div>
-          <label className="text-sm text-gray-400">
-            Name
-          </label>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full mt-1 bg-neutral-800 border border-neutral-700 rounded px-3 py-2 text-sm"
-            placeholder="Your name"
-          />
-        </div>
-
-        <div>
-          <label className="text-sm text-gray-400">
-            Company
-          </label>
-          <input
-            value={company}
-            onChange={(e) => setCompany(e.target.value)}
-            className="w-full mt-1 bg-neutral-800 border border-neutral-700 rounded px-3 py-2 text-sm"
-            placeholder="Your company"
-          />
-        </div>
-
-        <div>
-          <label className="text-sm text-gray-400">
-            Email
-          </label>
-          <input
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full mt-1 bg-neutral-800 border border-neutral-700 rounded px-3 py-2 text-sm"
-            placeholder="Your email"
-          />
-        </div>
-
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded-lg font-semibold mt-4"
-        >
-          {saving ? "Saving..." : "Save Profile"}
-        </button>
-      </div>
 
       {/* ================= SUBSCRIPTION ================= */}
 
-      <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-lg mt-6">
-        <h2 className="text-lg font-semibold mb-4">
-          Subscription
-        </h2>
-
+      <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-lg">
         <p className="mb-2">
-          <span className="text-gray-400">Plan:</span>{" "}
-          <span className="capitalize">{tier}</span>
+          <span className="text-gray-400">Current Plan:</span>{" "}
+          <span className="font-semibold capitalize">{tier}</span>
         </p>
 
-        <p className="mb-4">
+        <p className="mb-6">
           <span className="text-gray-400">Status:</span>{" "}
-          <span className="capitalize">{status}</span>
+          <span className="font-semibold capitalize">{status}</span>
         </p>
 
-        <a
-          href="/portal/subscription"
-          className="inline-block bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded"
-        >
-          Manage Subscription
-        </a>
+        <div className="flex gap-3">
+          <button
+            onClick={() => router.push("/pricing")}
+            className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded"
+          >
+            Upgrade Plan
+          </button>
+
+          {tier !== "free" && (
+            <button
+              onClick={handleCancel}
+              className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded"
+            >
+              Cancel Subscription
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ================= PROFILE ================= */}
+
+      <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-lg mt-6">
+        <h2 className="text-lg font-semibold mb-4">Profile</h2>
+
+        <div className="flex flex-col gap-3">
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Name"
+            className="bg-neutral-800 p-2 rounded"
+          />
+
+          <input
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email"
+            className="bg-neutral-800 p-2 rounded"
+          />
+
+          <input
+            value={company}
+            onChange={(e) => setCompany(e.target.value)}
+            placeholder="Company"
+            className="bg-neutral-800 p-2 rounded"
+          />
+
+          <button
+            onClick={handleSaveProfile}
+            className="bg-blue-600 hover:bg-blue-700 py-2 rounded mt-2"
+          >
+            Save Profile
+          </button>
+        </div>
       </div>
     </div>
   );
