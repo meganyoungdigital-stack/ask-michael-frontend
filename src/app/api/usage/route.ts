@@ -40,13 +40,28 @@ export async function GET() {
     GET USAGE COUNT
     ============================ */
 
-    const usageCount = await getUserUsage(userId);
+    let usageCount = await getUserUsage(userId);
+
+    /* ============================
+    🔥 FIX: ENSURE DAILY USAGE (CRITICAL)
+    ============================ */
+
+    const { db } = await connectToDatabase();
+
+    const today = new Date().toISOString().split("T")[0];
+
+    const usageDoc = await db.collection("usage").findOne({
+      userId,
+      date: today,
+    });
+
+    if (usageDoc) {
+      usageCount = usageDoc.count;
+    }
 
     /* ============================
     GET USER PLAN
     ============================ */
-
-    const { db } = await connectToDatabase();
 
     const user = await db
       .collection("users")
