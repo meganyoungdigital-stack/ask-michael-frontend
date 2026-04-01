@@ -50,14 +50,17 @@ export async function GET() {
 
     const today = new Date().toISOString().split("T")[0];
 
+    console.log("FETCH USAGE:", userId, today);
+
     const usageDoc = await db.collection("usage").findOne({
       userId,
       date: today,
     });
 
-    if (usageDoc) {
-      usageCount = usageDoc.count;
-    }
+    console.log("USAGE DOC:", usageDoc);
+
+    /* ✅ FORCE DAILY VALUE (OVERRIDE ANY HELPER) */
+    usageCount = usageDoc?.count || 0;
 
     /* ============================
     GET USER PLAN
@@ -78,7 +81,7 @@ export async function GET() {
     ============================ */
 
     return NextResponse.json({
-      count: usageCount || 0,
+      count: usageCount,
       limit,
       isPro,
     });

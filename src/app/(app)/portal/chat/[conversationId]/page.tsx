@@ -39,10 +39,12 @@ export default function ChatPage() {
       const res = await fetch("/api/usage");
       const data = await res.json();
 
-      setUsage({
-        count: data.usageCount ?? data.count ?? 0,
-        limit: data.dailyLimit ?? data.limit ?? 10,
-      });
+      console.log("USAGE RESPONSE:", data);
+
+setUsage({
+  count: data.count,
+  limit: data.limit,
+});
     } catch (err) {
       console.error("Failed to fetch usage");
     }
