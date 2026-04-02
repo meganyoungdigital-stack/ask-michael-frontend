@@ -94,21 +94,24 @@ export async function GET() {
       .collection("users")
       .findOne({ userId });
 
-    const isPro = user?.tier === "pro";
+    const tier = user?.tier || "free";
 
-    const limit = isPro
-      ? PRO_DAILY_LIMIT
-      : FREE_DAILY_LIMIT;
+const isPro = tier === "pro" || tier === "pro_plus";
+
+const limit =
+  tier === "pro" || tier === "pro_plus"
+    ? PRO_DAILY_LIMIT
+    : FREE_DAILY_LIMIT;
 
     /* ============================
     RESPONSE (STANDARDIZED)
     ============================ */
 
     return NextResponse.json({
-      count: usageCount,
-      limit,
-      isPro,
-    });
+  used: usageCount,   // ✅ FIXED KEY
+  limit,
+  isPro,
+});
 
   } catch (error) {
     console.error("[USAGE_API_ERROR]", error);
