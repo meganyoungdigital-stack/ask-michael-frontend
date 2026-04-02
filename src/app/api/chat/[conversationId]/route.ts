@@ -504,13 +504,12 @@ RESPONSE:
 ${fullResponse}
 `;
 
-            const learningRes = await openai.chat.completions.create({
-              model: "gpt-4o-mini",
-              messages: [{ role: "user", content: learningPrompt }],
-            });
+            const learningRes = await openai.responses.create({
+  model: "gpt-4o-mini",
+  input: learningPrompt,
+});
 
-            const learningText =
-              learningRes.choices?.[0]?.message?.content?.trim();
+const learningText = learningRes.output_text?.trim();
 
             if (learningText && learningText.length > 50) {
               const embedding = await createEmbedding(learningText);
