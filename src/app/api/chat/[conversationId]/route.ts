@@ -134,7 +134,14 @@ export async function POST(
     const params = await context.params;
 const { conversationId } = params;
 
-    const { db } = await connectToDatabase();
+    const { db } = await connectToDatabase();/* 🔥 FIX: REMOVE BROKEN INDEX */
+try {
+  await db.collection("usage").dropIndex("userId_1");
+  console.log("✅ Dropped userId_1 index");
+} catch (err) {
+  console.log("ℹ️ Index already removed or doesn't exist");
+}
+
 
     /* ================= GET USER ================= */
     const user = await db.collection("users").findOne({ userId });
