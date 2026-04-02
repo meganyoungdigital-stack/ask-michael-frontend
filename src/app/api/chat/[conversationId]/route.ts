@@ -5,7 +5,6 @@ import OpenAI from "openai";
 
 /* ✅ EXISTING */
 import { getMessageLimit, hasFeature } from "@/lib/tiers";
-const { ReadableStream } = require("stream/web");
 export const runtime = "nodejs";
 
 /* ================= OPENAI ================= */
@@ -553,8 +552,12 @@ return new Response(
         }
 
         /* ================= 🧠 AI LEARNING ================= */
-        try {
-          const learningPrompt = `
+        
+
+          /* ================= 🧠 AI LEARNING (SAFE ASYNC - NON BLOCKING) ================= */
+(async () => {
+  try {
+    const learningPrompt = `
 Extract reusable engineering knowledge from this response.
 Only return if high-quality and generally applicable.
 Return concise best-practice knowledge only.
@@ -563,51 +566,33 @@ RESPONSE:
 ${fullResponse}
 `;
 
-          const learningRes = await openai.responses.create({
-            model: "gpt-4o-mini",
-            input: learningPrompt,
-          });
+    const learningRes = await openai.responses.create({
+      model: "gpt-4.1-mini",
+      input: learningPrompt,
+    });
 
-          let learningText = "";
+    let learningText = "";
 
-          try {
-            if ((learningRes as any).output_text) {
-              learningText = (learningRes as any).output_text.trim();
-            } else if (learningRes && typeof learningRes === "object") {
-              const output = (learningRes as any).output;
+    if ((learningRes as any).output_text) {
+      learningText = (learningRes as any).output_text.trim();
+    }
 
-              if (Array.isArray(output)) {
-                for (const item of output) {
-                  if (item?.content && Array.isArray(item.content)) {
-                    for (const c of item.content) {
-                      if (c?.type === "output_text" && c?.text) {
-                        learningText += c.text;
-                      }
-                    }
-                  }
-                }
-              }
+    if (learningText && learningText.length > 50) {
+      const embedding = await createEmbedding(learningText);
 
-              learningText = learningText.trim();
-            }
-          } catch (parseErr) {
-            console.error("🚨 LEARNING PARSE ERROR:", parseErr);
-          }
+      await db.collection("ai_learnings").insertOne({
+        content: learningText,
+        embedding,
+        source: "ai_generated",
+        confidence: 0.8,
+        createdAt: new Date(),
+      });
+    }
 
-          if (learningText && learningText.length > 50) {
-            const embedding = await createEmbedding(learningText);
-
-            await db.collection("ai_learnings").insertOne({
-              content: learningText,
-              embedding,
-              source: "ai_generated",
-              confidence: 0.8,
-              createdAt: new Date(),
-            });
-          }
-        } catch (err) {
-          console.error("AI learning error:", err);
-        }
+  } catch (err) {
+    console.error("AI learning error (non-blocking):", err);
+  }
+})();
 
         controller.close();
       } catch (err) {
