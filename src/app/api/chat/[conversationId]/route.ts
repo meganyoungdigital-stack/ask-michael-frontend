@@ -5,7 +5,7 @@ import OpenAI from "openai";
 
 /* ✅ EXISTING */
 import { getMessageLimit, hasFeature } from "@/lib/tiers";
-
+const { ReadableStream } = require("stream/web");
 export const runtime = "nodejs";
 
 /* ================= OPENAI ================= */
@@ -416,7 +416,7 @@ Format:
     }
 
     /* ================= STREAMING RESPONSE (UPDATED FOR IMAGES) ================= */
-    const stream = await openai.responses.stream({
+    const aiResponse = await openai.responses.create({
   model: tier === "pro_plus" ? "gpt-4o" : "gpt-4o-mini",
   input: [
     {
@@ -425,77 +425,92 @@ Format:
     },
     {
       role: "user",
-      content: message + (imageInputs.length > 0 ? "\n\n[User attached images]" : ""),
+      content:
+        message +
+        (imageInputs.length > 0
+          ? "\n\n[User attached images]"
+          : ""),
     },
   ],
 });
-
     const encoder = new TextEncoder();
 
     return new Response(
-      new ReadableStream({
-        async start(controller) {
-          let fullResponse = "";
+  new ReadableStream({
+    async start(controller: any) {
+      let fullResponse = "";
 
-          try {
-  for await (const event of stream) {
-  if (event.type === "response.output_text.delta") {
-    const token = event.delta;
+      try {
+        /* ✅ SAFE RESPONSE PARSING (REPLACES STREAM) */
+        if (aiResponse && typeof aiResponse === "object") {
+          const output = (aiResponse as any).output;
 
-    if (token) {
-      fullResponse += token;
-      controller.enqueue(encoder.encode(token));
-    }
-  }
-}
-} catch (err) {
-  console.error("🚨 STREAM HARD FAIL:", err);
-}
+          if (Array.isArray(output) && output.length > 0) {
+            const first = output[0];
 
-          /* ✅ SAVE AI RESPONSE + SOURCES */
-          await db.collection("conversations").updateOne(
-            { conversationId, userId },
-            {
-              $push: {
-                messages: {
-                  role: "assistant",
-                  content: fullResponse,
-                  sourcesUsed,
-                  createdAt: new Date(),
-                },
-              },
-              $set: { updatedAt: new Date() },
-            } as any
-          );
+            if (first?.content && Array.isArray(first.content)) {
+              const textBlock = first.content.find(
+                (c: any) => c.type === "output_text"
+              );
 
-          /* ✅ CACHE FULL RESPONSE */
-          await db.collection("query_cache").updateOne(
-            { queryHash, userId },
-            {
-              $set: {
-                response: fullResponse,
-                createdAt: new Date(),
-              },
-            },
-            { upsert: true }
-          );
-
-          /* ✅ USAGE INCREMENT (GUARDED) */
-          if (!usageIncremented) {
-            await db.collection("usage").updateOne(
-              { userId, date: today },
-              {
-                $inc: { count: 1 },
-                $setOnInsert: { userId, date: today },
-              },
-              { upsert: true }
-            );
-            usageIncremented = true;
+              if (textBlock?.text) {
+                fullResponse = textBlock.text;
+              }
+            }
           }
+        }
 
-          /* ================= 🧠 AI LEARNING WRITE-BACK ================= */
-          try {
-            const learningPrompt = `
+        /* ✅ SEND RESPONSE TO CLIENT */
+        controller.enqueue(encoder.encode(fullResponse));
+
+      } catch (err) {
+        console.error("🚨 RESPONSE PARSE ERROR:", err);
+      }
+
+      /* ✅ SAVE AI RESPONSE + SOURCES */
+      await db.collection("conversations").updateOne(
+        { conversationId, userId },
+        {
+          $push: {
+            messages: {
+              role: "assistant",
+              content: fullResponse,
+              sourcesUsed,
+              createdAt: new Date(),
+            },
+          },
+          $set: { updatedAt: new Date() },
+        } as any
+      );
+
+      /* ✅ CACHE FULL RESPONSE */
+      await db.collection("query_cache").updateOne(
+        { queryHash, userId },
+        {
+          $set: {
+            response: fullResponse,
+            createdAt: new Date(),
+          },
+        },
+        { upsert: true }
+      );
+
+      /* ✅ USAGE INCREMENT (GUARDED) */
+      if (!usageIncremented) {
+        await db.collection("usage").updateOne(
+          { userId, date: today },
+          {
+            $inc: { count: 1 },
+            $setOnInsert: { userId, date: today },
+          },
+          { upsert: true }
+        );
+        usageIncremented = true;
+      }
+
+      /* ================= 🧠 AI LEARNING WRITE-BACK ================= */
+      try {
+        const learningPrompt = `
 Extract reusable engineering knowledge from this response.
 Only return if high-quality and generally applicable.
 Return concise best-practice knowledge only.
@@ -504,62 +519,80 @@ RESPONSE:
 ${fullResponse}
 `;
 
-            const learningRes = await openai.responses.create({
-  model: "gpt-4o-mini",
-  input: learningPrompt,
-});
+        const learningRes = await openai.responses.create({
+          model: "gpt-4o-mini",
+          input: learningPrompt,
+        });
 
-/* ✅ SIMPLE + SAFE */
-const learningText =
-  (learningRes as any)?.output_text?.trim?.() || "";
+        let learningText = "";
 
-            if (learningText && learningText.length > 50) {
-              const embedding = await createEmbedding(learningText);
+        if (learningRes && typeof learningRes === "object") {
+          const output = (learningRes as any).output;
 
-              await db.collection("ai_learnings").insertOne({
-                content: learningText,
-                embedding,
-                source: "ai_generated",
-                confidence: 0.8,
-                createdAt: new Date(),
-              });
+          if (Array.isArray(output) && output.length > 0) {
+            const first = output[0];
+
+            if (first?.content && Array.isArray(first.content)) {
+              const textBlock = first.content.find(
+                (c: any) => c.type === "output_text"
+              );
+
+              if (textBlock?.text) {
+                learningText = textBlock.text.trim();
+              }
             }
-          } catch (err) {
-            console.error("AI learning error:", err);
           }
+        }
 
-          controller.close();
-        },
-      }),
-      {
-        headers: {
-          "Content-Type": "text/plain; charset=utf-8",
-        },
+        if (learningText && learningText.length > 50) {
+          const embedding = await createEmbedding(learningText);
+
+          await db.collection("ai_learnings").insertOne({
+            content: learningText,
+            embedding,
+            source: "ai_generated",
+            confidence: 0.8,
+            createdAt: new Date(),
+          });
+        }
+
+      } catch (err) {
+        console.error("AI learning error:", err);
       }
-    );
 
-  } catch (error) {
-    console.error("=================================");
-console.error("🚨 CHAT ERROR (FULL)");
-console.error("=================================");
-console.error(error);
-console.error("=================================");
+      controller.close();
+    },
+  }), // ✅ CLOSE ReadableStream HERE
 
-if (error instanceof Error) {
-  console.error("MESSAGE:", error.message);
-  console.error("STACK:", error.stack);
-}
-
-    return new Response(
-      JSON.stringify({
-        error: "Chat failed",
-      }),
-      {
-        status: 500,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+  // ✅ HEADERS BELONG HERE (NOT INSIDE STREAM)
+  {
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+    },
   }
+);
+   } catch (error) {
+  console.error("=================================");
+  console.error("🚨 CHAT ERROR (FULL)");
+  console.error("=================================");
+  console.error(error);
+  console.error("=================================");
+
+  if (error instanceof Error) {
+    console.error("MESSAGE:", error.message);
+    console.error("STACK:", error.stack);
+  }
+
+  return new Response(
+    JSON.stringify({
+      error: "Chat failed",
+    }),
+    {
+      status: 500,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
 }
+}   
