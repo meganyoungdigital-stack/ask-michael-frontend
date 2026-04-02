@@ -323,12 +323,8 @@ Upgrade to unlock more:
             const bytes = await file.arrayBuffer();
             const base64 = Buffer.from(bytes).toString("base64");
 
-            imageInputs.push({
-              type: "image_url",
-              image_url: {
-                url: `data:${file.type};base64,${base64}`,
-              },
-            });
+            // Keep for future vision support, but DO NOT send to OpenAI yet
+imageInputs.push(`[IMAGE: ${file.name}]`);
 
             fileContext += `\n\n[IMAGE: ${file.name}]`;
           } else {
@@ -427,9 +423,9 @@ Format:
         {
           role: "user",
           content:
-            imageInputs.length > 0
-              ? [{ type: "text", text: message }, ...imageInputs]
-              : message,
+  imageInputs.length > 0
+    ? message + "\n\n[User attached images for analysis]"
+    : message,
         },
       ],
       stream: true,
@@ -442,11 +438,15 @@ Format:
         async start(controller) {
           let fullResponse = "";
 
-          for await (const chunk of stream) {
-            const token = chunk.choices?.[0]?.delta?.content || "";
-            fullResponse += token;
-            controller.enqueue(encoder.encode(token));
-          }
+          try {
+  for await (const chunk of stream) {
+    const token = chunk.choices?.[0]?.delta?.content || "";
+    fullResponse += token;
+    controller.enqueue(encoder.encode(token));
+  }
+} catch (streamError) {
+  console.error("STREAM FAILURE:", streamError);
+}
 
           /* ✅ SAVE AI RESPONSE + SOURCES */
           await db.collection("conversations").updateOne(
