@@ -135,11 +135,14 @@ export async function POST(
 const { conversationId } = params;
 
     const { db } = await connectToDatabase();/* 🔥 FIX: REMOVE BROKEN INDEX */
+/* ✅ ENSURE CORRECT USAGE INDEX */
 try {
-  await db.collection("usage").dropIndex("userId_1");
-  console.log("✅ Dropped userId_1 index");
+  await db.collection("usage").createIndex(
+    { userId: 1, date: 1 },
+    { unique: true }
+  );
 } catch (err) {
-  console.log("ℹ️ Index already removed or doesn't exist");
+  console.error("Index creation error:", err);
 }
 
 
