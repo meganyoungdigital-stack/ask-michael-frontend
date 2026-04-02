@@ -426,7 +426,7 @@ Format:
 
 let aiResponse: any;
 
-try {
+try { 
   aiResponse = await openai.responses.create({
     model: "gpt-4.1-mini",
     input: [
@@ -457,106 +457,27 @@ try {
     }
   );
 }
+/* ================= 🧠 AI LEARNING (NON-BLOCKING SAFE) ================= */
+setTimeout(async () => {
+  try {
+    let fullResponse = "";
 
-const encoder = new TextEncoder();
-
-return new Response(
-  new ReadableStream({
-    async start(controller: any) {
-      let fullResponse = "";
-
-      try {
-        /* ✅ FIXED RESPONSE PARSING (STABLE) */
-        try {
-          if ((aiResponse as any).output_text) {
-            fullResponse = (aiResponse as any).output_text;
-          } else if (aiResponse && typeof aiResponse === "object") {
-            const output = (aiResponse as any).output;
-
-            if (Array.isArray(output)) {
-              for (const item of output) {
-                if (item?.content && Array.isArray(item.content)) {
-                  for (const c of item.content) {
-                    if (c?.type === "output_text" && c?.text) {
-                      fullResponse += c.text;
-                    }
-                  }
-                }
-              }
+    if ((aiResponse as any)?.output_text) {
+      fullResponse = (aiResponse as any).output_text;
+    } else if (aiResponse?.output) {
+      for (const item of aiResponse.output) {
+        if (item?.content) {
+          for (const c of item.content) {
+            if (c?.type === "output_text" && c?.text) {
+              fullResponse += c.text;
             }
           }
-
-          if (!fullResponse || fullResponse.trim() === "") {
-            fullResponse = "⚠️ AI response was empty. Please try again.";
-          }
-
-        } catch (parseError) {
-          console.error("🚨 PARSE FAILURE:", parseError);
-          fullResponse = "⚠️ Error generating response.";
         }
+      }
+    }
 
-        /* ✅ SEND RESPONSE */
-        try {
-          controller.enqueue(encoder.encode(fullResponse));
-        } catch (streamErr) {
-          console.error("🚨 STREAM ENQUEUE ERROR:", streamErr);
-        }
+    if (!fullResponse || fullResponse.length < 50) return;
 
-        /* ✅ SAVE MESSAGE */
-        try {
-          await db.collection("conversations").updateOne(
-            { conversationId, userId },
-            {
-              $push: {
-                messages: {
-                  role: "assistant",
-                  content: fullResponse,
-                  sourcesUsed,
-                  createdAt: new Date(),
-                },
-              },
-              $set: { updatedAt: new Date() },
-            } as any
-          );
-        } catch (dbErr) {
-          console.error("🚨 DB SAVE ERROR:", dbErr);
-        }
-
-        /* ✅ CACHE */
-        try {
-          await db.collection("query_cache").updateOne(
-            { queryHash, userId },
-            {
-              $set: {
-                response: fullResponse,
-                createdAt: new Date(),
-              },
-            },
-            { upsert: true }
-          );
-        } catch (cacheErr) {
-          console.error("🚨 CACHE ERROR:", cacheErr);
-        }
-
-        /* ✅ USAGE SAFETY */
-        if (!usageIncremented) {
-          await db.collection("usage").updateOne(
-            { userId, date: today },
-            {
-              $inc: { count: 1 },
-              $setOnInsert: { userId, date: today },
-            },
-            { upsert: true }
-          );
-          usageIncremented = true;
-        }
-
-        /* ================= 🧠 AI LEARNING ================= */
-        
-
-          /* ================= 🧠 AI LEARNING (SAFE ASYNC - NON BLOCKING) ================= */
-(async () => {
-  try {
     const learningPrompt = `
 Extract reusable engineering knowledge from this response.
 Only return if high-quality and generally applicable.
@@ -571,11 +492,7 @@ ${fullResponse}
       input: learningPrompt,
     });
 
-    let learningText = "";
-
-    if ((learningRes as any).output_text) {
-      learningText = (learningRes as any).output_text.trim();
-    }
+    let learningText = (learningRes as any)?.output_text || "";
 
     if (learningText && learningText.length > 50) {
       const embedding = await createEmbedding(learningText);
@@ -590,24 +507,101 @@ ${fullResponse}
     }
 
   } catch (err) {
-    console.error("AI learning error (non-blocking):", err);
+    console.error("AI learning error:", err);
   }
-})();
+}, 0);
+const encoder = new TextEncoder();
+
+/* ================= STREAMING RESPONSE (UPDATED FOR IMAGES) ================= */
+
+return new Response(
+  new ReadableStream({
+    async start(controller: any) {
+      let fullResponse = "";
+
+      try {
+        /* ✅ FIXED RESPONSE PARSING (FLATTENED - NO NESTED TRY) */
+        if ((aiResponse as any)?.output_text) {
+          fullResponse = (aiResponse as any).output_text;
+        } else if (aiResponse && typeof aiResponse === "object") {
+          const output = (aiResponse as any).output;
+
+          if (Array.isArray(output)) {
+            for (const item of output) {
+              if (item?.content && Array.isArray(item.content)) {
+                for (const c of item.content) {
+                  if (c?.type === "output_text" && c?.text) {
+                    fullResponse += c.text;
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        if (!fullResponse || fullResponse.trim() === "") {
+          fullResponse = "⚠️ AI response was empty. Please try again.";
+        }
+
+        /* ✅ SEND RESPONSE (NO TRY/CATCH HERE) */
+        controller.enqueue(encoder.encode(fullResponse));
+
+        /* ✅ SAVE MESSAGE */
+        await db.collection("conversations").updateOne(
+          { conversationId, userId },
+          {
+            $push: {
+              messages: {
+                role: "assistant",
+                content: fullResponse,
+                sourcesUsed,
+                createdAt: new Date(),
+              },
+            },
+            $set: { updatedAt: new Date() },
+          } as any
+        );
+
+        /* ✅ CACHE */
+        await db.collection("query_cache").updateOne(
+          { queryHash, userId },
+          {
+            $set: {
+              response: fullResponse,
+              createdAt: new Date(),
+            },
+          },
+          { upsert: true }
+        );
+
+        /* ✅ USAGE SAFETY */
+        if (!usageIncremented) {
+          await db.collection("usage").updateOne(
+            { userId, date: today },
+            {
+              $inc: { count: 1 },
+              $setOnInsert: { userId, date: today },
+            },
+            { upsert: true }
+          );
+          usageIncremented = true;
+        }
 
         controller.close();
       } catch (err) {
-        console.error("🚨 STREAM FATAL ERROR:", err);
-        controller.close();
+        console.error("🚨 STREAM ERROR:", err);
+        controller.error(err);
       }
     },
   }),
   {
     headers: {
       "Content-Type": "text/plain; charset=utf-8",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
     },
   }
-);
-   } catch (error) {
+);   } catch (error) {
   console.error("=================================");
   console.error("🚨 CHAT ERROR (FULL)");
   console.error("=================================");
@@ -631,4 +625,4 @@ ${fullResponse}
     }
   );
 }
-}   
+}
