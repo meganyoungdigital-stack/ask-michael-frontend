@@ -18,9 +18,7 @@ export async function GET(
     }
 
     // ✅ Correct handling for Next.js 16
-    const params = await context.params;
-    const conversationId = params.conversationId;
-
+    const { conversationId } = await context.params;
     const { db } = await connectToDatabase();
 
     const conversation = await db
@@ -62,8 +60,7 @@ export async function PATCH(
       );
     }
 
-    const params = await context.params;
-    const conversationId = params.conversationId;
+    const { conversationId } = await context.params;
 
     const body = await req.json();
 
@@ -107,8 +104,7 @@ export async function DELETE(
       );
     }
 
-    const params = await context.params;
-    const conversationId = params.conversationId;
+    const { conversationId } = await context.params;
 
     const { db } = await connectToDatabase();
 
