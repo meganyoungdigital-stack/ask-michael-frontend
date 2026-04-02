@@ -63,7 +63,14 @@ async function getRelevantKnowledge(
   company?: string
 ) {
   try {
-    const queryEmbedding = await createEmbedding(message);
+    let queryEmbedding: number[] = [];
+
+try {
+  queryEmbedding = await createEmbedding(message);
+} catch (err) {
+  console.error("🚨 EMBEDDING ERROR:", err);
+  return { context: "", sources: [] }; // ✅ FAIL SAFE
+}
 
     const results = await db.collection("knowledge_base").aggregate([
       {
@@ -417,26 +424,44 @@ Format:
     }
 
     /* ================= STREAMING RESPONSE (UPDATED FOR IMAGES) ================= */
-    const aiResponse = await openai.responses.create({
-  model: tier === "pro_plus" ? "gpt-4o" : "gpt-4o-mini",
-  input: [
-    {
-      role: "system",
-      content: systemPrompt,
-    },
-    {
-      role: "user",
-      content:
-        message +
-        (imageInputs.length > 0
-          ? "\n\n[User attached images]"
-          : ""),
-    },
-  ],
-});
-    const encoder = new TextEncoder();
 
-    return new Response(
+let aiResponse: any;
+
+try {
+  aiResponse = await openai.responses.create({
+    model: "gpt-4.1-mini",
+    input: [
+      {
+        role: "system",
+        content: systemPrompt,
+      },
+      {
+        role: "user",
+        content:
+          message +
+          (imageInputs.length > 0
+            ? "\n\n[User attached images]"
+            : ""),
+      },
+    ],
+  });
+} catch (err) {
+  console.error("🚨 OPENAI ERROR:", err);
+
+  return new Response(
+    JSON.stringify({
+      error: "AI failed to respond",
+    }),
+    {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    }
+  );
+}
+
+const encoder = new TextEncoder();
+
+return new Response(
   new ReadableStream({
     async start(controller: any) {
       let fullResponse = "";
@@ -465,6 +490,7 @@ Format:
           if (!fullResponse || fullResponse.trim() === "") {
             fullResponse = "⚠️ AI response was empty. Please try again.";
           }
+
         } catch (parseError) {
           console.error("🚨 PARSE FAILURE:", parseError);
           fullResponse = "⚠️ Error generating response.";
