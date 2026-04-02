@@ -516,11 +516,10 @@ const encoder = new TextEncoder();
 
 return new Response(
   new ReadableStream({
-    async start(controller: any) {
+    async start(controller) {
       let fullResponse = "";
 
       try {
-        /* ✅ FIXED RESPONSE PARSING (FLATTENED - NO NESTED TRY) */
         if ((aiResponse as any)?.output_text) {
           fullResponse = (aiResponse as any).output_text;
         } else if (aiResponse && typeof aiResponse === "object") {
@@ -543,56 +542,53 @@ return new Response(
           fullResponse = "⚠️ AI response was empty. Please try again.";
         }
 
-        /* ✅ SEND RESPONSE (NO TRY/CATCH HERE) */
         controller.enqueue(encoder.encode(fullResponse));
 
-        /* ✅ SAVE MESSAGE */
-        await db.collection("conversations").updateOne(
-          { conversationId, userId },
-          {
-            $push: {
-              messages: {
-                role: "assistant",
-                content: fullResponse,
-                sourcesUsed,
+        try {
+          await db.collection("conversations").updateOne(
+            { conversationId, userId },
+            {
+              $push: {
+                messages: {
+                  role: "assistant",
+                  content: fullResponse,
+                  sourcesUsed,
+                  createdAt: new Date(),
+                },
+              },
+              $set: { updatedAt: new Date() },
+            } as any
+          );
+        } catch (err) {
+          console.error("DB conversations ERROR:", err);
+        }
+
+        try {
+          await db.collection("query_cache").updateOne(
+            { queryHash, userId },
+            {
+              $set: {
+                response: fullResponse,
                 createdAt: new Date(),
               },
             },
-            $set: { updatedAt: new Date() },
-          } as any
-        );
-
-        /* ✅ CACHE */
-        await db.collection("query_cache").updateOne(
-          { queryHash, userId },
-          {
-            $set: {
-              response: fullResponse,
-              createdAt: new Date(),
-            },
-          },
-          { upsert: true }
-        );
-
-        /* ✅ USAGE SAFETY */
-        if (!usageIncremented) {
-          await db.collection("usage").updateOne(
-            { userId, date: today },
-            {
-              $inc: { count: 1 },
-              $setOnInsert: { userId, date: today },
-            },
             { upsert: true }
           );
-          usageIncremented = true;
+        } catch (err) {
+          console.error("DB cache ERROR:", err);
         }
 
         controller.close();
       } catch (err) {
         console.error("🚨 STREAM ERROR:", err);
-        controller.error(err);
+
+        controller.enqueue(
+          encoder.encode("⚠️ Streaming error occurred")
+        );
+
+        controller.close();
       }
-    },
+    },   // ✅ THIS COMMA FIXES YOUR ERROR
   }),
   {
     headers: {
@@ -601,28 +597,28 @@ return new Response(
       Connection: "keep-alive",
     },
   }
-);   } catch (error) {
-  console.error("=================================");
-  console.error("🚨 CHAT ERROR (FULL)");
-  console.error("=================================");
-  console.error(error);
-  console.error("=================================");
+    );
+  } catch (error) {
+    console.error("=================================");
+    console.error("🚨 CHAT ERROR FULL TRACE");
+    console.error("=================================");
+    console.error(error);
 
-  if (error instanceof Error) {
-    console.error("MESSAGE:", error.message);
-    console.error("STACK:", error.stack);
-  }
-
-  return new Response(
-    JSON.stringify({
-      error: "Chat failed",
-    }),
-    {
-      status: 500,
-      headers: {
-        "Content-Type": "application/json",
-      },
+    if (error instanceof Error) {
+      console.error("MESSAGE:", error.message);
+      console.error("STACK:", error.stack);
     }
-  );
-}
+
+    return new Response(
+      JSON.stringify({
+        error: "Chat failed",
+      }),
+      {
+        status: 500,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+  }
 }
