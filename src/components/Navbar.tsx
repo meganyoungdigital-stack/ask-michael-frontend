@@ -60,13 +60,12 @@ export default function Navbar() {
           {/* Right Side */}
           {isSignedIn ? (
             <UserButton
-              afterSignOutUrl="/"
-              appearance={{
-                elements: {
-                  avatarBox: "w-8 h-8",
-                },
-              }}
-            />
+  appearance={{
+    elements: {
+      avatarBox: "w-8 h-8",
+    },
+  }}
+/>
           ) : (
             <Link href="/portal">
               <button className="px-5 py-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm hover:scale-105 transition">
@@ -130,13 +129,12 @@ export default function Navbar() {
           {/* Right Side */}
           {isSignedIn ? (
             <UserButton
-              afterSignOutUrl="/"
-              appearance={{
-                elements: {
-                  avatarBox: "w-8 h-8",
-                },
-              }}
-            />
+  appearance={{
+    elements: {
+      avatarBox: "w-8 h-8",
+    },
+  }}
+/>
           ) : (
             <Link href="/portal">
               <button className="px-5 py-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm hover:scale-105 transition">

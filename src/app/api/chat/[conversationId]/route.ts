@@ -509,26 +509,9 @@ ${fullResponse}
   input: learningPrompt,
 });
 
-let learningText = "";
-
-/* ✅ SAFE PARSING (NO TS ERRORS) */
-if (learningRes && typeof learningRes === "object") {
-  const output = (learningRes as any).output;
-
-  if (Array.isArray(output) && output.length > 0) {
-    const first = output[0];
-
-    if (first?.content && Array.isArray(first.content)) {
-      const textBlock = first.content.find(
-        (c: any) => c.type === "output_text"
-      );
-
-      if (textBlock?.text) {
-        learningText = textBlock.text.trim();
-      }
-    }
-  }
-}
+/* ✅ SIMPLE + SAFE */
+const learningText =
+  (learningRes as any)?.output_text?.trim?.() || "";
 
             if (learningText && learningText.length > 50) {
               const embedding = await createEmbedding(learningText);

@@ -25,13 +25,13 @@ const isPortalRoute = createRouteMatcher([
 ========================= */
 
 export default clerkMiddleware(async (auth, req) => {
-  // 🔐 Protect routes (existing logic)
+  // 🔐 Protect routes
   if (isProtectedRoute(req)) {
     await auth.protect();
   }
 
   /* =========================
-     TIER ENFORCEMENT (FIXED)
+     TIER ENFORCEMENT
   ========================= */
 
   if (isPortalRoute(req)) {
@@ -51,8 +51,6 @@ export default clerkMiddleware(async (auth, req) => {
       const tier = user?.tier || "free";
       const status = user?.subscriptionStatus || "inactive";
 
-      // ✅ Allow FREE users into portal (FIXED)
-
       // 🚫 Only block cancelled paid users
       if (tier !== "free" && status === "cancelled") {
         return NextResponse.redirect(new URL("/pricing", req.url));
@@ -61,7 +59,7 @@ export default clerkMiddleware(async (auth, req) => {
     } catch (error) {
       console.error("Middleware DB error:", error);
 
-      // Fail-safe: allow access instead of breaking app
+      // Fail-safe
       return NextResponse.next();
     }
   }

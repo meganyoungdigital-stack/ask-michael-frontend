@@ -26,15 +26,25 @@ export async function GET(
       .findOne({ conversationId, userId });
 
     if (!conversation) {
-      return NextResponse.json(
-        { error: "Conversation not found" },
-        { status: 404 }
-      );
-    }
+  /* ✅ AUTO CREATE (THIS FIXES YOUR 404) */
+  await db.collection("conversations").insertOne({
+    conversationId,
+    userId,
+    title: "New Chat",
+    messages: [],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
 
-    return NextResponse.json({
-      messages: conversation.messages || [],
-    });
+  return NextResponse.json({
+    messages: [],
+  });
+}
+
+    return NextResponse.json(
+  conversation.messages || [],
+  { status: 200 }
+);
   } catch (error) {
     console.error("[CONVERSATION_GET_ERROR]", error);
 
