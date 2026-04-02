@@ -144,36 +144,47 @@ export default function ChatPage() {
         method: "POST",
         body: formData,
       });
-
-      if (!res.ok || !res.body) {
-        throw new Error("Streaming failed");
-      }
+if (!res.ok) {
+  const errorText = await res.text();
+  console.error("API ERROR:", errorText);
+  throw new Error("API request failed");
+}
+      if (!res.body) {
+  console.error("No response body");
+  throw new Error("No response body");
+}
 
       /* ================= STREAMING FIX ================= */
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
 
-      let done = false;
       let aiText = "";
 
-      setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
-      while (!done) {
-        const { value, done: doneReading } = await reader.read();
-        done = doneReading;
+try {
+  while (true) {
+    const { value, done } = await reader.read();
 
-        const chunk = decoder.decode(value || new Uint8Array());
-        aiText += chunk;
+    if (done) break;
 
-        setMessages((prev) => {
-          const updated = [...prev];
-          updated[updated.length - 1] = {
-            role: "assistant",
-            content: aiText,
-          };
-          return updated;
-        });
-      }
+    if (value) {
+      const chunk = decoder.decode(value);
+      aiText += chunk;
+
+      setMessages((prev) => {
+        const updated = [...prev];
+        updated[updated.length - 1] = {
+          role: "assistant",
+          content: aiText,
+        };
+        return updated;
+      });
+    }
+  }
+} catch (streamErr) {
+  console.error("STREAM READ ERROR:", streamErr);
+}
 
       setSelectedFiles([]);
 
