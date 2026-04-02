@@ -125,7 +125,8 @@ export async function POST(
       return new Response("Unauthorized", { status: 401 });
     }
 
-    const { conversationId } = await context.params;
+    const params = await context.params;
+const { conversationId } = params;
 
     const { db } = await connectToDatabase();
 
