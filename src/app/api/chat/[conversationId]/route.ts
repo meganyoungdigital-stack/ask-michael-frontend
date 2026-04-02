@@ -441,76 +441,93 @@ Format:
       let fullResponse = "";
 
       try {
-        /* ✅ SAFE RESPONSE PARSING (REPLACES STREAM) */
-        if (aiResponse && typeof aiResponse === "object") {
-          const output = (aiResponse as any).output;
+        /* ✅ FIXED RESPONSE PARSING (STABLE) */
+        try {
+          if ((aiResponse as any).output_text) {
+            fullResponse = (aiResponse as any).output_text;
+          } else if (aiResponse && typeof aiResponse === "object") {
+            const output = (aiResponse as any).output;
 
-          if (Array.isArray(output) && output.length > 0) {
-            const first = output[0];
-
-            if (first?.content && Array.isArray(first.content)) {
-              const textBlock = first.content.find(
-                (c: any) => c.type === "output_text"
-              );
-
-              if (textBlock?.text) {
-                fullResponse = textBlock.text;
+            if (Array.isArray(output)) {
+              for (const item of output) {
+                if (item?.content && Array.isArray(item.content)) {
+                  for (const c of item.content) {
+                    if (c?.type === "output_text" && c?.text) {
+                      fullResponse += c.text;
+                    }
+                  }
+                }
               }
             }
           }
+
+          if (!fullResponse || fullResponse.trim() === "") {
+            fullResponse = "⚠️ AI response was empty. Please try again.";
+          }
+        } catch (parseError) {
+          console.error("🚨 PARSE FAILURE:", parseError);
+          fullResponse = "⚠️ Error generating response.";
         }
 
-        /* ✅ SEND RESPONSE TO CLIENT */
-        controller.enqueue(encoder.encode(fullResponse));
+        /* ✅ SEND RESPONSE */
+        try {
+          controller.enqueue(encoder.encode(fullResponse));
+        } catch (streamErr) {
+          console.error("🚨 STREAM ENQUEUE ERROR:", streamErr);
+        }
 
-      } catch (err) {
-        console.error("🚨 RESPONSE PARSE ERROR:", err);
-      }
+        /* ✅ SAVE MESSAGE */
+        try {
+          await db.collection("conversations").updateOne(
+            { conversationId, userId },
+            {
+              $push: {
+                messages: {
+                  role: "assistant",
+                  content: fullResponse,
+                  sourcesUsed,
+                  createdAt: new Date(),
+                },
+              },
+              $set: { updatedAt: new Date() },
+            } as any
+          );
+        } catch (dbErr) {
+          console.error("🚨 DB SAVE ERROR:", dbErr);
+        }
 
-      /* ✅ SAVE AI RESPONSE + SOURCES */
-      await db.collection("conversations").updateOne(
-        { conversationId, userId },
-        {
-          $push: {
-            messages: {
-              role: "assistant",
-              content: fullResponse,
-              sourcesUsed,
-              createdAt: new Date(),
+        /* ✅ CACHE */
+        try {
+          await db.collection("query_cache").updateOne(
+            { queryHash, userId },
+            {
+              $set: {
+                response: fullResponse,
+                createdAt: new Date(),
+              },
             },
-          },
-          $set: { updatedAt: new Date() },
-        } as any
-      );
+            { upsert: true }
+          );
+        } catch (cacheErr) {
+          console.error("🚨 CACHE ERROR:", cacheErr);
+        }
 
-      /* ✅ CACHE FULL RESPONSE */
-      await db.collection("query_cache").updateOne(
-        { queryHash, userId },
-        {
-          $set: {
-            response: fullResponse,
-            createdAt: new Date(),
-          },
-        },
-        { upsert: true }
-      );
+        /* ✅ USAGE SAFETY */
+        if (!usageIncremented) {
+          await db.collection("usage").updateOne(
+            { userId, date: today },
+            {
+              $inc: { count: 1 },
+              $setOnInsert: { userId, date: today },
+            },
+            { upsert: true }
+          );
+          usageIncremented = true;
+        }
 
-      /* ✅ USAGE INCREMENT (GUARDED) */
-      if (!usageIncremented) {
-        await db.collection("usage").updateOne(
-          { userId, date: today },
-          {
-            $inc: { count: 1 },
-            $setOnInsert: { userId, date: today },
-          },
-          { upsert: true }
-        );
-        usageIncremented = true;
-      }
-
-      /* ================= 🧠 AI LEARNING WRITE-BACK ================= */
-      try {
-        const learningPrompt = `
+        /* ================= 🧠 AI LEARNING ================= */
+        try {
+          const learningPrompt = `
 Extract reusable engineering knowledge from this response.
 Only return if high-quality and generally applicable.
 Return concise best-practice knowledge only.
@@ -519,52 +536,59 @@ RESPONSE:
 ${fullResponse}
 `;
 
-        const learningRes = await openai.responses.create({
-          model: "gpt-4o-mini",
-          input: learningPrompt,
-        });
-
-        let learningText = "";
-
-        if (learningRes && typeof learningRes === "object") {
-          const output = (learningRes as any).output;
-
-          if (Array.isArray(output) && output.length > 0) {
-            const first = output[0];
-
-            if (first?.content && Array.isArray(first.content)) {
-              const textBlock = first.content.find(
-                (c: any) => c.type === "output_text"
-              );
-
-              if (textBlock?.text) {
-                learningText = textBlock.text.trim();
-              }
-            }
-          }
-        }
-
-        if (learningText && learningText.length > 50) {
-          const embedding = await createEmbedding(learningText);
-
-          await db.collection("ai_learnings").insertOne({
-            content: learningText,
-            embedding,
-            source: "ai_generated",
-            confidence: 0.8,
-            createdAt: new Date(),
+          const learningRes = await openai.responses.create({
+            model: "gpt-4o-mini",
+            input: learningPrompt,
           });
+
+          let learningText = "";
+
+          try {
+            if ((learningRes as any).output_text) {
+              learningText = (learningRes as any).output_text.trim();
+            } else if (learningRes && typeof learningRes === "object") {
+              const output = (learningRes as any).output;
+
+              if (Array.isArray(output)) {
+                for (const item of output) {
+                  if (item?.content && Array.isArray(item.content)) {
+                    for (const c of item.content) {
+                      if (c?.type === "output_text" && c?.text) {
+                        learningText += c.text;
+                      }
+                    }
+                  }
+                }
+              }
+
+              learningText = learningText.trim();
+            }
+          } catch (parseErr) {
+            console.error("🚨 LEARNING PARSE ERROR:", parseErr);
+          }
+
+          if (learningText && learningText.length > 50) {
+            const embedding = await createEmbedding(learningText);
+
+            await db.collection("ai_learnings").insertOne({
+              content: learningText,
+              embedding,
+              source: "ai_generated",
+              confidence: 0.8,
+              createdAt: new Date(),
+            });
+          }
+        } catch (err) {
+          console.error("AI learning error:", err);
         }
 
+        controller.close();
       } catch (err) {
-        console.error("AI learning error:", err);
+        console.error("🚨 STREAM FATAL ERROR:", err);
+        controller.close();
       }
-
-      controller.close();
     },
-  }), // ✅ CLOSE ReadableStream HERE
-
-  // ✅ HEADERS BELONG HERE (NOT INSIDE STREAM)
+  }),
   {
     headers: {
       "Content-Type": "text/plain; charset=utf-8",
