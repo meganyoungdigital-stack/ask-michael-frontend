@@ -416,20 +416,19 @@ Format:
     }
 
     /* ================= STREAMING RESPONSE (UPDATED FOR IMAGES) ================= */
-    const stream = await openai.chat.completions.create({
-      model: tier === "pro_plus" ? "gpt-4o" : "gpt-4o-mini",
-      messages: [
-        { role: "system", content: systemPrompt },
-        {
-          role: "user",
-          content:
-  imageInputs.length > 0
-    ? message + "\n\n[User attached images for analysis]"
-    : message,
-        },
-      ],
-      stream: true,
-    });
+    const stream = await openai.responses.stream({
+  model: tier === "pro_plus" ? "gpt-4o" : "gpt-4o-mini",
+  input: [
+    {
+      role: "system",
+      content: systemPrompt,
+    },
+    {
+      role: "user",
+      content: message + (imageInputs.length > 0 ? "\n\n[User attached images]" : ""),
+    },
+  ],
+});
 
     const encoder = new TextEncoder();
 
@@ -439,13 +438,18 @@ Format:
           let fullResponse = "";
 
           try {
-  for await (const chunk of stream) {
-    const token = chunk.choices?.[0]?.delta?.content || "";
-    fullResponse += token;
-    controller.enqueue(encoder.encode(token));
+  for await (const event of stream) {
+  if (event.type === "response.output_text.delta") {
+    const token = event.delta;
+
+    if (token) {
+      fullResponse += token;
+      controller.enqueue(encoder.encode(token));
+    }
   }
-} catch (streamError) {
-  console.error("STREAM FAILURE:", streamError);
+}
+} catch (err) {
+  console.error("🚨 STREAM HARD FAIL:", err);
 }
 
           /* ✅ SAVE AI RESPONSE + SOURCES */
