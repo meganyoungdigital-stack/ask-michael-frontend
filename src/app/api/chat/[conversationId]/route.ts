@@ -509,7 +509,26 @@ ${fullResponse}
   input: learningPrompt,
 });
 
-const learningText = learningRes.output_text?.trim();
+let learningText = "";
+
+/* ✅ SAFE PARSING (NO TS ERRORS) */
+if (learningRes && typeof learningRes === "object") {
+  const output = (learningRes as any).output;
+
+  if (Array.isArray(output) && output.length > 0) {
+    const first = output[0];
+
+    if (first?.content && Array.isArray(first.content)) {
+      const textBlock = first.content.find(
+        (c: any) => c.type === "output_text"
+      );
+
+      if (textBlock?.text) {
+        learningText = textBlock.text.trim();
+      }
+    }
+  }
+}
 
             if (learningText && learningText.length > 50) {
               const embedding = await createEmbedding(learningText);
