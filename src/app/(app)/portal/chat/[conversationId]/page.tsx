@@ -78,7 +78,11 @@ export default function ChatPage() {
     const fetchConversation = async () => {
       try {
         const res = await fetch(`/api/conversation/${conversationId}`);
-        if (!res.ok) throw new Error("Failed to fetch");
+        if (!res.ok) {
+  const text = await res.text();
+  console.error("FETCH ERROR:", text);
+  throw new Error("Failed to fetch");
+}
 
         const data = await res.json();
         setMessages(data.messages || []);
