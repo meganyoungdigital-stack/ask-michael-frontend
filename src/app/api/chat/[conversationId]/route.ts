@@ -418,26 +418,22 @@ Format:
     }
 
     /* ================= 🔥 USAGE INCREMENT BEFORE STREAM ================= */
-    let usageIncremented = false;
-
-    if (!usageIncremented) {
-      await db.collection("usage").updateOne(
-        { userId, date: today },
-        {
-          $inc: { count: 1 },
-          $setOnInsert: { userId, date: today },
-        },
-        { upsert: true }
-      );
-      usageIncremented = true;
-    }
+    await db.collection("usage").updateOne(
+  { userId, date: today },
+  {
+    $inc: { count: 1 },
+    $setOnInsert: { userId, date: today },
+  },
+  { upsert: true }
+);
+      
 
     /* ================= STREAMING RESPONSE (UPDATED FOR IMAGES) ================= */
 
-let aiResponse: any;
+let stream: any;
 
-try { 
-  aiResponse = await openai.responses.create({
+try {
+  stream = await openai.responses.stream({
     model: "gpt-4.1-mini",
     input: [
       {
@@ -470,23 +466,7 @@ try {
 /* ================= 🧠 AI LEARNING (NON-BLOCKING SAFE) ================= */
 setTimeout(async () => {
   try {
-    let fullResponse = "";
-
-    if ((aiResponse as any)?.output_text) {
-      fullResponse = (aiResponse as any).output_text;
-    } else if (aiResponse?.output) {
-      for (const item of aiResponse.output) {
-        if (item?.content) {
-          for (const c of item.content) {
-            if (c?.type === "output_text" && c?.text) {
-              fullResponse += c.text;
-            }
-          }
-        }
-      }
-    }
-
-    if (!fullResponse || fullResponse.length < 50) return;
+   
 
     const learningPrompt = `
 Extract reusable engineering knowledge from this response.
@@ -494,15 +474,15 @@ Only return if high-quality and generally applicable.
 Return concise best-practice knowledge only.
 
 RESPONSE:
-${fullResponse}
+[Streaming response captured separately]
 `;
 
-    const learningRes = await openai.responses.create({
-      model: "gpt-4.1-mini",
-      input: learningPrompt,
-    });
+const learningRes = await openai.responses.create({
+  model: "gpt-4.1-mini",
+  input: learningPrompt,
+});
 
-    let learningText = (learningRes as any)?.output_text || "";
+let learningText = (learningRes as any)?.output_text || "";
 
     if (learningText && learningText.length > 50) {
       const embedding = await createEmbedding(learningText);
@@ -530,29 +510,17 @@ return new Response(
       let fullResponse = "";
 
       try {
-        if ((aiResponse as any)?.output_text) {
-          fullResponse = (aiResponse as any).output_text;
-        } else if (aiResponse && typeof aiResponse === "object") {
-          const output = (aiResponse as any).output;
+        for await (const event of stream) {
+  if (event.type === "response.output_text.delta") {
+    const chunk = event.delta;
+    fullResponse += chunk;
+    controller.enqueue(encoder.encode(chunk));
+  }
+}
 
-          if (Array.isArray(output)) {
-            for (const item of output) {
-              if (item?.content && Array.isArray(item.content)) {
-                for (const c of item.content) {
-                  if (c?.type === "output_text" && c?.text) {
-                    fullResponse += c.text;
-                  }
-                }
-              }
-            }
-          }
-        }
-
-        if (!fullResponse || fullResponse.trim() === "") {
-          fullResponse = "⚠️ AI response was empty. Please try again.";
-        }
-
-        controller.enqueue(encoder.encode(fullResponse));
+if (!fullResponse || fullResponse.trim() === "") {
+  fullResponse = "⚠️ AI response was empty. Please try again.";
+}
 
         try {
           await db.collection("conversations").updateOne(
@@ -630,5 +598,44 @@ return new Response(
         },
       }
     );
+  }
+}  // ✅ END OF POST FUNCTION
+
+
+/* ================= GET CONVERSATION ================= */
+export async function GET(
+  req: NextRequest,
+  context: { params: Promise<{ conversationId: string }> }
+) {
+  try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+
+    const { conversationId } = await context.params;
+
+    const { db } = await connectToDatabase();
+
+    const conversation = await db
+      .collection("conversations")
+      .findOne({ conversationId, userId });
+
+    return new Response(
+      JSON.stringify({
+        messages: conversation?.messages || [],
+      }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  } catch (err) {
+    console.error("GET conversation error:", err);
+
+    return new Response("Failed to fetch messages", {
+      status: 500,
+    });
   }
 }

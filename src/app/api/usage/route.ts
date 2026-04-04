@@ -57,7 +57,7 @@ export async function GET() {
     GET USAGE COUNT
     ============================ */
 
-    let usageCount = await getUserUsage(userId);
+   let usageCount = 0;
 
     console.log("RAW USAGE (helper):", usageCount);
 
