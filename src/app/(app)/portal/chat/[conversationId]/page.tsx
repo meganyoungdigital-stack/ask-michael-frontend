@@ -50,14 +50,15 @@ export default function ChatPage() {
       /* ✅ HARD SAFE SET (NO FALLBACK CONFUSION) */
       setUsage((prev) => {
         const serverCount =
-          typeof data.count === "number" ? data.count : prev.count;
+         typeof data.used === "number" ? data.used : prev.count;
         const serverLimit =
           typeof data.limit === "number" ? data.limit : prev.limit;
 
         /* 🔥 PREVENT STALE OVERWRITE */
-        if (serverCount < prev.count) {
-          return prev;
-        }
+        setUsage({
+  count: typeof data.used === "number" ? data.used : 0,
+  limit: typeof data.limit === "number" ? data.limit : 10,
+});
 
         return {
           count: serverCount,
@@ -77,7 +78,7 @@ export default function ChatPage() {
 
     const fetchConversation = async () => {
       try {
-        const res = await fetch(`/api/conversation/${conversationId}`);
+        const res = await fetch(`/api/chat/${conversationId}`);
         if (!res.ok) {
   const text = await res.text();
   console.error("FETCH ERROR:", text);
