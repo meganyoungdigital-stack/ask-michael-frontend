@@ -508,6 +508,7 @@ return new Response(
   new ReadableStream({
     async start(controller) {
       let fullResponse = "";
+let isPdfRequest = false;
 
       try {
         for await (const event of stream) {
@@ -521,6 +522,11 @@ return new Response(
 if (!fullResponse || fullResponse.trim() === "") {
   fullResponse = "⚠️ AI response was empty. Please try again.";
 }
+
+/* ✅ CORRECT PLACE */
+isPdfRequest =
+  message.toLowerCase().includes("pdf") ||
+  message.toLowerCase().includes("download");
 
         try {
           await db.collection("conversations").updateOne(
@@ -553,10 +559,50 @@ if (!fullResponse || fullResponse.trim() === "") {
             { upsert: true }
           );
         } catch (err) {
-          console.error("DB cache ERROR:", err);
-        }
+  console.error("DB cache ERROR:", err);
+}
 
-        controller.close();
+/* ================= PDF GENERATION ================= */
+if (isPdfRequest) {
+  try {
+    const pdfRes = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/generate-pdf`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          content: fullResponse,
+          title: "AI Generated Document",
+        }),
+      }
+    );
+
+    const blob = await pdfRes.blob();
+
+const fileUrl = URL.createObjectURL(blob);
+
+controller.enqueue(
+  encoder.encode(
+    `\n\n<a href="${fileUrl}" download="AI_Document.pdf" style="
+      display:inline-block;
+      padding:10px 16px;
+      background:#10a37f;
+      color:white;
+      border-radius:6px;
+      text-decoration:none;
+      font-weight:500;
+    ">📄 Download PDF</a>\n\n`
+  )
+);
+  } catch (err) {
+    console.error("PDF generation failed:", err);
+  }
+}
+
+/* ✅ ALWAYS LAST */
+controller.close();
       } catch (err) {
         console.error("🚨 STREAM ERROR:", err);
 
