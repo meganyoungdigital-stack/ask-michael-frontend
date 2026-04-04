@@ -33,9 +33,9 @@ export default function ProfilePage() {
         setEmail(data?.email || "");
         setCompany(data?.company || "");
         setOccupation(data?.occupation || ""); // ✅ NEW
-      } catch {
-        console.error("Failed to load user");
-      } finally {
+      } catch (error) {
+  console.error("Failed to load user", error);
+      }  finally {
         setLoading(false);
       }
     }
@@ -84,8 +84,9 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen overflow-y-auto text-white">
-      <div className="pt-24 p-10 max-w-2xl mx-auto relative">
+  <div className="min-h-screen flex flex-col text-white">
+      <div className="flex-1 overflow-y-auto min-h-0">
+  <div className="pt-24 p-10 max-w-2xl mx-auto relative">
 
         {/* 🔥 BACK BUTTON */}
         <button
@@ -174,8 +175,8 @@ export default function ProfilePage() {
             </button>
           </div>
         </div>
-
       </div>
     </div>
-  );
+  </div>
+);
 }
