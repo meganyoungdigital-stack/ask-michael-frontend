@@ -7,6 +7,10 @@ import { useParams } from "next/navigation";
 interface Message {
   role: "user" | "assistant";
   content: string;
+
+  /* ✅ NEW */
+  imageUrl?: string;
+  fileName?: string;
 }
 
 export default function ChatPage() {
@@ -277,11 +281,13 @@ try {
 
         {messages.map((msg, i) => (
   <ChatMessage
-    key={i}
-    role={msg.role}
-    content={msg.content}
-    conversationId={conversationId}
-  />
+  key={i}
+  role={msg.role}
+  content={msg.content}
+  conversationId={conversationId}
+  imageUrl={msg.imageUrl}
+  fileName={msg.fileName}
+/>
 ))}
 
         <div ref={bottomRef} />

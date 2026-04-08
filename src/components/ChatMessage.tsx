@@ -14,6 +14,8 @@ interface ChatMessageProps {
   /* ✅ NEW (optional - won't break anything) */
   messageId?: string;
   conversationId?: string;
+ imageUrl?: string;
+  fileName?: string;
 }
 
 export default function ChatMessage({
@@ -22,6 +24,8 @@ export default function ChatMessage({
   isTyping = false,
   messageId,
   conversationId,
+  imageUrl,
+  fileName,
 }: ChatMessageProps) {
 
   const isAssistant = role === "assistant";
@@ -74,7 +78,11 @@ export default function ChatMessage({
       }`}
     >
       <div className="relative group max-w-2xl">
-
+{fileName && (
+  <div className="mb-2 flex items-center gap-2 text-xs text-gray-600">
+    📎 <span>{fileName}</span>
+  </div>
+)}
         {/* Chat Bubble */}
         <div
           className={`rounded-2xl px-5 py-4 shadow-sm border text-sm leading-relaxed ${
