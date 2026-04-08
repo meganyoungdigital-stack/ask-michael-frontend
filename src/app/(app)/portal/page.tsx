@@ -57,8 +57,18 @@ export default function PortalPage() {
   }
 
   useEffect(() => {
+  fetchUsage();
+
+  const handleRefresh = () => {
     fetchUsage();
-  }, []);
+  };
+
+  window.addEventListener("refreshSidebar", handleRefresh);
+
+  return () => {
+    window.removeEventListener("refreshSidebar", handleRefresh);
+  };
+}, []);
 
   /* =========================
      CREATE CHAT
