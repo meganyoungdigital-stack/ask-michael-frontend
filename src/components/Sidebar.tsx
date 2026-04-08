@@ -15,10 +15,7 @@ interface Conversation {
   starred?: boolean;
 }
 
-interface Document {
-  _id: string;
-  name: string;
-}
+
 
 /* ================= COMPONENT ================= */
 
@@ -32,8 +29,7 @@ export default function Sidebar() {
       : "";
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(true);
 
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
@@ -93,13 +89,9 @@ export default function Sidebar() {
   async function loadSidebar() {
     setLoading(true);
 
-    const [convData, docData] = await Promise.all([
-      safeFetch("/api/conversation/list"),
-      safeFetch("/api/documents"),
-    ]);
+    const convData = await safeFetch("/api/conversation/list");
 
-    setConversations(convData?.conversations || []);
-    setDocuments(docData?.documents || []);
+setConversations(convData?.conversations || []);
 
     setLoading(false);
   }
@@ -305,14 +297,7 @@ export default function Sidebar() {
 
       {/* CONTENT */}
       <div className="flex-1 overflow-y-auto p-4">
-        <p className="text-xs text-gray-400 mb-2">Documents</p>
-
-        {documents.map((doc) => (
-          <div key={doc._id} className="text-sm truncate mb-1">
-            📄 {doc.name}
-          </div>
-        ))}
-
+        
         {pinned.length > 0 && (
           <>
             <p className="text-xs text-gray-400 mt-6 mb-2">Pinned</p>
