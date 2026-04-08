@@ -8,9 +8,11 @@ interface Message {
   role: "user" | "assistant";
   content: string;
 
-  /* ✅ NEW */
-  imageUrl?: string;
-  fileName?: string;
+  /* ✅ MULTIPLE FILES */
+  files?: {
+    name: string;
+    url?: string;
+  }[];
 }
 
 export default function ChatPage() {
@@ -124,14 +126,13 @@ export default function ChatPage() {
 
     setSending(true);
 
-    const userMessage: any = {
+    const userMessage: Message = {
   role: "user",
   content: input.trim(),
-  fileName: selectedFiles[0]?.name,
-  imageUrl:
-    selectedFiles.length > 0
-      ? URL.createObjectURL(selectedFiles[0])
-      : undefined,
+  files: selectedFiles.map((file) => ({
+    name: file.name,
+    url: URL.createObjectURL(file), // optional (for future preview)
+  })),
 };
 
     const isFirstMessage = messages.length === 0;
@@ -285,8 +286,7 @@ try {
   role={msg.role}
   content={msg.content}
   conversationId={conversationId}
-  imageUrl={msg.imageUrl}
-  fileName={msg.fileName}
+  files={msg.files}
 />
 ))}
 

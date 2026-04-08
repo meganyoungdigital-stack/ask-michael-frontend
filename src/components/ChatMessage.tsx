@@ -11,11 +11,14 @@ interface ChatMessageProps {
   content: string;
   isTyping?: boolean;
 
-  /* ✅ NEW (optional - won't break anything) */
   messageId?: string;
   conversationId?: string;
- imageUrl?: string;
-  fileName?: string;
+
+  /* ✅ MULTIPLE FILES */
+  files?: {
+    name: string;
+    url?: string;
+  }[];
 }
 
 export default function ChatMessage({
@@ -24,8 +27,7 @@ export default function ChatMessage({
   isTyping = false,
   messageId,
   conversationId,
-  imageUrl,
-  fileName,
+  files,
 }: ChatMessageProps) {
 
   const isAssistant = role === "assistant";
@@ -78,9 +80,16 @@ export default function ChatMessage({
       }`}
     >
       <div className="relative group max-w-2xl">
-{fileName && (
-  <div className="mb-2 flex items-center gap-2 text-xs text-gray-600">
-    📎 <span>{fileName}</span>
+{files && files.length > 0 && (
+  <div className="mb-2 space-y-1">
+    {files.map((file, index) => (
+      <div
+        key={index}
+        className="flex items-center gap-2 text-xs text-gray-600"
+      >
+        📎 <span>{file.name}</span>
+      </div>
+    ))}
   </div>
 )}
         {/* Chat Bubble */}
