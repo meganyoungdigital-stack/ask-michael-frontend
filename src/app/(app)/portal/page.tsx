@@ -47,10 +47,10 @@ export default function PortalPage() {
       const data = await res.json();
 
       setUsage({
-        count: data.count || 0,
-        limit: data.limit || 10,
-        isPro: data.isPro || false,
-      });
+  count: typeof data.used === "number" ? data.used : 0,
+  limit: typeof data.limit === "number" ? data.limit : 10,
+  isPro: data.isPro || false,
+});
     } catch (err) {
       console.error("Failed to fetch usage");
     }
