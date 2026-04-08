@@ -1,5 +1,6 @@
 "use client";
 
+import ChatMessage from "@/components/ChatMessage";
 import { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
 
@@ -119,10 +120,15 @@ export default function ChatPage() {
 
     setSending(true);
 
-    const userMessage: Message = {
-      role: "user",
-      content: input.trim(),
-    };
+    const userMessage: any = {
+  role: "user",
+  content: input.trim(),
+  fileName: selectedFiles[0]?.name,
+  imageUrl:
+    selectedFiles.length > 0
+      ? URL.createObjectURL(selectedFiles[0])
+      : undefined,
+};
 
     const isFirstMessage = messages.length === 0;
 
@@ -270,32 +276,13 @@ try {
         )}
 
         {messages.map((msg, i) => (
-          <div
-            key={i}
-            className={`flex ${
-              msg.role === "user" ? "justify-end" : "justify-start"
-            }`}
-          >
-            <div
-              className={`max-w-xl p-3 rounded-lg ${
-                msg.role === "user"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-200 text-black"
-              }`}
-            >
-              <div className="whitespace-pre-wrap">{msg.content}</div>
-
-              {msg.role === "assistant" && (
-                <button
-                  onClick={() => copyToClipboard(msg.content)}
-                  className="text-xs text-gray-500 mt-2 hover:text-black"
-                >
-                  Copy
-                </button>
-              )}
-            </div>
-          </div>
-        ))}
+  <ChatMessage
+    key={i}
+    role={msg.role}
+    content={msg.content}
+    conversationId={conversationId}
+  />
+))}
 
         <div ref={bottomRef} />
       </div>

@@ -87,11 +87,39 @@ export default function ChatMessage({
           {isTyping ? (
             <TypingIndicator />
           ) : (
-            <div className="prose prose-sm max-w-none text-gray-800">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {content}
-              </ReactMarkdown>
-            </div>
+            <div className="prose prose-sm max-w-none">
+  <ReactMarkdown
+    remarkPlugins={[remarkGfm]}
+    components={{
+      h1: (props) => (
+        <h1 className="text-xl font-bold mt-4 mb-2 text-gray-900" {...props} />
+      ),
+      h2: (props) => (
+        <h2 className="text-lg font-semibold mt-3 mb-2 text-gray-900" {...props} />
+      ),
+      h3: (props) => (
+        <h3 className="text-md font-semibold mt-2 mb-1 text-gray-900" {...props} />
+      ),
+      p: (props) => (
+        <p className="text-sm text-gray-800 leading-relaxed" {...props} />
+      ),
+      ul: (props) => (
+        <ul className="list-disc pl-5 mb-2" {...props} />
+      ),
+      ol: (props) => (
+        <ol className="list-decimal pl-5 mb-2" {...props} />
+      ),
+      li: (props) => (
+        <li className="mb-1" {...props} />
+      ),
+      strong: (props) => (
+        <strong className="font-semibold text-gray-900" {...props} />
+      ),
+    }}
+  >
+    {content}
+  </ReactMarkdown>
+</div>
           )}
 
         </div>
