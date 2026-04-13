@@ -1,4 +1,34 @@
-export const translations = {
+type TranslationSchema = {
+  heroSubtitle: string;
+  enterPlatform: string;
+  howItWorks: string;
+
+  step1Title: string;
+  step1Desc: string;
+  step2Title: string;
+  step2Desc: string;
+  step3Title: string;
+  step3Desc: string;
+
+  portalTitle: string;
+  portalSubtitle: string;
+  loading: string;
+  messagesLeft: (count: number) => string;
+  limitReached: string;
+  newChat: string;
+
+  share: string;
+  pinned: string;
+  chats: string;
+  loadingChats: string;
+  profile: string;
+  untitledChat: string;
+  pin: string;
+  unpin: string;
+  rename: string;
+  delete: string;
+};
+export const translations: Record<"en" | "zu" | "af" | "fr", TranslationSchema> = {
   en: {
     heroSubtitle:
       "Enter the intelligence dimension of: AI-assisted heavy metal engineering.",
@@ -15,13 +45,25 @@ export const translations = {
     step3Desc:
       "Receive actionable insights, predictions, and recommendations to improve operations and safety.",
 
-    /* ✅ ADD THESE (PORTAL) */
+    /* ✅ PORTAL */
     portalTitle: "Ask Michael",
     portalSubtitle: "Your AI engineering assistant",
     loading: "Loading portal...",
-    messagesLeft: (count: number) => `${count} messages left today`,
+    messagesLeft: (count) => `${count} messages left today`,
     limitReached: "Daily message limit reached",
     newChat: "+ New Chat",
+
+    /* ✅ SIDEBAR */
+    share: "Share",
+    pinned: "Pinned",
+    chats: "Chats",
+    loadingChats: "Loading chats...",
+    profile: "Profile",
+    untitledChat: "Untitled Chat",
+    pin: "Pin",
+    unpin: "Unpin",
+    rename: "Rename",
+    delete: "Delete",
   },
 
   zu: {
@@ -40,13 +82,25 @@ export const translations = {
     step3Desc:
       "Thola izincomo nezibikezelo zokuthuthukisa ukusebenza nokuphepha.",
 
-    /* ✅ ADD THESE (PORTAL) */
+    /* ✅ PORTAL */
     portalTitle: "Ask Michael",
     portalSubtitle: "Umeluleki wakho wobunjiniyela we-AI",
     loading: "Ilayisha i-portal...",
     messagesLeft: (count: number) => `${count} imiyalezo esele namuhla`,
     limitReached: "Umkhawulo wemiyalezo usuphelile",
     newChat: "+ Ingxoxo Entsha",
+
+    /* ✅ SIDEBAR */
+    share: "Yabelana",
+    pinned: "Okunamathiselwe",
+    chats: "Izingxoxo",
+    loadingChats: "Iyalayisha izingxoxo...",
+    profile: "Iphrofayela",
+    untitledChat: "Ingxoxo Engenagama",
+    pin: "Namathisela",
+    unpin: "Susa ukunamathisela",
+    rename: "Qamba kabusha",
+    delete: "Susa",
   },
 
   af: {
@@ -65,13 +119,25 @@ export const translations = {
     step3Desc:
       "Ontvang bruikbare insigte, voorspellings en aanbevelings.",
 
-    /* ✅ ADD THESE (PORTAL) */
+    /* ✅ PORTAL */
     portalTitle: "Ask Michael",
     portalSubtitle: "Jou KI-ingenieursassistent",
     loading: "Laai portaal...",
     messagesLeft: (count: number) => `${count} boodskappe oor vandag`,
     limitReached: "Daaglikse limiet bereik",
     newChat: "+ Nuwe Gesprek",
+
+    /* ✅ SIDEBAR */
+    share: "Deel",
+    pinned: "Vasgemaak",
+    chats: "Gesprekke",
+    loadingChats: "Laai gesprekke...",
+    profile: "Profiel",
+    untitledChat: "Naamlose Gesprek",
+    pin: "Vasmaak",
+    unpin: "Losmaak",
+    rename: "Hernoem",
+    delete: "Verwyder",
   },
 
   fr: {
@@ -90,12 +156,24 @@ export const translations = {
     step3Desc:
       "Recevez des recommandations et des prédictions exploitables.",
 
-    /* ✅ ADD THESE (PORTAL) */
+    /* ✅ PORTAL */
     portalTitle: "Ask Michael",
     portalSubtitle: "Votre assistant d'ingénierie IA",
     loading: "Chargement du portail...",
     messagesLeft: (count: number) => `${count} messages restants aujourd'hui`,
     limitReached: "Limite quotidienne atteinte",
     newChat: "+ Nouvelle discussion",
+
+    /* ✅ SIDEBAR */
+    share: "Partager",
+    pinned: "Épinglé",
+    chats: "Discussions",
+    loadingChats: "Chargement des discussions...",
+    profile: "Profil",
+    untitledChat: "Discussion sans titre",
+    pin: "Épingler",
+    unpin: "Désépingler",
+    rename: "Renommer",
+    delete: "Supprimer",
   },
 };
