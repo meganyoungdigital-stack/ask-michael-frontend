@@ -6,11 +6,31 @@ import {
   useTransform,
   useScroll,
 } from "framer-motion";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
-
+import { translations } from "@/lib/translations";
 export default function LandingPage() {
+  const [lang, setLang] = useState("en");
+
+useEffect(() => {
+  if (typeof window === "undefined") return;
+
+  const loadLang = () => {
+    const savedLang = localStorage.getItem("lang") || "en";
+    setLang(savedLang);
+  };
+
+  loadLang();
+
+  window.addEventListener("languageChange", loadLang);
+
+  return () => {
+    window.removeEventListener("languageChange", loadLang);
+  };
+}, []);
+
+const t = translations[lang as "en" | "zu" | "af" | "fr"];
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
@@ -30,8 +50,11 @@ export default function LandingPage() {
 
     window.addEventListener("mousemove", handleMouseMove);
 
-    const canvas = canvasRef.current!;
-    const ctx = canvas.getContext("2d")!;
+    const canvas = canvasRef.current;
+if (!canvas) return;
+
+const ctx = canvas.getContext("2d");
+if (!ctx) return;
 
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -113,7 +136,7 @@ export default function LandingPage() {
             transition={{ delay: 0.8 }}
             className="mt-6 text-xl text-gray-200 max-w-2xl"
           >
-            Enter the intelligence dimension of: AI-assisted heavy metal engineering.
+            {t.heroSubtitle}
           </motion.p>
 
           <motion.div
@@ -124,7 +147,7 @@ export default function LandingPage() {
           >
             <Link href="/portal">
               <button className="px-8 py-4 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-lg font-semibold hover:scale-105 transition">
-                Enter Platform →
+                {t.enterPlatform}
               </button>
             </Link>
           </motion.div>
@@ -132,7 +155,66 @@ export default function LandingPage() {
         </div>
 
       </section>
+<section className="relative py-24 bg-black text-white mt-10">
 
+  <div className="max-w-6xl mx-auto px-6 text-center">
+
+    <motion.h2
+      initial={{ opacity: 0, y: 40 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.8 }}
+      viewport={{ once: true }}
+      className="text-4xl md:text-6xl font-bold mb-16"
+    >
+      {t.howItWorks}
+    </motion.h2>
+
+    <div className="grid md:grid-cols-3 gap-10">
+
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        viewport={{ once: true }}
+        className="p-8 bg-zinc-900/60 backdrop-blur rounded-2xl border border-white/10 hover:scale-105 transition"
+      >
+        <h3 className="text-2xl font-semibold mb-4">1. Upload Data</h3>
+        <p className="text-gray-400">
+          Import engineering documents, inspection reports, or operational data directly into the platform.
+        </p>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        viewport={{ once: true }}
+        className="p-8 bg-zinc-900/60 backdrop-blur rounded-2xl border border-white/10 hover:scale-105 transition"
+      >
+        <h3 className="text-2xl font-semibold mb-4">2. AI Processing</h3>
+        <p className="text-gray-400">
+          Ask Michael analyzes your data using advanced AI models tailored for heavy engineering environments.
+        </p>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+        viewport={{ once: true }}
+        className="p-8 bg-zinc-900/60 backdrop-blur rounded-2xl border border-white/10 hover:scale-105 transition"
+      >
+        <h3 className="text-2xl font-semibold mb-4">3. Get Insights</h3>
+        <p className="text-gray-400">
+          Receive actionable insights, predictions, and recommendations to improve operations and safety.
+        </p>
+      </motion.div>
+
+    </div>
+
+  </div>
+
+</section>
       <Footer />
 
     </main>

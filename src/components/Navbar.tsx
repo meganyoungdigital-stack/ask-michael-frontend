@@ -3,14 +3,28 @@
 import Link from "next/link";
 import { useUser, UserButton } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function Navbar() {
   const { isLoaded, isSignedIn } = useUser();
   const pathname = usePathname();
 
   const [visible, setVisible] = useState(false);
+  const [language, setLanguage] = useState<string>(() => {
+  if (typeof window !== "undefined") {
+    return localStorage.getItem("lang") || "en";
+  }
+  return "en";
+});
 
+    const changeLanguage = (lang: string) => {
+  setLanguage(lang);
+
+  if (typeof window !== "undefined") {
+    localStorage.setItem("lang", lang);
+    window.dispatchEvent(new Event("languageChange"));
+  }
+};
   // Detect platform routes
   const isPlatform =
     pathname.startsWith("/portal") ||
@@ -22,7 +36,7 @@ export default function Navbar() {
   }
 
   // =============================
-  // MARKETING NAVBAR (UNCHANGED)
+  // MARKETING NAVBAR
   // =============================
   if (!isPlatform) {
     return (
@@ -40,6 +54,22 @@ export default function Navbar() {
 
           {/* Navigation */}
           <div className="hidden md:flex items-center gap-8 text-sm text-blue-100">
+
+            {/* 🌍 LANGUAGE SWITCHER (UPDATED) */}
+            <div className="flex items-center gap-1 border border-white/20 rounded-lg px-1 py-1">
+              {["en", "zu", "af", "fr"].map((lang) => (
+                <button
+                  key={lang}
+                  onClick={() => changeLanguage(lang)}
+                  className={`px-2 py-1 rounded ${
+                    language === lang ? "bg-white text-black" : "text-white"
+                  }`}
+                >
+                  {lang.toUpperCase()}
+                </button>
+              ))}
+            </div>
+
             <Link href="/solutions" className="hover:text-white transition">
               Solutions
             </Link>
@@ -60,12 +90,12 @@ export default function Navbar() {
           {/* Right Side */}
           {isSignedIn ? (
             <UserButton
-  appearance={{
-    elements: {
-      avatarBox: "w-8 h-8",
-    },
-  }}
-/>
+              appearance={{
+                elements: {
+                  avatarBox: "w-8 h-8",
+                },
+              }}
+            />
           ) : (
             <Link href="/portal">
               <button className="px-5 py-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm hover:scale-105 transition">
@@ -109,6 +139,22 @@ export default function Navbar() {
 
           {/* Navigation */}
           <div className="hidden md:flex items-center gap-8 text-sm text-blue-100">
+
+            {/* 🌍 LANGUAGE SWITCHER (UPDATED) */}
+            <div className="flex items-center gap-1 border border-white/20 rounded-lg px-1 py-1">
+              {["en", "zu", "af", "fr"].map((lang) => (
+                <button
+                  key={lang}
+                  onClick={() => changeLanguage(lang)}
+                  className={`px-2 py-1 rounded ${
+                    language === lang ? "bg-white text-black" : "text-white"
+                  }`}
+                >
+                  {lang.toUpperCase()}
+                </button>
+              ))}
+            </div>
+
             <Link href="/solutions" className="hover:text-white transition">
               Solutions
             </Link>
@@ -129,12 +175,12 @@ export default function Navbar() {
           {/* Right Side */}
           {isSignedIn ? (
             <UserButton
-  appearance={{
-    elements: {
-      avatarBox: "w-8 h-8",
-    },
-  }}
-/>
+              appearance={{
+                elements: {
+                  avatarBox: "w-8 h-8",
+                },
+              }}
+            />
           ) : (
             <Link href="/portal">
               <button className="px-5 py-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm hover:scale-105 transition">
