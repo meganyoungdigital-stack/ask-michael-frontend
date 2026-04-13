@@ -4,6 +4,7 @@ export const translations = {
       "Enter the intelligence dimension of: AI-assisted heavy metal engineering.",
     enterPlatform: "Enter Platform →",
     howItWorks: "How It Works",
+
     step1Title: "1. Upload Data",
     step1Desc:
       "Import engineering documents, inspection reports, or operational data directly into the platform.",
@@ -13,6 +14,14 @@ export const translations = {
     step3Title: "3. Get Insights",
     step3Desc:
       "Receive actionable insights, predictions, and recommendations to improve operations and safety.",
+
+    /* ✅ ADD THESE (PORTAL) */
+    portalTitle: "Ask Michael",
+    portalSubtitle: "Your AI engineering assistant",
+    loading: "Loading portal...",
+    messagesLeft: (count: number) => `${count} messages left today`,
+    limitReached: "Daily message limit reached",
+    newChat: "+ New Chat",
   },
 
   zu: {
@@ -20,6 +29,7 @@ export const translations = {
       "Ngena emhlabeni wobuhlakani: ubunjiniyela bensimbi obusizwa yi-AI.",
     enterPlatform: "Ngena ku-Platform →",
     howItWorks: "Isebenza Kanjani",
+
     step1Title: "1. Layisha Idatha",
     step1Desc:
       "Faka amadokhumenti wobunjiniyela noma idatha yokusebenza ohlelweni.",
@@ -29,6 +39,14 @@ export const translations = {
     step3Title: "3. Thola Imiphumela",
     step3Desc:
       "Thola izincomo nezibikezelo zokuthuthukisa ukusebenza nokuphepha.",
+
+    /* ✅ ADD THESE (PORTAL) */
+    portalTitle: "Ask Michael",
+    portalSubtitle: "Umeluleki wakho wobunjiniyela we-AI",
+    loading: "Ilayisha i-portal...",
+    messagesLeft: (count: number) => `${count} imiyalezo esele namuhla`,
+    limitReached: "Umkhawulo wemiyalezo usuphelile",
+    newChat: "+ Ingxoxo Entsha",
   },
 
   af: {
@@ -36,6 +54,7 @@ export const translations = {
       "Betree die intelligensie-dimensie van: KI-ondersteunde swaarmetaal ingenieurswese.",
     enterPlatform: "Gaan na Platform →",
     howItWorks: "Hoe Dit Werk",
+
     step1Title: "1. Laai Data Op",
     step1Desc:
       "Laai ingenieursdokumente, inspeksieverslae of operasionele data direk in die platform.",
@@ -45,6 +64,14 @@ export const translations = {
     step3Title: "3. Kry Insigte",
     step3Desc:
       "Ontvang bruikbare insigte, voorspellings en aanbevelings.",
+
+    /* ✅ ADD THESE (PORTAL) */
+    portalTitle: "Ask Michael",
+    portalSubtitle: "Jou KI-ingenieursassistent",
+    loading: "Laai portaal...",
+    messagesLeft: (count: number) => `${count} boodskappe oor vandag`,
+    limitReached: "Daaglikse limiet bereik",
+    newChat: "+ Nuwe Gesprek",
   },
 
   fr: {
@@ -52,6 +79,7 @@ export const translations = {
       "Entrez dans la dimension de l'intelligence : ingénierie lourde assistée par IA.",
     enterPlatform: "Accéder à la plateforme →",
     howItWorks: "Comment ça marche",
+
     step1Title: "1. Télécharger les données",
     step1Desc:
       "Importez des documents d'ingénierie ou des données opérationnelles dans la plateforme.",
@@ -61,5 +89,13 @@ export const translations = {
     step3Title: "3. Obtenir des résultats",
     step3Desc:
       "Recevez des recommandations et des prédictions exploitables.",
+
+    /* ✅ ADD THESE (PORTAL) */
+    portalTitle: "Ask Michael",
+    portalSubtitle: "Votre assistant d'ingénierie IA",
+    loading: "Chargement du portail...",
+    messagesLeft: (count: number) => `${count} messages restants aujourd'hui`,
+    limitReached: "Limite quotidienne atteinte",
+    newChat: "+ Nouvelle discussion",
   },
 };

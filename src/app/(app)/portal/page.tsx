@@ -1,10 +1,14 @@
 "use client";
 
+import { useLanguage } from "@/hooks/useLanguage";
+import { translations } from "@/lib/translations";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 
 export default function PortalPage() {
+  const lang = useLanguage();
+const t = translations[lang as "en" | "zu" | "af" | "fr"];
   const router = useRouter();
   const { isLoaded, isSignedIn } = useUser();
 
@@ -105,7 +109,7 @@ export default function PortalPage() {
   if (!isLoaded || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen text-white">
-        Loading portal...
+        {t.loading}
       </div>
     );
   }
@@ -123,18 +127,18 @@ export default function PortalPage() {
       />
 
       <h1 className="text-3xl font-bold mb-2">
-        Ask Michael
+        {t.portalTitle}
       </h1>
 
       <p className="text-gray-400 mb-4">
-        Your AI engineering assistant
+        {t.portalSubtitle}
       </p>
 
       {/* USAGE */}
       <p className="text-sm text-gray-400 mb-6">
         {isLimitReached
-          ? "Daily message limit reached"
-          : `${remaining} messages left today`}
+  ? t.limitReached
+  : t.messagesLeft(remaining)}
       </p>
 
       {/* BUTTON */}
@@ -147,7 +151,7 @@ export default function PortalPage() {
             : "bg-blue-600 hover:bg-blue-700"
         }`}
       >
-        {isLimitReached ? "Limit Reached" : "+ New Chat"}
+       {isLimitReached ? t.limitReached : t.newChat}
       </button>
 
     </div>
