@@ -27,6 +27,18 @@ type TranslationSchema = {
   unpin: string;
   rename: string;
   delete: string;
+  
+  footerSolutions: string;
+footerPlatform: string;
+footerPricing: string;
+footerContact: string;
+
+backToPlatform: string;
+
+profileTitle: string;
+account: string;
+subscription: string;
+signOut: string;
 };
 export const translations: Record<"en" | "zu" | "af" | "fr", TranslationSchema> = {
   en: {
@@ -64,6 +76,18 @@ export const translations: Record<"en" | "zu" | "af" | "fr", TranslationSchema> 
     unpin: "Unpin",
     rename: "Rename",
     delete: "Delete",
+
+    footerSolutions: "Solutions",
+    footerPlatform: "Platform",
+    footerPricing: "Pricing",
+    footerContact: "Contact",
+
+    backToPlatform: "← Back to Platform",
+
+    profileTitle: "Profile",
+    account: "Account",
+    subscription: "Subscription",
+    signOut: "Sign Out",
   },
 
   zu: {
@@ -101,6 +125,18 @@ export const translations: Record<"en" | "zu" | "af" | "fr", TranslationSchema> 
     unpin: "Susa ukunamathisela",
     rename: "Qamba kabusha",
     delete: "Susa",
+
+    footerSolutions: "Izixazululo",
+    footerPlatform: "I-Platform",
+    footerPricing: "Amanani",
+    footerContact: "Xhumana",
+
+    backToPlatform: "← Buyela ku-Platform",
+
+    profileTitle: "Iphrofayela",
+    account: "I-akhawunti",
+    subscription: "Ukubhalisa",
+    signOut: "Phuma",
   },
 
   af: {
@@ -138,6 +174,18 @@ export const translations: Record<"en" | "zu" | "af" | "fr", TranslationSchema> 
     unpin: "Losmaak",
     rename: "Hernoem",
     delete: "Verwyder",
+
+    footerSolutions: "Oplossings",
+    footerPlatform: "Platform",
+    footerPricing: "Pryse",
+    footerContact: "Kontak",
+
+    backToPlatform: "← Terug na Platform",
+
+    profileTitle: "Profiel",
+    account: "Rekening",
+    subscription: "Intekening",
+    signOut: "Teken uit",
   },
 
   fr: {
@@ -175,5 +223,17 @@ export const translations: Record<"en" | "zu" | "af" | "fr", TranslationSchema> 
     unpin: "Désépingler",
     rename: "Renommer",
     delete: "Supprimer",
+
+    footerSolutions: "Solutions",
+footerPlatform: "Plateforme",
+footerPricing: "Tarification",
+footerContact: "Contact",
+
+backToPlatform: "← Retour à la plateforme",
+
+profileTitle: "Profil",
+account: "Compte",
+subscription: "Abonnement",
+signOut: "Se déconnecter",
   },
 };
