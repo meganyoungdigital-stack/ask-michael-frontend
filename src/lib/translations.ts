@@ -27,6 +27,7 @@ type TranslationSchema = {
   unpin: string;
   rename: string;
   delete: string;
+  login: string;
   
   footerSolutions: string;
 footerPlatform: string;
@@ -88,6 +89,7 @@ export const translations: Record<"en" | "zu" | "af" | "fr", TranslationSchema> 
     account: "Account",
     subscription: "Subscription",
     signOut: "Sign Out",
+    login: "Login",
   },
 
   zu: {
@@ -137,6 +139,7 @@ export const translations: Record<"en" | "zu" | "af" | "fr", TranslationSchema> 
     account: "I-akhawunti",
     subscription: "Ukubhalisa",
     signOut: "Phuma",
+    login: "Ngena",
   },
 
   af: {
@@ -186,6 +189,7 @@ export const translations: Record<"en" | "zu" | "af" | "fr", TranslationSchema> 
     account: "Rekening",
     subscription: "Intekening",
     signOut: "Teken uit",
+    login: "Ngena",
   },
 
   fr: {
@@ -235,5 +239,8 @@ profileTitle: "Profil",
 account: "Compte",
 subscription: "Abonnement",
 signOut: "Se déconnecter",
+login: "Connexion",
   },
+
+   
 };

@@ -1,11 +1,15 @@
 "use client";
 
+import { useLanguage } from "@/hooks/useLanguage";
+import { translations } from "@/lib/translations";
 import Link from "next/link";
 import { useUser, UserButton } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 
 export default function Navbar() {
+  const lang = useLanguage();
+const t = translations[lang as "en" | "zu" | "af" | "fr"];
   const { isLoaded, isSignedIn } = useUser();
   const pathname = usePathname();
 
@@ -71,20 +75,20 @@ export default function Navbar() {
             </div>
 
             <Link href="/solutions" className="hover:text-white transition">
-              Solutions
-            </Link>
+  {t.footerSolutions}
+</Link>
 
-            <Link href="/portal" className="hover:text-white transition">
-              Platform
-            </Link>
+<Link href="/portal" className="hover:text-white transition">
+  {t.footerPlatform}
+</Link>
 
-            <Link href="/pricing" className="hover:text-white transition">
-              Pricing
-            </Link>
+<Link href="/pricing" className="hover:text-white transition">
+  {t.footerPricing}
+</Link>
 
-            <Link href="/contact" className="hover:text-white transition">
-              Contact
-            </Link>
+<Link href="/contact" className="hover:text-white transition">
+  {t.footerContact}
+</Link>
           </div>
 
           {/* Right Side */}
@@ -98,9 +102,9 @@ export default function Navbar() {
             />
           ) : (
             <Link href="/portal">
-              <button className="px-5 py-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm hover:scale-105 transition">
-                Login
-              </button>
+             <button className="px-5 py-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm hover:scale-105 transition">
+              {t.login}
+             </button>
             </Link>
           )}
         </div>
@@ -156,20 +160,20 @@ export default function Navbar() {
             </div>
 
             <Link href="/solutions" className="hover:text-white transition">
-              Solutions
-            </Link>
+  {t.footerSolutions}
+</Link>
 
-            <Link href="/portal" className="hover:text-white transition">
-              Platform
-            </Link>
+<Link href="/portal" className="hover:text-white transition">
+  {t.footerPlatform}
+</Link>
 
-            <Link href="/pricing" className="hover:text-white transition">
-              Pricing
-            </Link>
+<Link href="/pricing" className="hover:text-white transition">
+  {t.footerPricing}
+</Link>
 
-            <Link href="/contact" className="hover:text-white transition">
-              Contact
-            </Link>
+<Link href="/contact" className="hover:text-white transition">
+  {t.footerContact}
+</Link>
           </div>
 
           {/* Right Side */}
@@ -183,9 +187,9 @@ export default function Navbar() {
             />
           ) : (
             <Link href="/portal">
-              <button className="px-5 py-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm hover:scale-105 transition">
-                Login
-              </button>
+             <button className="px-5 py-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm hover:scale-105 transition">
+              {t.login}
+             </button>
             </Link>
           )}
         </div>
