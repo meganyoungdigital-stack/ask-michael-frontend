@@ -4,15 +4,21 @@ import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useLanguage } from "@/hooks/useLanguage";
+import { translations } from "@/lib/translations";
 
 export default function KnowledgePage() {
+ 
+  const lang = useLanguage();
+  const t = translations[lang as "en" | "zu" | "af" | "fr"];
+
   return (
     <div className="min-h-screen bg-background px-6 py-20">
 
       {/* NAV */}
       <div className="max-w-6xl mx-auto mb-10 flex justify-start items-center">
         <Link href="/">
-          <Button variant="outline">← Back Home</Button>
+          <Button variant="outline">{t.backToPlatform}</Button>
         </Link>
       </div>
 
@@ -23,7 +29,7 @@ export default function KnowledgePage() {
           animate={{ opacity: 1, y: 0 }}
           className="text-5xl font-bold mb-6"
         >
-          AI Knowledge Engineering
+          {t.aiKnowledge}
         </motion.h1>
 
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
@@ -32,7 +38,7 @@ export default function KnowledgePage() {
 
         <div className="flex justify-center gap-4">
           <Link href="/portal">
-            <Button size="lg">Get Started</Button>
+            <Button size="lg">{t.enterPlatform}</Button>
           </Link>
 
           <Link href="/pricing">

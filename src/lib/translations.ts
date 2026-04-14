@@ -29,6 +29,7 @@ type TranslationSchema = {
   delete: string;
   login: string;
   
+  
   footerSolutions: string;
 footerPlatform: string;
 footerPricing: string;
@@ -36,6 +37,7 @@ footerContact: string;
 footerLegal: string;
 footerDescription: string;
 footerDisclaimer: string;
+
 
 terms: string;
 privacy: string;
@@ -51,6 +53,7 @@ profileTitle: string;
 account: string;
 subscription: string;
 signOut: string;
+
 };
 export const translations: Record<"en" | "zu" | "af" | "fr", TranslationSchema> = {
   en: {
@@ -159,18 +162,18 @@ maintenanceIntelligence: "Maintenance Intelligence",
     footerContact: "Xhumana",
     footerLegal: "Okusemthethweni",
     footerDescription:
-  "Industrial AI intelligence for heavy metal engineering knowledge, procedures and operational decision support.",
+  "Ubuhlakani be-AI yezimboni kwezobunjiniyela bensimbi, izinqubo kanye nokwesekwa kokuthatha izinqumo.",
 
 footerDisclaimer:
-  "AI responses are generated automatically and should be verified before use in operational environments.",
+  "Izimpendulo ze-AI zikhiqizwa ngokuzenzakalelayo futhi kufanele ziqinisekiswe ngaphambi kokusetshenziswa.",
 
-terms: "Terms",
-privacy: "Privacy",
-aiPolicy: "AI Policy",
+terms: "Imigomo",
+privacy: "Ubumfihlo",
+aiPolicy: "Inqubomgomo ye-AI",
 
-aiKnowledge: "AI Knowledge Engineering",
-industrialProcedures: "Industrial Procedures",
-maintenanceIntelligence: "Maintenance Intelligence",
+aiKnowledge: "Ubunjiniyela bolwazi lwe-AI",
+industrialProcedures: "Izinqubo Zezimboni",
+maintenanceIntelligence: "Ubuhlakani Bokulungisa",
 
     backToPlatform: "← Buyela ku-Platform",
 
@@ -223,18 +226,18 @@ maintenanceIntelligence: "Maintenance Intelligence",
     footerContact: "Kontak",
     footerLegal: "Regs",
     footerDescription:
-  "Industrial AI intelligence for heavy metal engineering knowledge, procedures and operational decision support.",
+  "Industriële KI-intelligensie vir swaarmetaal-ingenieurskennis, prosedures en operasionele besluitneming.",
 
 footerDisclaimer:
-  "AI responses are generated automatically and should be verified before use in operational environments.",
+  "KI-antwoorde word outomaties gegenereer en moet geverifieer word voor gebruik.",
 
-terms: "Terms",
-privacy: "Privacy",
-aiPolicy: "AI Policy",
+terms: "Bepalings",
+privacy: "Privaatheid",
+aiPolicy: "KI-beleid",
 
-aiKnowledge: "AI Knowledge Engineering",
-industrialProcedures: "Industrial Procedures",
-maintenanceIntelligence: "Maintenance Intelligence",
+aiKnowledge: "KI Kennis Ingenieurswese",
+industrialProcedures: "Industriële Prosedures",
+maintenanceIntelligence: "Onderhoudsintelligensie",
 
     backToPlatform: "← Terug na Platform",
 
@@ -287,18 +290,18 @@ footerPricing: "Tarification",
 footerContact: "Contact",
 footerLegal: "Légal",
 footerDescription:
-  "Industrial AI intelligence for heavy metal engineering knowledge, procedures and operational decision support.",
+  "Intelligence industrielle basée sur l'IA pour l'ingénierie lourde, les processus et la prise de décision opérationnelle.",
 
 footerDisclaimer:
-  "AI responses are generated automatically and should be verified before use in operational environments.",
+  "Les réponses de l'IA sont générées automatiquement et doivent être vérifiées avant utilisation.",
 
-terms: "Terms",
-privacy: "Privacy",
-aiPolicy: "AI Policy",
+terms: "Conditions",
+privacy: "Confidentialité",
+aiPolicy: "Politique IA",
 
-aiKnowledge: "AI Knowledge Engineering",
-industrialProcedures: "Industrial Procedures",
-maintenanceIntelligence: "Maintenance Intelligence",
+aiKnowledge: "Ingénierie des connaissances IA",
+industrialProcedures: "Procédures industrielles",
+maintenanceIntelligence: "Intelligence de maintenance",
 
 backToPlatform: "← Retour à la plateforme",
 

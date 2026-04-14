@@ -5,12 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Check, X } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { useLanguage } from "@/hooks/useLanguage";
+import { translations } from "@/lib/translations";
 
 /* ✅ NEW */
 import { useUser } from "@clerk/nextjs";
 import { useEffect } from "react";
 
 export default function PricingPage() {
+  const lang = useLanguage();
+  const t = translations[lang as "en" | "zu" | "af" | "fr"];
   const { user } = useUser();
 
   /* ================= LOAD PAYSTACK SCRIPT ================= */
@@ -169,7 +173,7 @@ export default function PricingPage() {
       {/* NAV */}
       <div className="max-w-6xl mx-auto mb-10 flex justify-between items-center">
         <Link href="/">
-          <Button variant="outline">← Back Home</Button>
+          <Button variant="outline">{t.backToPlatform}</Button>
         </Link>
 
         <Link href="/portal">
@@ -312,7 +316,7 @@ export default function PricingPage() {
         </h3>
 
         <Link href="/portal">
-          <Button size="lg">Get Started</Button>
+          <Button size="lg">{t.enterPlatform}</Button>
         </Link>
       </div>
     </div>

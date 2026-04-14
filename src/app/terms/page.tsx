@@ -4,15 +4,19 @@ import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useLanguage } from "@/hooks/useLanguage";
+import { translations } from "@/lib/translations";
 
 export default function TermsPage() {
+  const lang = useLanguage();
+const t = translations[lang as "en" | "zu" | "af" | "fr"];
   return (
     <div className="min-h-screen bg-background px-6 py-20">
 
       {/* NAV */}
       <div className="max-w-6xl mx-auto mb-10 flex justify-start items-center">
         <Link href="/">
-          <Button variant="outline">← Back Home</Button>
+          <Button variant="outline">{t.backToPlatform}</Button>
         </Link>
       </div>
 

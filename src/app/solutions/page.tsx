@@ -4,8 +4,13 @@ import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useLanguage } from "@/hooks/useLanguage";
+import { translations } from "@/lib/translations";
 
 export default function SolutionsPage() {
+
+  const lang = useLanguage();
+  const t = translations[lang as "en" | "zu" | "af" | "fr"];
   return (
     <div className="min-h-screen bg-background px-6 py-20">
 
@@ -25,7 +30,7 @@ export default function SolutionsPage() {
 
         <div className="flex justify-center gap-4">
           <Link href="/portal">
-            <Button size="lg">Get Started</Button>
+            <Button size="lg">{t.enterPlatform}</Button>
           </Link>
           <Link href="/pricing">
             <Button variant="outline" size="lg">
