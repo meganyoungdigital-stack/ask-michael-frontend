@@ -33,6 +33,17 @@ type TranslationSchema = {
 footerPlatform: string;
 footerPricing: string;
 footerContact: string;
+footerLegal: string;
+footerDescription: string;
+footerDisclaimer: string;
+
+terms: string;
+privacy: string;
+aiPolicy: string;
+
+aiKnowledge: string;
+industrialProcedures: string;
+maintenanceIntelligence: string;
 
 backToPlatform: string;
 
@@ -82,6 +93,20 @@ export const translations: Record<"en" | "zu" | "af" | "fr", TranslationSchema> 
     footerPlatform: "Platform",
     footerPricing: "Pricing",
     footerContact: "Contact",
+    footerLegal: "Legal",
+    footerDescription:
+  "Industrial AI intelligence for heavy metal engineering knowledge, procedures and operational decision support.",
+
+footerDisclaimer:
+  "AI responses are generated automatically and should be verified before use in operational environments.",
+
+terms: "Terms",
+privacy: "Privacy",
+aiPolicy: "AI Policy",
+
+aiKnowledge: "AI Knowledge Engineering",
+industrialProcedures: "Industrial Procedures",
+maintenanceIntelligence: "Maintenance Intelligence",
 
     backToPlatform: "← Back to Platform",
 
@@ -132,6 +157,20 @@ export const translations: Record<"en" | "zu" | "af" | "fr", TranslationSchema> 
     footerPlatform: "I-Platform",
     footerPricing: "Amanani",
     footerContact: "Xhumana",
+    footerLegal: "Okusemthethweni",
+    footerDescription:
+  "Industrial AI intelligence for heavy metal engineering knowledge, procedures and operational decision support.",
+
+footerDisclaimer:
+  "AI responses are generated automatically and should be verified before use in operational environments.",
+
+terms: "Terms",
+privacy: "Privacy",
+aiPolicy: "AI Policy",
+
+aiKnowledge: "AI Knowledge Engineering",
+industrialProcedures: "Industrial Procedures",
+maintenanceIntelligence: "Maintenance Intelligence",
 
     backToPlatform: "← Buyela ku-Platform",
 
@@ -182,6 +221,20 @@ export const translations: Record<"en" | "zu" | "af" | "fr", TranslationSchema> 
     footerPlatform: "Platform",
     footerPricing: "Pryse",
     footerContact: "Kontak",
+    footerLegal: "Regs",
+    footerDescription:
+  "Industrial AI intelligence for heavy metal engineering knowledge, procedures and operational decision support.",
+
+footerDisclaimer:
+  "AI responses are generated automatically and should be verified before use in operational environments.",
+
+terms: "Terms",
+privacy: "Privacy",
+aiPolicy: "AI Policy",
+
+aiKnowledge: "AI Knowledge Engineering",
+industrialProcedures: "Industrial Procedures",
+maintenanceIntelligence: "Maintenance Intelligence",
 
     backToPlatform: "← Terug na Platform",
 
@@ -232,6 +285,20 @@ export const translations: Record<"en" | "zu" | "af" | "fr", TranslationSchema> 
 footerPlatform: "Plateforme",
 footerPricing: "Tarification",
 footerContact: "Contact",
+footerLegal: "Légal",
+footerDescription:
+  "Industrial AI intelligence for heavy metal engineering knowledge, procedures and operational decision support.",
+
+footerDisclaimer:
+  "AI responses are generated automatically and should be verified before use in operational environments.",
+
+terms: "Terms",
+privacy: "Privacy",
+aiPolicy: "AI Policy",
+
+aiKnowledge: "AI Knowledge Engineering",
+industrialProcedures: "Industrial Procedures",
+maintenanceIntelligence: "Maintenance Intelligence",
 
 backToPlatform: "← Retour à la plateforme",
 

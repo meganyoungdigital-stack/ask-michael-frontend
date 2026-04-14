@@ -1,10 +1,15 @@
 "use client"
 
+import { useLanguage } from "@/hooks/useLanguage";
+import { translations } from "@/lib/translations";
 import { motion } from "framer-motion"
 import Link from "next/link"
 import Image from "next/image"
 
 export default function Footer() {
+
+  const lang = useLanguage();
+const t = translations[lang as "en" | "zu" | "af" | "fr"];
 
   return (
 
@@ -40,8 +45,7 @@ Ask Michael
 </div>
 
 <p className="text-sm text-gray-400">
-Industrial AI intelligence for heavy metal engineering knowledge,
-procedures and operational decision support.
+{t.footerDescription}
 </p>
 
 <div className="mt-4 text-sm">
@@ -59,31 +63,30 @@ askmichael@askmichaelai.org
 
 <div>
 
-<h3 className="text-white font-semibold mb-4">Platform</h3>
-
+<h3 className="text-white font-semibold mb-4">{t.footerPlatform}</h3>
 <ul className="space-y-2 text-sm">
 
 <li>
 <Link href="/portal" className="hover:text-white">
-Ask Michael
+{t.portalTitle}
 </Link>
 </li>
 
 <li>
 <Link href="/ai-knowledge-engineering" className="hover:text-white">
-AI Knowledge Engineering
+{t.aiKnowledge}
 </Link>
 </li>
 
 <li>
 <Link href="/industrial-procedures" className="hover:text-white">
-Industrial Procedures
+{t.industrialProcedures}
 </Link>
 </li>
 
 <li>
 <Link href="/maintenance-intelligence" className="hover:text-white">
-Maintenance Intelligence
+{t.maintenanceIntelligence}
 </Link>
 </li>
 
@@ -95,19 +98,19 @@ Maintenance Intelligence
 
 <div>
 
-<h3 className="text-white font-semibold mb-4">Solutions</h3>
+<h3 className="text-white font-semibold mb-4">{t.footerSolutions}</h3>
 
 <ul className="space-y-2 text-sm">
 
 <li>
 <Link href="/pricing" className="hover:text-white">
-Pricing
+{t.footerPricing}
 </Link>
 </li>
 
 <li>
 <Link href="/contact" className="hover:text-white">
-Contact
+{t.footerContact}
 </Link>
 </li>
 
@@ -119,25 +122,25 @@ Contact
 
 <div>
 
-<h3 className="text-white font-semibold mb-4">Legal</h3>
+<h3 className="text-white font-semibold mb-4">{t.footerLegal}</h3>
 
 <ul className="space-y-2 text-sm">
 
 <li>
 <Link href="/terms" className="hover:text-white">
-Terms
+{t.terms}
 </Link>
 </li>
 
 <li>
 <Link href="/privacy" className="hover:text-white">
-Privacy
+{t.privacy}
 </Link>
 </li>
 
 <li>
 <Link href="/ai-policy" className="hover:text-white">
-AI Policy
+{t.aiPolicy}
 </Link>
 </li>
 
@@ -153,8 +156,7 @@ AI Policy
 
 <br/>
 
-AI responses are generated automatically and should be
-verified before use in operational environments.
+{t.footerDisclaimer}
 
 </div>
 
