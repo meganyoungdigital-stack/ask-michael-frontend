@@ -5,7 +5,7 @@ import { translations } from "@/lib/translations";
 import Link from "next/link";
 import { useUser, UserButton } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function Navbar() {
   const lang = useLanguage();
@@ -16,6 +16,12 @@ export default function Navbar() {
 
   const [visible, setVisible] = useState(false); // navbar hover
   const [langOpen, setLangOpen] = useState(false); // dropdown
+
+  useEffect(() => {
+  const handleClickOutside = () => setLangOpen(false);
+  window.addEventListener("click", handleClickOutside);
+  return () => window.removeEventListener("click", handleClickOutside);
+}, []);
 
   const language = lang; // ✅ single source of truth
 
@@ -51,9 +57,12 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-8 text-sm text-blue-100">
 
             {/* 🌍 LANGUAGE DROPDOWN */}
-            <div className="relative" onMouseLeave={() => setLangOpen(false)}>
+            <div className="relative">
               <button
-                onClick={() => setLangOpen((prev) => !prev)}
+                onClick={(e) => {
+  e.stopPropagation();
+  setLangOpen((prev) => !prev);
+}}
                 className="flex items-center gap-2 border border-white/20 rounded-lg px-3 py-1 text-white hover:bg-white/10 transition"
               >
                 <span>
@@ -68,7 +77,10 @@ export default function Navbar() {
               </button>
 
               {langOpen && (
-                <div className="absolute right-0 mt-2 w-40 rounded-xl border border-white/10 bg-blue-950 shadow-lg z-50">
+                <div
+  onClick={(e) => e.stopPropagation()}
+  className="absolute right-0 mt-2 w-40 rounded-xl border border-white/10 bg-blue-950 shadow-lg z-50"
+>
                   {[
                     { code: "en", name: "English", flag: "🇬🇧" },
                     { code: "af", name: "Afrikaans", flag: "🇿🇦" },
@@ -138,7 +150,7 @@ export default function Navbar() {
       <div className="h-4 w-full" />
 
       <nav
-        className={`transition-all duration-300 overflow-hidden backdrop-blur-md bg-blue-950/90 border-b border-blue-900 ${
+        className={`transition-all duration-300 overflow-visible backdrop-blur-md bg-blue-950/90 border-b border-blue-900 ${
           visible ? "h-[72px] opacity-100" : "h-0 opacity-0"
         }`}
       >
@@ -154,9 +166,12 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-8 text-sm text-blue-100">
 
             {/* 🌍 LANGUAGE DROPDOWN */}
-            <div className="relative" onMouseLeave={() => setLangOpen(false)}>
+            <div className="relative">
               <button
-                onClick={() => setLangOpen((prev) => !prev)}
+                onClick={(e) => {
+  e.stopPropagation();
+  setLangOpen((prev) => !prev);
+}}
                 className="flex items-center gap-2 border border-white/20 rounded-lg px-3 py-1 text-white hover:bg-white/10 transition"
               >
                 <span>
@@ -171,7 +186,10 @@ export default function Navbar() {
               </button>
 
               {langOpen && (
-                <div className="absolute right-0 mt-2 w-40 rounded-xl border border-white/10 bg-blue-950 shadow-lg z-50">
+                <div
+  onClick={(e) => e.stopPropagation()}
+  className="absolute right-0 mt-2 w-40 rounded-xl border border-white/10 bg-blue-950 shadow-lg z-50"
+>
                   {[
                     { code: "en", name: "English", flag: "🇬🇧" },
                     { code: "af", name: "Afrikaans", flag: "🇿🇦" },
