@@ -1268,7 +1268,7 @@ viewPricing: "Sien Pryse",
     account: "Rekening",
     subscription: "Intekening",
     signOut: "Teken uit",
-    login: "Ngena",
+    login: "Teken in",
 knowledgeHeroDescription:
   "Organiseer, herwin en werk met ingenieurskennis deur KI-ondersteunde hulpmiddels wat ontwerp is om ingeligte besluitneming te ondersteun.",
 
