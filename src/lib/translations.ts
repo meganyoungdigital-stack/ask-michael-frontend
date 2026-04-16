@@ -336,6 +336,35 @@ termsDisclaimerText3: string;
 termsFinalTitle: string;
 termsFinalText: string;
 
+accountTitle: string;
+currentPlan: string;
+status: string;
+upgradePlan: string;
+cancelSubscription: string;
+
+confirmCancel: string;
+subscriptionCancelled: string;
+subscriptionCancelFailed: string;
+
+profileUpdated: string;
+profileUpdateFailed: string;
+loadingProfile: string;
+
+name: string;
+email: string;
+company: string;
+occupation: string;
+saveProfile: string;
+
+uploadDataTitle: string;
+uploadDataDesc: string;
+
+aiProcessingTitle: string;
+aiProcessingDesc: string;
+
+getInsightsTitle: string;
+getInsightsDesc: string;
+
 };
 export const translations: Record<"en" | "zu" | "af" | "fr", TranslationSchema> = {
   en: {
@@ -768,6 +797,37 @@ termsDisclaimerText3:
 termsFinalTitle: "Start Using the Platform",
 termsFinalText:
   "Access AI-assisted tools designed to support your workflows responsibly.",
+accountTitle: "Account & Subscription",
+currentPlan: "Current Plan:",
+status: "Status:",
+upgradePlan: "Upgrade Plan",
+cancelSubscription: "Cancel Subscription",
+
+confirmCancel: "Cancel your subscription?",
+subscriptionCancelled: "Subscription cancelled",
+subscriptionCancelFailed: "Failed to cancel subscription",
+
+profileUpdated: "Profile updated",
+profileUpdateFailed: "Failed to update profile",
+loadingProfile: "Loading profile...",
+
+name: "Name",
+email: "Email",
+company: "Company",
+occupation: "Occupation (e.g. Engineer, Manager, Welder)",
+saveProfile: "Save Profile",
+
+uploadDataTitle: "1. Upload Data",
+uploadDataDesc:
+  "Import engineering documents, inspection reports, or operational data directly into the platform.",
+
+aiProcessingTitle: "2. AI Processing",
+aiProcessingDesc:
+  "Ask Michael analyzes your data using advanced AI models tailored for heavy engineering environments.",
+
+getInsightsTitle: "3. Get Insights",
+getInsightsDesc:
+  "Receive actionable insights, predictions, and recommendations to improve operations and safety.",
 
   },
 
@@ -1203,6 +1263,38 @@ termsFinalTitle: "Qala Ukusebenzisa Iplathifomu",
 termsFinalText:
   "Sebenzisa amathuluzi e-AI ngokuzibophezela ukuze uthuthukise umsebenzi wakho.",
 
+accountTitle: "I-akhawunti & Ukubhalisa",
+currentPlan: "Uhlelo Lamanje:",
+status: "Isimo:",
+upgradePlan: "Thuthukisa Uhlelo",
+cancelSubscription: "Khansela Ukubhalisa",
+
+confirmCancel: "Ingabe ufuna ukukhansela ukubhalisa kwakho?",
+subscriptionCancelled: "Ukubhalisa kukhanseliwe",
+subscriptionCancelFailed: "Ukukhansela ukubhalisa kwehlulekile",
+
+profileUpdated: "Iphrofayela ibuyekeziwe",
+profileUpdateFailed: "Ukubuyekeza iphrofayela kwehlulekile",
+loadingProfile: "Ilayisha iphrofayela...",
+
+name: "Igama",
+email: "I-imeyili",
+company: "Inkampani",
+occupation: "Umsebenzi (isb. Unjiniyela, Umphathi, Umshiseli)",
+saveProfile: "Londoloza Iphrofayela",
+
+uploadDataTitle: "1. Layisha Idatha",
+uploadDataDesc:
+  "Faka amadokhumenti wobunjiniyela, imibiko yokuhlola, noma idatha yokusebenza ngqo kuplathifomu.",
+
+aiProcessingTitle: "2. Ukuhlaziywa kwe-AI",
+aiProcessingDesc:
+  "Ask Michael ihlaziya idatha yakho isebenzisa amamodeli e-AI athuthukile ahlelwe izindawo zobunjiniyela ezinzima.",
+
+getInsightsTitle: "3. Thola Imininingwane",
+getInsightsDesc:
+  "Thola imininingwane esebenzayo, ukubikezela, nezincomo zokuthuthukisa ukusebenza nokuphepha.",
+
   },
 
   af: {
@@ -1636,7 +1728,37 @@ termsFinalTitle: "Begin die Platform Gebruik",
 termsFinalText:
   "Gebruik AI hulpmiddels verantwoordelik in jou werk.",
 
+accountTitle: "Rekening & Intekening",
+currentPlan: "Huidige Plan:",
+status: "Status:",
+upgradePlan: "Gradeer Plan Op",
+cancelSubscription: "Kanselleer Intekening",
 
+confirmCancel: "Wil jy jou intekening kanselleer?",
+subscriptionCancelled: "Intekening gekanselleer",
+subscriptionCancelFailed: "Kon nie intekening kanselleer nie",
+
+profileUpdated: "Profiel opgedateer",
+profileUpdateFailed: "Kon nie profiel opdateer nie",
+loadingProfile: "Laai profiel...",
+
+name: "Naam",
+email: "E-pos",
+company: "Maatskappy",
+occupation: "Beroep (bv. Ingenieur, Bestuurder, Sweiser)",
+saveProfile: "Stoor Profiel",
+
+uploadDataTitle: "1. Laai Data Op",
+uploadDataDesc:
+  "Voer ingenieursdokumente, inspeksieverslae of operasionele data direk in die platform in.",
+
+aiProcessingTitle: "2. KI Verwerking",
+aiProcessingDesc:
+  "Ask Michael ontleed jou data met gevorderde KI-modelle wat vir swaar ingenieursomgewings ontwerp is.",
+
+getInsightsTitle: "3. Kry Insigte",
+getInsightsDesc:
+  "Ontvang bruikbare insigte, voorspellings en aanbevelings om operasies en veiligheid te verbeter.",
 
   },
 
@@ -2071,6 +2193,38 @@ termsDisclaimerText3:
 termsFinalTitle: "Commencer à utiliser la plateforme",
 termsFinalText:
   "Utilisez les outils AI de manière responsable.",
+
+accountTitle: "Compte & Abonnement",
+currentPlan: "Plan Actuel :",
+status: "Statut :",
+upgradePlan: "Mettre à niveau le plan",
+cancelSubscription: "Annuler l’abonnement",
+
+confirmCancel: "Voulez-vous annuler votre abonnement ?",
+subscriptionCancelled: "Abonnement annulé",
+subscriptionCancelFailed: "Échec de l’annulation de l’abonnement",
+
+profileUpdated: "Profil mis à jour",
+profileUpdateFailed: "Échec de la mise à jour du profil",
+loadingProfile: "Chargement du profil...",
+
+name: "Nom",
+email: "Email",
+company: "Entreprise",
+occupation: "Profession (ex. Ingénieur, Manager, Soudeur)",
+saveProfile: "Enregistrer le profil",
+
+uploadDataTitle: "1. Télécharger les Données",
+uploadDataDesc:
+  "Importez des documents d'ingénierie, des rapports d'inspection ou des données opérationnelles directement dans la plateforme.",
+
+aiProcessingTitle: "2. Traitement IA",
+aiProcessingDesc:
+  "Ask Michael analyse vos données à l'aide de modèles d'IA avancés adaptés aux environnements d'ingénierie lourde.",
+
+getInsightsTitle: "3. Obtenir des Informations",
+getInsightsDesc:
+  "Recevez des informations exploitables, des prévisions et des recommandations pour améliorer les opérations et la sécurité.",
 
   },
 
