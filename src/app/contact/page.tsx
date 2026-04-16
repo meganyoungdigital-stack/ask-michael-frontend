@@ -9,7 +9,8 @@ import { translations } from "@/lib/translations";
 
 export default function ContactPage() {
   const lang = useLanguage();
-const t = translations[lang as "en" | "zu" | "af" | "fr"];
+  const t = translations[lang as "en" | "zu" | "af" | "fr"];
+
   return (
     <div className="min-h-screen bg-background px-6 py-20">
 
@@ -27,21 +28,21 @@ const t = translations[lang as "en" | "zu" | "af" | "fr"];
           animate={{ opacity: 1, y: 0 }}
           className="text-5xl font-bold mb-6"
         >
-          Contact & Support
+          {t.contactTitle}
         </motion.h1>
 
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-          Get in touch for support, platform inquiries, or collaboration opportunities. We aim to respond promptly to all queries related to the system.
+          {t.contactDescription}
         </p>
 
         <div className="flex justify-center gap-4">
           <a href="mailto:askmichael@askmichaelai.org">
-            <Button size="lg">Email Support</Button>
+            <Button size="lg">{t.contactEmailSupport}</Button>
           </a>
 
           <Link href="/portal">
             <Button variant="outline" size="lg">
-              Go to Platform
+              {t.contactGoToPlatform}
             </Button>
           </Link>
         </div>
@@ -55,12 +56,10 @@ const t = translations[lang as "en" | "zu" | "af" | "fr"];
           <Card className="p-6 rounded-2xl shadow">
             <CardContent>
               <h3 className="text-xl font-semibold mb-3">
-                General Inquiries
+                {t.contactSection1Title}
               </h3>
               <p className="text-muted-foreground">
-                For questions about the platform, features, or general usage, please reach out via email.
-                <br /><br />
-                📧 askmichael@askmichaelai.org
+                {t.contactSection1Text}
               </p>
             </CardContent>
           </Card>
@@ -71,12 +70,10 @@ const t = translations[lang as "en" | "zu" | "af" | "fr"];
           <Card className="p-6 rounded-2xl shadow">
             <CardContent>
               <h3 className="text-xl font-semibold mb-3">
-                Technical Support
+                {t.contactSection2Title}
               </h3>
               <p className="text-muted-foreground">
-                Report issues, bugs, or system errors. Include as much detail as possible to help diagnose and resolve problems efficiently.
-                <br /><br />
-                Response times may vary depending on system load and complexity.
+                {t.contactSection2Text}
               </p>
             </CardContent>
           </Card>
@@ -87,12 +84,10 @@ const t = translations[lang as "en" | "zu" | "af" | "fr"];
           <Card className="p-6 rounded-2xl shadow">
             <CardContent>
               <h3 className="text-xl font-semibold mb-3">
-                Business & Partnerships
+                {t.contactSection3Title}
               </h3>
               <p className="text-muted-foreground">
-                For enterprise use, integrations, or partnership opportunities, contact us to discuss how the platform can support your operations.
-                <br /><br />
-                We work with industrial teams to improve workflows and system intelligence.
+                {t.contactSection3Text}
               </p>
             </CardContent>
           </Card>
@@ -103,12 +98,10 @@ const t = translations[lang as "en" | "zu" | "af" | "fr"];
           <Card className="p-6 rounded-2xl shadow">
             <CardContent>
               <h3 className="text-xl font-semibold mb-3">
-                Feedback & Improvements
+                {t.contactSection4Title}
               </h3>
               <p className="text-muted-foreground">
-                Suggestions and feedback are welcome to help improve the platform’s functionality and usability.
-                <br /><br />
-                Continuous improvement is a core part of the system’s development.
+                {t.contactSection4Text}
               </p>
             </CardContent>
           </Card>
@@ -123,11 +116,11 @@ const t = translations[lang as "en" | "zu" | "af" | "fr"];
           whileInView={{ opacity: 1, y: 0 }}
           className="text-3xl font-semibold mb-4"
         >
-          Direct Communication Channel
+          {t.contactSummaryTitle}
         </motion.h2>
 
         <p className="text-muted-foreground">
-          All communication is handled via a centralized email channel to ensure proper tracking, response management, and support continuity.
+          {t.contactSummaryText}
         </p>
       </div>
 
@@ -136,14 +129,10 @@ const t = translations[lang as "en" | "zu" | "af" | "fr"];
         <Card className="p-6 rounded-2xl border border-border">
           <CardContent>
             <h3 className="text-xl font-semibold mb-3">
-              Response Policy
+              {t.contactPolicyTitle}
             </h3>
             <p className="text-muted-foreground text-sm">
-              This platform provides support for system-related inquiries and operational assistance.
-              <br /><br />
-              Response times may vary depending on request complexity and system demand.
-              <br /><br />
-              For critical issues, include detailed information in your message to facilitate faster resolution.
+              {t.contactPolicyText}
             </p>
           </CardContent>
         </Card>
@@ -152,21 +141,21 @@ const t = translations[lang as "en" | "zu" | "af" | "fr"];
       {/* FINAL CTA */}
       <div className="text-center mt-24">
         <h3 className="text-3xl font-semibold mb-4">
-          Need Assistance?
+          {t.contactFinalCtaTitle}
         </h3>
 
         <p className="text-muted-foreground mb-6">
-          Contact us directly and we’ll help you get the support you need.
+          {t.contactFinalCtaText}
         </p>
 
         <div className="flex justify-center gap-4">
           <a href="mailto:askmichael@askmichaelai.org">
-            <Button size="lg">Send Email</Button>
+            <Button size="lg">{t.contactSendEmail}</Button>
           </a>
 
           <Link href="/portal">
             <Button variant="outline" size="lg">
-              Go to Platform
+              {t.contactGoToPlatform}
             </Button>
           </Link>
         </div>

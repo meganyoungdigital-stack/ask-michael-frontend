@@ -9,7 +9,8 @@ import { translations } from "@/lib/translations";
 
 export default function AIPolicyPage() {
   const lang = useLanguage();
-const t = translations[lang as "en" | "zu" | "af" | "fr"];
+  const t = translations[lang as "en" | "zu" | "af" | "fr"];
+
   return (
     <div className="min-h-screen bg-background px-6 py-20">
 
@@ -27,21 +28,21 @@ const t = translations[lang as "en" | "zu" | "af" | "fr"];
           animate={{ opacity: 1, y: 0 }}
           className="text-5xl font-bold mb-6"
         >
-          AI Usage & Responsibility Policy
+          {t.aiPolicyTitle}
         </motion.h1>
 
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-          Guidelines for the responsible use of AI-assisted tools within engineering and operational workflows.
+          {t.aiPolicyDescription}
         </p>
 
         <div className="flex justify-center gap-4">
           <Link href="/portal">
-            <Button size="lg">Access Platform</Button>
+            <Button size="lg">{t.enterPlatform}</Button>
           </Link>
 
           <Link href="/pricing">
             <Button variant="outline" size="lg">
-              View Pricing
+              {t.viewPricing}
             </Button>
           </Link>
         </div>
@@ -54,12 +55,10 @@ const t = translations[lang as "en" | "zu" | "af" | "fr"];
           <Card className="p-6 rounded-2xl shadow">
             <CardContent>
               <h3 className="text-xl font-semibold mb-3">
-                AI-Assisted, Not Autonomous
+                {t.aiPolicySection1Title}
               </h3>
               <p className="text-muted-foreground">
-                This platform provides AI-assisted outputs designed to support users in analysis, research, and decision-making.
-                <br /><br />
-                It does not operate autonomously and does not replace human judgment, professional expertise, or certified engineering review.
+                {t.aiPolicySection1Text}
               </p>
             </CardContent>
           </Card>
@@ -70,12 +69,10 @@ const t = translations[lang as "en" | "zu" | "af" | "fr"];
           <Card className="p-6 rounded-2xl shadow">
             <CardContent>
               <h3 className="text-xl font-semibold mb-3">
-                No Guarantee of Accuracy
+                {t.aiPolicySection2Title}
               </h3>
               <p className="text-muted-foreground">
-                AI-generated outputs may contain inaccuracies, omissions, or incomplete information.
-                <br /><br />
-                Users are responsible for independently verifying all outputs before relying on them for operational, technical, or compliance-related decisions.
+                {t.aiPolicySection2Text}
               </p>
             </CardContent>
           </Card>
@@ -86,12 +83,10 @@ const t = translations[lang as "en" | "zu" | "af" | "fr"];
           <Card className="p-6 rounded-2xl shadow">
             <CardContent>
               <h3 className="text-xl font-semibold mb-3">
-                Compliance Responsibility
+                {t.aiPolicySection3Title}
               </h3>
               <p className="text-muted-foreground">
-                The platform may assist in accessing standards and technical references, but it does not guarantee regulatory compliance.
-                <br /><br />
-                Users remain solely responsible for ensuring that all work complies with applicable laws, standards, and certification requirements.
+                {t.aiPolicySection3Text}
               </p>
             </CardContent>
           </Card>
@@ -102,12 +97,10 @@ const t = translations[lang as "en" | "zu" | "af" | "fr"];
           <Card className="p-6 rounded-2xl shadow">
             <CardContent>
               <h3 className="text-xl font-semibold mb-3">
-                Appropriate Use
+                {t.aiPolicySection4Title}
               </h3>
               <p className="text-muted-foreground">
-                Users agree to use the platform responsibly and in accordance with applicable laws and regulations.
-                <br /><br />
-                The platform must not be used for unsafe, unlawful, or high-risk activities without proper professional oversight.
+                {t.aiPolicySection4Text}
               </p>
             </CardContent>
           </Card>
@@ -121,12 +114,10 @@ const t = translations[lang as "en" | "zu" | "af" | "fr"];
           <Card className="p-6 rounded-2xl shadow">
             <CardContent>
               <h3 className="text-xl font-semibold mb-3">
-                Data Responsibility
+                {t.aiPolicySection5Title}
               </h3>
               <p className="text-muted-foreground">
-                Users are responsible for ensuring that any data uploaded to the platform complies with data protection laws, confidentiality obligations, and internal policies.
-                <br /><br />
-                Sensitive or regulated information should only be used in accordance with applicable governance requirements.
+                {t.aiPolicySection5Text}
               </p>
             </CardContent>
           </Card>
@@ -138,14 +129,10 @@ const t = translations[lang as "en" | "zu" | "af" | "fr"];
         <Card className="p-6 rounded-2xl border border-border">
           <CardContent>
             <h3 className="text-xl font-semibold mb-3">
-              Important Notice
+              {t.aiPolicyDisclaimerTitle}
             </h3>
             <p className="text-muted-foreground text-sm">
-              This platform provides AI-assisted tools intended to support engineering and operational workflows.
-              <br /><br />
-              It does not replace professional judgment, certified review processes, or regulatory compliance requirements.
-              <br /><br />
-              By using this platform, users acknowledge and accept responsibility for verifying outputs and making final decisions.
+              {t.aiPolicyDisclaimerText}
             </p>
           </CardContent>
         </Card>
@@ -154,21 +141,21 @@ const t = translations[lang as "en" | "zu" | "af" | "fr"];
       {/* FINAL CTA */}
       <div className="text-center mt-24">
         <h3 className="text-3xl font-semibold mb-4">
-          Use AI Responsibly in Your Workflow
+          {t.aiPolicyFinalCtaTitle}
         </h3>
 
         <p className="text-muted-foreground mb-6">
-          Access AI-assisted tools designed to support — not replace — your expertise.
+          {t.aiPolicyFinalCtaText}
         </p>
 
         <div className="flex justify-center gap-4">
           <Link href="/portal">
-            <Button size="lg">Start Free</Button>
+            <Button size="lg">{t.startFree}</Button>
           </Link>
 
           <Link href="/pricing">
             <Button variant="outline" size="lg">
-              View Pricing
+              {t.viewPricing}
             </Button>
           </Link>
         </div>

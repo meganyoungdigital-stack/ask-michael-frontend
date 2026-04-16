@@ -33,7 +33,7 @@ export default function KnowledgePage() {
         </motion.h1>
 
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-          Organize, retrieve, and interact with engineering knowledge using AI-assisted tools designed to support informed decision-making.
+          {t.knowledgeHeroDescription}
         </p>
 
         <div className="flex justify-center gap-4">
@@ -43,7 +43,7 @@ export default function KnowledgePage() {
 
           <Link href="/pricing">
             <Button variant="outline" size="lg">
-              View Pricing
+              {t.viewPricing}
             </Button>
           </Link>
         </div>
@@ -55,12 +55,10 @@ export default function KnowledgePage() {
           <Card className="p-6 rounded-2xl shadow">
             <CardContent>
               <h3 className="text-xl font-semibold mb-3">
-                Structured Knowledge Retrieval
+                {t.knowledgeSection1Title}
               </h3>
               <p className="text-muted-foreground">
-                Access engineering standards, internal documentation, and technical resources through an AI-assisted retrieval system.
-                <br /><br />
-                The platform surfaces relevant information to support workflows, while interpretation and application remain the responsibility of qualified professionals.
+                {t.knowledgeSection1Text}
               </p>
             </CardContent>
           </Card>
@@ -71,12 +69,10 @@ export default function KnowledgePage() {
           <Card className="p-6 rounded-2xl shadow">
             <CardContent>
               <h3 className="text-xl font-semibold mb-3">
-                Context-Aware Document Analysis
+                {t.knowledgeSection2Title}
               </h3>
               <p className="text-muted-foreground">
-                Analyze documents with AI-assisted context awareness, enabling faster navigation of complex engineering materials.
-                <br /><br />
-                Outputs are intended to support review processes and should be verified before use in any operational or compliance context.
+                {t.knowledgeSection2Text}
               </p>
             </CardContent>
           </Card>
@@ -87,12 +83,10 @@ export default function KnowledgePage() {
           <Card className="p-6 rounded-2xl shadow">
             <CardContent>
               <h3 className="text-xl font-semibold mb-3">
-                AI-Assisted Querying
+                {t.knowledgeSection3Title}
               </h3>
               <p className="text-muted-foreground">
-                Interact with your knowledge base using natural language queries to retrieve relevant insights efficiently.
-                <br /><br />
-                The system is designed to assist exploration and does not guarantee completeness or accuracy of retrieved results.
+                {t.knowledgeSection3Text}
               </p>
             </CardContent>
           </Card>
@@ -103,12 +97,10 @@ export default function KnowledgePage() {
           <Card className="p-6 rounded-2xl shadow">
             <CardContent>
               <h3 className="text-xl font-semibold mb-3">
-                Custom Knowledge Integration
+                {t.knowledgeSection4Title}
               </h3>
               <p className="text-muted-foreground">
-                Integrate proprietary documents and datasets into a unified knowledge environment tailored to your organization.
-                <br /><br />
-                Users are responsible for ensuring appropriate permissions, data governance, and compliance with applicable regulations.
+                {t.knowledgeSection4Text}
               </p>
             </CardContent>
           </Card>
@@ -122,11 +114,11 @@ export default function KnowledgePage() {
           whileInView={{ opacity: 1, y: 0 }}
           className="text-3xl font-semibold mb-4"
         >
-          Built for Engineering Workflows
+          {t.knowledgeWorkflowTitle}
         </motion.h2>
 
         <p className="text-muted-foreground">
-          Designed to support engineers, analysts, and technical teams in managing and interacting with complex knowledge systems across multiple stages of work.
+          {t.knowledgeWorkflowText}
         </p>
       </div>
 
@@ -135,14 +127,10 @@ export default function KnowledgePage() {
         <Card className="p-6 rounded-2xl border border-border">
           <CardContent>
             <h3 className="text-xl font-semibold mb-3">
-              Important Notice
+              {t.knowledgeDisclaimerTitle}
             </h3>
             <p className="text-muted-foreground text-sm">
-              This platform provides AI-assisted knowledge retrieval and analysis tools intended to support engineering workflows.
-              <br /><br />
-              It does not replace professional judgment, certified engineering review, or regulatory compliance processes.
-              <br /><br />
-              Users are responsible for verifying outputs, ensuring compliance with applicable standards, and making final decisions based on their professional expertise.
+              {t.knowledgeDisclaimerText}
             </p>
           </CardContent>
         </Card>
@@ -151,21 +139,21 @@ export default function KnowledgePage() {
       {/* FINAL CTA */}
       <div className="text-center mt-24">
         <h3 className="text-3xl font-semibold mb-4">
-          Start Using AI-Assisted Knowledge Tools
+          {t.knowledgeFinalCtaTitle}
         </h3>
 
         <p className="text-muted-foreground mb-6">
-          Enhance how your team accesses and interacts with engineering knowledge.
+          {t.knowledgeFinalCtaText}
         </p>
 
         <div className="flex justify-center gap-4">
           <Link href="/portal">
-            <Button size="lg">Start Free</Button>
+            <Button size="lg">{t.startFree}</Button>
           </Link>
 
           <Link href="/pricing">
             <Button variant="outline" size="lg">
-              View Pricing
+              {t.viewPricing}
             </Button>
           </Link>
         </div>

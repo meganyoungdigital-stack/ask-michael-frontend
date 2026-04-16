@@ -9,7 +9,8 @@ import { translations } from "@/lib/translations";
 
 export default function MaintenanceIntelligencePage() {
   const lang = useLanguage();
-const t = translations[lang as "en" | "zu" | "af" | "fr"];
+  const t = translations[lang as "en" | "zu" | "af" | "fr"];
+
   return (
     <div className="min-h-screen bg-background px-6 py-20">
 
@@ -27,11 +28,11 @@ const t = translations[lang as "en" | "zu" | "af" | "fr"];
           animate={{ opacity: 1, y: 0 }}
           className="text-5xl font-bold mb-6"
         >
-          Maintenance Intelligence
+          {t.maintenanceTitle}
         </motion.h1>
 
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-          Support maintenance planning and operational awareness with AI-assisted insights derived from data, logs, and system activity.
+          {t.maintenanceDescription}
         </p>
 
         <div className="flex justify-center gap-4">
@@ -41,7 +42,7 @@ const t = translations[lang as "en" | "zu" | "af" | "fr"];
 
           <Link href="/pricing">
             <Button variant="outline" size="lg">
-              View Pricing
+              {t.viewPricing}
             </Button>
           </Link>
         </div>
@@ -55,12 +56,10 @@ const t = translations[lang as "en" | "zu" | "af" | "fr"];
           <Card className="p-6 rounded-2xl shadow">
             <CardContent>
               <h3 className="text-xl font-semibold mb-3">
-                Data-Driven Maintenance Insights
+                {t.maintenanceSection1Title}
               </h3>
-              <p className="text-muted-foreground">
-                Analyze operational data, logs, and historical records to identify patterns that may be relevant to maintenance activities.
-                <br /><br />
-                The system highlights trends and observations to assist teams in understanding system behavior over time.
+              <p className="text-muted-foreground whitespace-pre-line">
+                {t.maintenanceSection1Text}
               </p>
             </CardContent>
           </Card>
@@ -71,12 +70,10 @@ const t = translations[lang as "en" | "zu" | "af" | "fr"];
           <Card className="p-6 rounded-2xl shadow">
             <CardContent>
               <h3 className="text-xl font-semibold mb-3">
-                Anomaly Detection Support
+                {t.maintenanceSection2Title}
               </h3>
-              <p className="text-muted-foreground">
-                Surface unusual patterns or deviations in system data that may require further investigation.
-                <br /><br />
-                These signals are intended to support awareness and should be reviewed by qualified personnel before action is taken.
+              <p className="text-muted-foreground whitespace-pre-line">
+                {t.maintenanceSection2Text}
               </p>
             </CardContent>
           </Card>
@@ -87,12 +84,10 @@ const t = translations[lang as "en" | "zu" | "af" | "fr"];
           <Card className="p-6 rounded-2xl shadow">
             <CardContent>
               <h3 className="text-xl font-semibold mb-3">
-                Predictive Support for Planning
+                {t.maintenanceSection3Title}
               </h3>
-              <p className="text-muted-foreground">
-                Use AI-assisted analysis to support planning by identifying potential risks or inefficiencies based on available data.
-                <br /><br />
-                Outputs are indicative and should not be interpreted as guaranteed predictions or maintenance recommendations.
+              <p className="text-muted-foreground whitespace-pre-line">
+                {t.maintenanceSection3Text}
               </p>
             </CardContent>
           </Card>
@@ -103,12 +98,10 @@ const t = translations[lang as "en" | "zu" | "af" | "fr"];
           <Card className="p-6 rounded-2xl shadow">
             <CardContent>
               <h3 className="text-xl font-semibold mb-3">
-                Maintenance Workflow Support
+                {t.maintenanceSection4Title}
               </h3>
-              <p className="text-muted-foreground">
-                Integrate insights into maintenance workflows to improve visibility and coordination across teams.
-                <br /><br />
-                The platform supports decision-making processes but does not replace established maintenance procedures or protocols.
+              <p className="text-muted-foreground whitespace-pre-line">
+                {t.maintenanceSection4Text}
               </p>
             </CardContent>
           </Card>
@@ -123,11 +116,11 @@ const t = translations[lang as "en" | "zu" | "af" | "fr"];
           whileInView={{ opacity: 1, y: 0 }}
           className="text-3xl font-semibold mb-4"
         >
-          Supporting Proactive Maintenance Strategies
+          {t.maintenanceWorkflowTitle}
         </motion.h2>
 
         <p className="text-muted-foreground">
-          Designed to assist teams in improving maintenance awareness, planning efficiency, and operational visibility across industrial environments.
+          {t.maintenanceWorkflowText}
         </p>
       </div>
 
@@ -136,14 +129,10 @@ const t = translations[lang as "en" | "zu" | "af" | "fr"];
         <Card className="p-6 rounded-2xl border border-border">
           <CardContent>
             <h3 className="text-xl font-semibold mb-3">
-              Important Notice
+              {t.maintenanceDisclaimerTitle}
             </h3>
-            <p className="text-muted-foreground text-sm">
-              This platform provides AI-assisted insights intended to support maintenance planning and operational awareness.
-              <br /><br />
-              It does not provide guaranteed predictions, maintenance instructions, or safety assurances.
-              <br /><br />
-              Users are responsible for verifying all outputs, following established procedures, and making final decisions based on qualified professional judgment.
+            <p className="text-muted-foreground text-sm whitespace-pre-line">
+              {t.maintenanceDisclaimerText}
             </p>
           </CardContent>
         </Card>
@@ -152,21 +141,21 @@ const t = translations[lang as "en" | "zu" | "af" | "fr"];
       {/* FINAL CTA */}
       <div className="text-center mt-24">
         <h3 className="text-3xl font-semibold mb-4">
-          Improve Maintenance Visibility with AI Support
+          {t.maintenanceFinalCtaTitle}
         </h3>
 
         <p className="text-muted-foreground mb-6">
-          Use AI-assisted insights to support planning, identify trends, and enhance operational awareness.
+          {t.maintenanceFinalCtaText}
         </p>
 
         <div className="flex justify-center gap-4">
           <Link href="/portal">
-            <Button size="lg">Start Free</Button>
+            <Button size="lg">{t.startFree}</Button>
           </Link>
 
           <Link href="/pricing">
             <Button variant="outline" size="lg">
-              View Pricing
+              {t.viewPricing}
             </Button>
           </Link>
         </div>

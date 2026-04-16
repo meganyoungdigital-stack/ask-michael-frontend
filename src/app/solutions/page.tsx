@@ -11,6 +11,7 @@ export default function SolutionsPage() {
 
   const lang = useLanguage();
   const t = translations[lang as "en" | "zu" | "af" | "fr"];
+
   return (
     <div className="min-h-screen bg-background px-6 py-20">
 
@@ -21,11 +22,11 @@ export default function SolutionsPage() {
           animate={{ opacity: 1, y: 0 }}
           className="text-5xl font-bold mb-6"
         >
-          Engineering Intelligence, Augmented by AI
+          {t.solutionsHeroTitle}
         </motion.h1>
 
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-          Support your engineering workflows with AI-assisted insights across standards, operations, and design — built to enhance decision-making, not replace it.
+          {t.solutionsHeroText}
         </p>
 
         <div className="flex justify-center gap-4">
@@ -34,7 +35,7 @@ export default function SolutionsPage() {
           </Link>
           <Link href="/pricing">
             <Button variant="outline" size="lg">
-              View Pricing
+              {t.viewPricing}
             </Button>
           </Link>
         </div>
@@ -48,12 +49,10 @@ export default function SolutionsPage() {
           <Card className="p-6 rounded-2xl shadow">
             <CardContent>
               <h3 className="text-xl font-semibold mb-3">
-                AI-Assisted Access to Engineering Standards
+                {t.solutionsSection1Title}
               </h3>
               <p className="text-muted-foreground">
-                Quickly explore and reference engineering standards, internal documentation, and technical knowledge through an AI-assisted interface.
-                <br /><br />
-                The platform helps surface relevant information to support your work — while final interpretation and compliance remain the responsibility of qualified professionals.
+                {t.solutionsSection1Text}
               </p>
             </CardContent>
           </Card>
@@ -64,18 +63,16 @@ export default function SolutionsPage() {
           <Card className="p-6 rounded-2xl shadow">
             <CardContent>
               <h3 className="text-xl font-semibold mb-3">
-                Data-Informed Operational Insights
+                {t.solutionsSection2Title}
               </h3>
               <p className="text-muted-foreground mb-4">
-                Analyze production logs, sensor data, and operational inputs with AI-supported pattern recognition.
-                <br /><br />
-                The system highlights trends and potential anomalies to assist teams in identifying areas for further investigation.
+                {t.solutionsSection2Text}
               </p>
 
               <ul className="text-sm text-muted-foreground space-y-2">
-                <li>• Detect patterns in production data</li>
-                <li>• Surface anomalies for review</li>
-                <li>• Support data-driven decision-making</li>
+                <li>{t.solutionsSection2Bullet1}</li>
+                <li>{t.solutionsSection2Bullet2}</li>
+                <li>{t.solutionsSection2Bullet3}</li>
               </ul>
             </CardContent>
           </Card>
@@ -86,12 +83,10 @@ export default function SolutionsPage() {
           <Card className="p-6 rounded-2xl shadow">
             <CardContent>
               <h3 className="text-xl font-semibold mb-3">
-                Predictive Analysis for Proactive Planning
+                {t.solutionsSection3Title}
               </h3>
               <p className="text-muted-foreground">
-                Use AI-driven analysis to identify potential risks and inefficiencies based on historical and real-time data.
-                <br /><br />
-                These insights are intended to support planning and operational awareness, and should be validated by engineering teams before implementation.
+                {t.solutionsSection3Text}
               </p>
             </CardContent>
           </Card>
@@ -102,12 +97,10 @@ export default function SolutionsPage() {
           <Card className="p-6 rounded-2xl shadow">
             <CardContent>
               <h3 className="text-xl font-semibold mb-3">
-                AI Co-Pilot for Drawings and Visual Data
+                {t.solutionsSection4Title}
               </h3>
               <p className="text-muted-foreground">
-                Interact with engineering drawings, CAD files, and visual data using AI-assisted interpretation tools.
-                <br /><br />
-                The platform can help identify elements, highlight patterns, and support review workflows — while final verification remains the responsibility of the user.
+                {t.solutionsSection4Text}
               </p>
             </CardContent>
           </Card>
@@ -121,13 +114,11 @@ export default function SolutionsPage() {
           whileInView={{ opacity: 1, y: 0 }}
           className="text-3xl font-semibold mb-4"
         >
-          One Platform, Multiple Engineering Functions
+          {t.solutionsWorkflowTitle}
         </motion.h2>
 
         <p className="text-muted-foreground">
-          Bring together knowledge retrieval, operational insights, and visual analysis into a unified workflow.
-          <br /><br />
-          Designed to integrate into existing engineering environments and support teams across multiple stages of the process.
+          {t.solutionsWorkflowText}
         </p>
       </div>
 
@@ -136,12 +127,10 @@ export default function SolutionsPage() {
         <Card className="p-6 rounded-2xl border border-border">
           <CardContent>
             <h3 className="text-xl font-semibold mb-3">
-              Important Notice
+              {t.solutionsDisclaimerTitle}
             </h3>
             <p className="text-muted-foreground text-sm">
-              This platform provides AI-assisted insights intended to support engineering workflows. It does not replace professional judgment, certified engineering review, or regulatory compliance processes.
-              <br /><br />
-              Users are responsible for verifying outputs, ensuring compliance with applicable standards, and making final decisions.
+              {t.solutionsDisclaimerText}
             </p>
           </CardContent>
         </Card>
@@ -150,21 +139,21 @@ export default function SolutionsPage() {
       {/* FINAL CTA */}
       <div className="text-center mt-24">
         <h3 className="text-3xl font-semibold mb-4">
-          Enhance Your Engineering Workflow with AI Support
+          {t.solutionsFinalTitle}
         </h3>
 
         <p className="text-muted-foreground mb-6">
-          Start using AI-assisted tools to support analysis, improve efficiency, and streamline engineering processes.
+          {t.solutionsFinalText}
         </p>
 
         <div className="flex justify-center gap-4">
           <Link href="/portal">
-            <Button size="lg">Start Free</Button>
+            <Button size="lg">{t.startFree}</Button>
           </Link>
 
           <Link href="/pricing">
             <Button variant="outline" size="lg">
-              View Pricing
+              {t.viewPricing}
             </Button>
           </Link>
         </div>
