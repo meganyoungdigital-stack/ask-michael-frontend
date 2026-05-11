@@ -8,8 +8,8 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { translations } from "@/lib/translations";
 
 export default function TermsPage() {
-  const lang = useLanguage();
-  const t = translations[lang as "en" | "zu" | "af" | "fr"];
+  const lang = useLanguage() as keyof typeof translations;
+const t = translations[lang];
 
   return (
     <div className="min-h-screen bg-background px-6 py-20">

@@ -8,8 +8,8 @@ import { translations } from "@/lib/translations";
 export default function ProfilePage() {
   const router = useRouter();
 
-  const lang = useLanguage();
-  const t = translations[lang as "en" | "zu" | "af" | "fr"];
+  const lang = useLanguage() as keyof typeof translations;
+const t = translations[lang];
 
   const [tier, setTier] = useState("free");
   const [status, setStatus] = useState("inactive");

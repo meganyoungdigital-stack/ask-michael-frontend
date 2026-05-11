@@ -8,8 +8,8 @@ import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 
 export default function Navbar() {
-  const lang = useLanguage();
-  const t = translations[lang as "en" | "zu" | "af" | "fr"];
+  const lang = useLanguage() as keyof typeof translations;
+const t = translations[lang];
 
   const { isLoaded, isSignedIn } = useUser();
   const pathname = usePathname();

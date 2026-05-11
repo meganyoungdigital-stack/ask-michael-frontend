@@ -13,8 +13,8 @@ import { useUser } from "@clerk/nextjs";
 import { useEffect } from "react";
 
 export default function PricingPage() {
-  const lang = useLanguage();
-  const t = translations[lang as "en" | "zu" | "af" | "fr"];
+  const lang = useLanguage() as keyof typeof translations;
+const t = translations[lang];
   const { user } = useUser();
 
   useEffect(() => {

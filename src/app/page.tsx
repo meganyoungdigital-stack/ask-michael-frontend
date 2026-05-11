@@ -31,7 +31,7 @@ export default function LandingPage() {
     };
   }, []);
 
-  const t = translations[lang as "en" | "zu" | "af" | "fr"];
+const t = translations[lang as keyof typeof translations];
 
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);

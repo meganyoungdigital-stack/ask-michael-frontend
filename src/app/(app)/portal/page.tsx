@@ -7,8 +7,8 @@ import { useUser } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 
 export default function PortalPage() {
-  const lang = useLanguage();
-const t = translations[lang as "en" | "zu" | "af" | "fr"];
+  const lang = useLanguage() as keyof typeof translations;
+const t = translations[lang];
   const router = useRouter();
   const { isLoaded, isSignedIn } = useUser();
 
