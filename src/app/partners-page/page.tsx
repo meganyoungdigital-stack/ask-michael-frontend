@@ -23,54 +23,110 @@ export default function PartnersPage() {
 
     e.preventDefault();
 
+    setSubmitted(false);
+
+
+    if (
+      !formData.companyName ||
+      !formData.contactName ||
+      !formData.email ||
+      !formData.message
+    ) {
+
+      alert(
+        "Please complete all required fields."
+      );
+
+      return;
+
+    }
+
+
     setLoading(true);
 
+
     try {
+
+      console.log(
+        "Sending partner application:",
+        formData
+      );
+
 
       const response = await fetch(
         "/api/partners/apply",
         {
           method: "POST",
+
           headers: {
             "Content-Type": "application/json",
           },
+
           body: JSON.stringify(formData),
         }
       );
 
 
+
+      const result = await response.json();
+
+
+
+      console.log(
+        "API response:",
+        result
+      );
+
+
+
       if (!response.ok) {
-        throw new Error("Submission failed");
+
+        throw new Error(
+          result.error ||
+          "Submission failed"
+        );
+
       }
+
 
 
       setSubmitted(true);
 
 
+
       setFormData({
+
         companyName: "",
         contactName: "",
         email: "",
         website: "",
         message: "",
+
       });
 
 
+
     } catch (error) {
+
 
       console.error(
         "Partner application error:",
         error
       );
 
+
       alert(
-        "Something went wrong. Please try again."
+        error instanceof Error
+          ? error.message
+          : "Something went wrong."
       );
 
 
     } finally {
 
+
       setLoading(false);
+
 
     }
 
@@ -79,20 +135,26 @@ export default function PartnersPage() {
 
 
   return (
+
     <main className="min-h-screen bg-white px-6 py-20">
 
+
       <section className="mx-auto max-w-5xl text-center">
+
 
         <h1 className="text-5xl font-bold">
           Partner With Ask Michael AI
         </h1>
+
 
         <p className="mt-6 text-xl text-gray-600">
           Integrate powerful AI capabilities into your software,
           website, or application through our partnership program.
         </p>
 
+
       </section>
+
 
 
 
@@ -148,6 +210,7 @@ export default function PartnersPage() {
 
 
 
+
       <section className="mx-auto mt-20 max-w-xl">
 
 
@@ -177,6 +240,8 @@ export default function PartnersPage() {
 
 
           <input
+            type="text"
+            required
             className="w-full rounded border p-3"
             placeholder="Company Name"
             value={formData.companyName}
@@ -190,7 +255,10 @@ export default function PartnersPage() {
 
 
 
+
           <input
+            type="text"
+            required
             className="w-full rounded border p-3"
             placeholder="Your Name"
             value={formData.contactName}
@@ -204,10 +272,12 @@ export default function PartnersPage() {
 
 
 
+
           <input
+            type="email"
+            required
             className="w-full rounded border p-3"
             placeholder="Email"
-            type="email"
             value={formData.email}
             onChange={(e) =>
               setFormData({
@@ -219,7 +289,9 @@ export default function PartnersPage() {
 
 
 
+
           <input
+            type="text"
             className="w-full rounded border p-3"
             placeholder="Website"
             value={formData.website}
@@ -233,7 +305,10 @@ export default function PartnersPage() {
 
 
 
+
           <textarea
+
+            required
 
             className="w-full rounded border p-3"
 
@@ -254,8 +329,13 @@ export default function PartnersPage() {
 
 
           <button
+
+            type="submit"
+
             disabled={loading}
+
             className="w-full rounded bg-black p-3 text-white disabled:opacity-50"
+
           >
 
             {loading
@@ -274,6 +354,7 @@ export default function PartnersPage() {
 
 
     </main>
+
   );
 
 }
