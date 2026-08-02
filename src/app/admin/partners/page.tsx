@@ -80,7 +80,7 @@ export default function PartnersAdminPage() {
 
   return (
 
-    <main className="min-h-screen p-10 text-gray-900">
+    <main className="min-h-screen pt-32 px-10 text-gray-900">
 
       <p>
         Loading partner applications...
@@ -112,7 +112,7 @@ export default function PartnersAdminPage() {
 
   return (
 
-    <main className="min-h-screen bg-gray-50 p-10">
+    <main className="min-h-screen bg-gray-50 pt-32 px-10 pb-10">
 
 
       <h1 className="text-4xl font-bold mb-8 text-gray-900">
