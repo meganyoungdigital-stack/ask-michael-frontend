@@ -1,5 +1,12 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
+import { Resend } from "resend";
+
+
+const resend = new Resend(
+  process.env.RESEND_API_KEY
+);
+
 
 
 export async function POST(req: Request) {
@@ -7,6 +14,7 @@ export async function POST(req: Request) {
   try {
 
     const body = await req.json();
+
 
     const {
       companyName,
@@ -17,12 +25,14 @@ export async function POST(req: Request) {
     } = body;
 
 
+
     if (
       !companyName ||
       !contactName ||
       !email ||
       !message
     ) {
+
       return NextResponse.json(
         {
           error: "Missing required fields",
@@ -31,10 +41,14 @@ export async function POST(req: Request) {
           status: 400,
         }
       );
+
     }
 
 
+
+
     const { db } = await connectToDatabase();
+
 
 
     await db.collection("partner_applications").insertOne({
@@ -56,18 +70,85 @@ export async function POST(req: Request) {
     });
 
 
+
+
+
+
+    // Send email notification
+
+    await resend.emails.send({
+
+      from: "Ask Michael AI <noreply@askmichaelai.org>",
+
+      to: [
+        "askmichael@askmichaelai.org"
+      ],
+
+      subject: "New Partner Application Received",
+
+      html: `
+
+        <h2>New Partner Application</h2>
+
+        <p>
+          <strong>Company:</strong>
+          ${companyName}
+        </p>
+
+
+        <p>
+          <strong>Contact Name:</strong>
+          ${contactName}
+        </p>
+
+
+        <p>
+          <strong>Email:</strong>
+          ${email}
+        </p>
+
+
+        <p>
+          <strong>Website:</strong>
+          ${website || "Not provided"}
+        </p>
+
+
+        <p>
+          <strong>Message:</strong>
+        </p>
+
+
+        <p>
+          ${message}
+        </p>
+
+
+      `,
+
+    });
+
+
+
+
+
     return NextResponse.json(
+
       {
         success: true,
         message: "Application submitted successfully",
       },
+
       {
         status: 201,
       }
+
     );
 
 
+
   } catch (error) {
+
 
     console.error(
       "Partner application error:",
@@ -75,13 +156,17 @@ export async function POST(req: Request) {
     );
 
 
+
     return NextResponse.json(
+
       {
         error: "Something went wrong",
       },
+
       {
         status: 500,
       }
+
     );
 
   }
