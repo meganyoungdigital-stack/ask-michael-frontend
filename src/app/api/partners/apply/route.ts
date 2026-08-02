@@ -78,7 +78,7 @@ export async function POST(req: Request) {
 
     const { data, error } = await resend.emails.send({
 
-      from: "Ask Michael AI <onboarding@resend.dev>",
+      from: "Ask Michael AI <noreply@askmichaelai.org>",
 
       to: [
         "askmichael@askmichaelai.org"
