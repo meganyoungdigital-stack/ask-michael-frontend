@@ -96,6 +96,8 @@ askmichael@askmichaelai.org
 
 {/* Solutions */}
 
+{/* Solutions */}
+
 <div>
 
 <h3 className="text-white font-semibold mb-4">{t.footerSolutions}</h3>
@@ -111,6 +113,12 @@ askmichael@askmichaelai.org
 <li>
 <Link href="/contact" className="hover:text-white">
 {t.footerContact}
+</Link>
+</li>
+
+<li>
+<Link href="/partners-page" className="hover:text-white">
+Partners
 </Link>
 </li>
 
