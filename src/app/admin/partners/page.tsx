@@ -78,11 +78,21 @@ export default function PartnersAdminPage() {
 
   if (loading) {
 
-    return (
-  <div className="p-10 text-black">
-    TEST ADMIN PAGE
-  </div>
-);
+  return (
+
+    <main className="min-h-screen p-10 text-gray-900">
+
+      <p>
+        Loading partner applications...
+      </p>
+
+    </main>
+
+  );
+
+
+
+
 
       <main className="min-h-screen p-10">
 
