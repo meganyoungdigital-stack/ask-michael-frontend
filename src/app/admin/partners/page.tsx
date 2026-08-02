@@ -79,6 +79,10 @@ export default function PartnersAdminPage() {
   if (loading) {
 
     return (
+  <div className="p-10 text-black">
+    TEST ADMIN PAGE
+  </div>
+);
 
       <main className="min-h-screen p-10">
 
@@ -88,7 +92,7 @@ export default function PartnersAdminPage() {
 
       </main>
 
-    );
+    
 
   }
 
