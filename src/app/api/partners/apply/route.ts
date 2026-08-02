@@ -13,7 +13,9 @@ export async function POST(req: Request) {
 
   try {
 
+
     const body = await req.json();
+
 
 
     const {
@@ -74,41 +76,98 @@ export async function POST(req: Request) {
 
 
 
-    // Send email notification
+    const { data, error } = await resend.emails.send({
 
-    const emailResponse = await resend.emails.send({
+      from: "Ask Michael AI <onboarding@resend.dev>",
 
-  from: "Ask Michael AI <noreply@askmichaelai.org>",
+      to: [
+        "askmichael@askmichaelai.org"
+      ],
 
-  to: [
-    "askmichael@askmichaelai.org"
-  ],
+      subject: "New Partner Application Received",
 
-  subject: "New Partner Application Received",
+      html: `
 
-  html: `
-
-    <h2>New Partner Application</h2>
-
-    <p><strong>Company:</strong> ${companyName}</p>
-
-    <p><strong>Contact Name:</strong> ${contactName}</p>
-
-    <p><strong>Email:</strong> ${email}</p>
-
-    <p><strong>Website:</strong> ${website || "Not provided"}</p>
-
-    <p><strong>Message:</strong> ${message}</p>
-
-  `,
-
-});
+        <h2>
+          New Partner Application
+        </h2>
 
 
-console.log(
-  "RESEND RESPONSE:",
-  emailResponse
-);
+        <p>
+          <strong>Company:</strong>
+          ${companyName}
+        </p>
+
+
+        <p>
+          <strong>Contact Name:</strong>
+          ${contactName}
+        </p>
+
+
+        <p>
+          <strong>Email:</strong>
+          ${email}
+        </p>
+
+
+        <p>
+          <strong>Website:</strong>
+          ${website || "Not provided"}
+        </p>
+
+
+        <p>
+          <strong>Message:</strong>
+        </p>
+
+
+        <p>
+          ${message}
+        </p>
+
+
+      `,
+
+    });
+
+
+
+
+
+
+    if (error) {
+
+      console.error(
+        "RESEND ERROR:",
+        error
+      );
+
+
+      return NextResponse.json(
+
+        {
+          error: "Application saved but email failed",
+          resendError: error,
+        },
+
+        {
+          status: 500,
+        }
+
+      );
+
+    }
+
+
+
+
+
+    console.log(
+      "RESEND SUCCESS:",
+      data
+    );
+
 
 
 
@@ -118,7 +177,11 @@ console.log(
 
       {
         success: true,
+
         message: "Application submitted successfully",
+
+        emailId: data?.id,
+
       },
 
       {
@@ -126,6 +189,8 @@ console.log(
       }
 
     );
+
+
 
 
 
@@ -150,6 +215,7 @@ console.log(
       }
 
     );
+
 
   }
 
