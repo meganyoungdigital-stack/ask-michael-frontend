@@ -105,7 +105,7 @@ export default function PartnersAdminPage() {
     <main className="min-h-screen bg-gray-50 p-10">
 
 
-      <h1 className="text-4xl font-bold mb-8">
+      <h1 className="text-4xl font-bold mb-8 text-gray-900">
 
         Partner Applications
 
@@ -119,7 +119,7 @@ export default function PartnersAdminPage() {
 
         {applications.length === 0 && (
 
-          <div className="bg-white rounded-xl border p-6">
+          <div className="bg-white rounded-xl border p-6 text-gray-900">
 
             No partner applications found.
 
@@ -148,7 +148,7 @@ export default function PartnersAdminPage() {
               <div>
 
 
-                <h2 className="text-xl font-bold">
+                <h2 className="text-xl font-bold text-gray-900">
 
                   {partner.companyName}
 
