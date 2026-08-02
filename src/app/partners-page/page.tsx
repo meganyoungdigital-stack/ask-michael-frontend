@@ -240,10 +240,10 @@ export default function PartnersPage() {
 
 
           <input
-            type="text"
-            required
-            className="w-full rounded border p-3"
-            placeholder="Company Name"
+  type="text"
+  required
+  className="w-full rounded border p-3 text-black placeholder:text-gray-400"
+  placeholder="Company Name"
             value={formData.companyName}
             onChange={(e) =>
               setFormData({
@@ -259,7 +259,7 @@ export default function PartnersPage() {
           <input
             type="text"
             required
-            className="w-full rounded border p-3"
+            className="w-full rounded border p-3 text-black placeholder:text-gray-400"
             placeholder="Your Name"
             value={formData.contactName}
             onChange={(e) =>
@@ -276,7 +276,7 @@ export default function PartnersPage() {
           <input
             type="email"
             required
-            className="w-full rounded border p-3"
+            className="w-full rounded border p-3 text-black placeholder:text-gray-400"
             placeholder="Email"
             value={formData.email}
             onChange={(e) =>
@@ -291,9 +291,9 @@ export default function PartnersPage() {
 
 
           <input
-            type="text"
-            className="w-full rounded border p-3"
-            placeholder="Website"
+  type="text"
+  className="w-full rounded border p-3 text-black placeholder:text-gray-400"
+  placeholder="Website"
             value={formData.website}
             onChange={(e) =>
               setFormData({
@@ -307,12 +307,9 @@ export default function PartnersPage() {
 
 
           <textarea
-
-            required
-
-            className="w-full rounded border p-3"
-
-            placeholder="Tell us about your software and AI needs"
+  required
+  className="w-full rounded border p-3 text-black placeholder:text-gray-400"
+  placeholder="Tell us about your software and AI needs"
 
             value={formData.message}
 
