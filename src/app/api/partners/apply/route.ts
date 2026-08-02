@@ -76,57 +76,39 @@ export async function POST(req: Request) {
 
     // Send email notification
 
-    await resend.emails.send({
+    const emailResponse = await resend.emails.send({
 
-      from: "Ask Michael AI <noreply@askmichaelai.org>",
+  from: "Ask Michael AI <noreply@askmichaelai.org>",
 
-      to: [
-        "askmichael@askmichaelai.org"
-      ],
+  to: [
+    "askmichael@askmichaelai.org"
+  ],
 
-      subject: "New Partner Application Received",
+  subject: "New Partner Application Received",
 
-      html: `
+  html: `
 
-        <h2>New Partner Application</h2>
+    <h2>New Partner Application</h2>
 
-        <p>
-          <strong>Company:</strong>
-          ${companyName}
-        </p>
+    <p><strong>Company:</strong> ${companyName}</p>
 
+    <p><strong>Contact Name:</strong> ${contactName}</p>
 
-        <p>
-          <strong>Contact Name:</strong>
-          ${contactName}
-        </p>
+    <p><strong>Email:</strong> ${email}</p>
 
+    <p><strong>Website:</strong> ${website || "Not provided"}</p>
 
-        <p>
-          <strong>Email:</strong>
-          ${email}
-        </p>
+    <p><strong>Message:</strong> ${message}</p>
+
+  `,
+
+});
 
 
-        <p>
-          <strong>Website:</strong>
-          ${website || "Not provided"}
-        </p>
-
-
-        <p>
-          <strong>Message:</strong>
-        </p>
-
-
-        <p>
-          ${message}
-        </p>
-
-
-      `,
-
-    });
+console.log(
+  "RESEND RESPONSE:",
+  emailResponse
+);
 
 
 
