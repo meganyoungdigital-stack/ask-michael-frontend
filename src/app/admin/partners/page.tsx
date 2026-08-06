@@ -29,7 +29,7 @@ export default function PartnersAdminPage() {
 
 
   const [applications, setApplications] = useState<PartnerApplication[]>([]);
-
+  const [updating, setUpdating] = useState("");
   const [loading, setLoading] = useState(true);
 
 
@@ -91,17 +91,7 @@ export default function PartnersAdminPage() {
   );
 
 
-
-
-
-      <main className="min-h-screen p-10">
-
-        <p>
-          Loading partner applications...
-        </p>
-
-      </main>
-
+   
     
 
   }
@@ -109,7 +99,60 @@ export default function PartnersAdminPage() {
 
 
 
+async function updatePartnerStatus(
+  id: string,
+  status: string
+) {
 
+  try {
+
+    setUpdating(id);
+
+
+    await fetch(
+      "/api/admin/partners",
+      {
+        method: "PATCH",
+
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify({
+          id,
+          status,
+        }),
+
+      }
+    );
+
+
+    setApplications((current) =>
+      current.map((partner) =>
+        partner._id === id
+          ? {
+              ...partner,
+              status,
+            }
+          : partner
+      )
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      "Status update failed",
+      error
+    );
+
+  } finally {
+
+    setUpdating("");
+
+  }
+
+}
   return (
 
     <main className="min-h-screen bg-gray-50 pt-32 px-10 pb-10">
@@ -217,9 +260,55 @@ export default function PartnersAdminPage() {
 
               <p className="text-gray-700">
 
-                {partner.message}
+  {partner.message}
 
-              </p>
+</p>
+
+
+<div className="mt-6 flex gap-4">
+
+
+  <button
+    onClick={() =>
+      updatePartnerStatus(
+        partner._id,
+        "approved"
+      )
+    }
+    disabled={updating === partner._id}
+    className="rounded bg-green-600 px-4 py-2 text-white hover:bg-green-700 disabled:opacity-50"
+  >
+
+    {updating === partner._id
+      ? "Updating..."
+      : "Approve"
+    }
+
+  </button>
+
+
+
+
+  <button
+    onClick={() =>
+      updatePartnerStatus(
+        partner._id,
+        "rejected"
+      )
+    }
+    disabled={updating === partner._id}
+    className="rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:opacity-50"
+  >
+
+    {updating === partner._id
+      ? "Updating..."
+      : "Reject"
+    }
+
+  </button>
+
+
+</div>
 
 
             </div>
