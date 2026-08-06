@@ -40,15 +40,22 @@ export default function PartnersAdminPage() {
 
       try {
 
-        const response = await fetch(
-          "/api/admin/partners"
-        );
+        const response = await fetch("/api/admin/partners");
 
+if (!response.ok) {
+  throw new Error("Failed to load partner applications");
+}
 
-        const data = await response.json();
+const data = await response.json();
 
+console.log("Partner applications:", data);
 
-        setApplications(data);
+if (Array.isArray(data)) {
+  setApplications(data);
+} else {
+  console.error("Unexpected API response:", data);
+  setApplications([]);
+}
 
 
       } catch (error) {
