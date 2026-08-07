@@ -72,6 +72,10 @@ export async function PATCH(req: Request) {
       status,
     } = await req.json();
 
+    console.log("PATCH CALLED");
+console.log("Status:", status);
+console.log("ID:", id);
+
 
 
 
@@ -108,7 +112,7 @@ export async function PATCH(req: Request) {
             new ObjectId(id),
 
         });
-
+       console.log("Application found:", application);
 
 
 
@@ -164,9 +168,10 @@ export async function PATCH(req: Request) {
 
 
     // Create registration invitation after approval
-
+    console.log("Checking approval status:", status);
     if(status === "approved"){
 
+     console.log("APPROVAL BLOCK ENTERED");
 
 
       const existingInvitation =
@@ -194,35 +199,35 @@ export async function PATCH(req: Request) {
 
 
 
-
+console.log("Creating invitation...");
 
         await db
-          .collection("partner_invitations")
-          .insertOne({
+  .collection("partner_invitations")
+  .insertOne({
 
-            companyName:
-              application.companyName,
+    companyName:
+      application.companyName,
+
+    contactName:
+      application.contactName,
+
+    email:
+      application.email,
+
+    token,
+
+    status:
+      "pending",
+
+    createdAt:
+      new Date(),
+
+  });
 
 
-            contactName:
-              application.contactName,
-
-
-            email:
-              application.email,
-
-
-            token,
-
-
-            status:
-              "pending",
-
-
-            createdAt:
-              new Date(),
-
-          });
+console.log(
+  "Invitation created successfully"
+);
 
 
 
