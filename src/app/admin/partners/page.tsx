@@ -233,11 +233,19 @@ async function updatePartnerStatus(
 
 
 
-              <span className="rounded bg-yellow-100 px-3 py-1 text-sm">
-
-                {partner.status}
-
-              </span>
+              <span
+  className={`rounded px-3 py-1 text-sm font-semibold ${
+    partner.status === "approved"
+      ? "bg-green-100 text-green-700"
+      : partner.status === "rejected"
+      ? "bg-red-100 text-red-700"
+      : partner.status === "suspended"
+      ? "bg-orange-100 text-orange-700"
+      : "bg-yellow-100 text-yellow-700"
+  }`}
+>
+  {partner.status}
+</span>
 
 
             </div>
@@ -313,7 +321,20 @@ async function updatePartnerStatus(
     }
 
   </button>
-
+<button
+  onClick={() =>
+    updatePartnerStatus(
+      partner._id,
+      "suspended"
+    )
+  }
+  disabled={updating === partner._id}
+  className="rounded bg-orange-600 px-4 py-2 text-white hover:bg-orange-700 disabled:opacity-50"
+>
+  {updating === partner._id
+    ? "Updating..."
+    : "Suspend"}
+</button>
 
 </div>
 

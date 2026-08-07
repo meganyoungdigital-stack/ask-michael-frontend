@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
+import { ObjectId } from "mongodb";
+import bcrypt from "bcrypt";
+import { randomBytes } from "crypto";
+
 
 
 export async function GET() {
@@ -26,7 +30,12 @@ export async function GET() {
 
   } catch (error) {
 
-    console.error("Admin partners fetch error:", error);
+
+    console.error(
+      "Admin partners fetch error:",
+      error
+    );
+
 
     return NextResponse.json(
       {
@@ -44,20 +53,13 @@ export async function GET() {
 
 }
 
-
-
-
 export async function PATCH(req: Request) {
 
   try {
-
-    const body = await req.json();
-
-
     const {
       id,
       status,
-    } = body;
+    } = await req.json();
 
 
 
@@ -80,11 +82,38 @@ export async function PATCH(req: Request) {
 
 
 
+    const application =
+      await db
+        .collection("partner_applications")
+        .findOne({
+          _id: new ObjectId(id),
+        });
+
+
+
+    if (!application) {
+
+      return NextResponse.json(
+        {
+          error: "Partner application not found",
+        },
+        {
+          status: 404,
+        }
+      );
+
+    }
+
+
+
+
+    // Update application status
+
     await db
       .collection("partner_applications")
       .updateOne(
         {
-          _id: new (await import("mongodb")).ObjectId(id),
+          _id: new ObjectId(id),
         },
         {
           $set: {
@@ -96,6 +125,121 @@ export async function PATCH(req: Request) {
 
 
 
+
+
+
+    // Create partner account when approved
+
+    if (status === "approved") {
+
+
+
+      const existingPartner =
+        await db
+          .collection("partners")
+          .findOne({
+            email: application.email,
+          });
+
+
+
+      if (!existingPartner) {
+
+
+
+        const temporaryPassword =
+          randomBytes(6)
+            .toString("hex");
+
+
+
+        const passwordHash =
+          await bcrypt.hash(
+            temporaryPassword,
+            10
+          );
+
+
+
+        const apiKey =
+          "am_live_" +
+          randomBytes(24)
+            .toString("hex");
+
+
+
+
+
+        await db
+          .collection("partners")
+          .insertOne({
+
+            companyName:
+              application.companyName,
+
+
+            contactName:
+              application.contactName,
+
+
+            email:
+              application.email,
+
+
+            passwordHash,
+
+
+            apiKey,
+
+
+            status:
+              "approved",
+
+
+            monthlyFee:
+              1999,
+
+
+            pricePerMessage:
+              0.05,
+
+
+            messages:
+              0,
+
+
+            createdAt:
+              new Date(),
+
+          });
+
+
+
+
+        console.log(
+          "NEW PARTNER ACCOUNT CREATED"
+        );
+
+
+        console.log(
+          "Temporary Password:",
+          temporaryPassword
+        );
+
+
+        console.log(
+          "API Key:",
+          apiKey
+        );
+
+
+      }
+
+    }
+
+
+
+
     return NextResponse.json(
       {
         success: true,
@@ -104,7 +248,9 @@ export async function PATCH(req: Request) {
     );
 
 
+
   } catch (error) {
+
 
     console.error(
       "Partner status update error:",
@@ -123,6 +269,7 @@ export async function PATCH(req: Request) {
         status: 500,
       }
     );
+
 
   }
 
