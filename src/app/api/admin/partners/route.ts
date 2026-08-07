@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
-import bcrypt from "bcrypt";
-import { randomBytes } from "crypto";
+import crypto from "crypto";
 
 
 
@@ -10,7 +9,9 @@ export async function GET() {
 
   try {
 
+
     const { db } = await connectToDatabase();
+
 
 
     const applications = await db
@@ -28,6 +29,7 @@ export async function GET() {
     );
 
 
+
   } catch (error) {
 
 
@@ -35,6 +37,7 @@ export async function GET() {
       "Admin partners fetch error:",
       error
     );
+
 
 
     return NextResponse.json(
@@ -49,13 +52,21 @@ export async function GET() {
       }
     );
 
+
   }
 
 }
 
+
+
+
+
+
 export async function PATCH(req: Request) {
 
   try {
+
+
     const {
       id,
       status,
@@ -63,18 +74,22 @@ export async function PATCH(req: Request) {
 
 
 
+
     if (!id || !status) {
+
 
       return NextResponse.json(
         {
           error: "Missing id or status",
         },
         {
-          status: 400,
+          status:400,
         }
       );
 
+
     }
+
 
 
 
@@ -82,27 +97,38 @@ export async function PATCH(req: Request) {
 
 
 
+
+
     const application =
       await db
         .collection("partner_applications")
         .findOne({
-          _id: new ObjectId(id),
+
+          _id:
+            new ObjectId(id),
+
         });
+
+
+
 
 
 
     if (!application) {
 
+
       return NextResponse.json(
         {
-          error: "Partner application not found",
+          error:"Partner application not found",
         },
         {
-          status: 404,
+          status:404,
         }
       );
 
+
     }
+
 
 
 
@@ -112,15 +138,22 @@ export async function PATCH(req: Request) {
     await db
       .collection("partner_applications")
       .updateOne(
+
         {
-          _id: new ObjectId(id),
+          _id:
+            new ObjectId(id),
         },
+
         {
-          $set: {
+          $set:
+          {
             status,
-            updatedAt: new Date(),
-          },
+
+            updatedAt:
+              new Date(),
+          }
         }
+
       );
 
 
@@ -128,50 +161,43 @@ export async function PATCH(req: Request) {
 
 
 
-    // Create partner account when approved
-
-    if (status === "approved") {
 
 
+    // Create registration invitation after approval
 
-      const existingPartner =
+    if(status === "approved"){
+
+
+
+      const existingInvitation =
         await db
-          .collection("partners")
+          .collection("partner_invitations")
           .findOne({
-            email: application.email,
+
+            email:
+              application.email,
+
           });
 
 
 
-      if (!existingPartner) {
 
 
 
-        const temporaryPassword =
-          randomBytes(6)
-            .toString("hex");
+      if(!existingInvitation){
 
 
 
-        const passwordHash =
-          await bcrypt.hash(
-            temporaryPassword,
-            10
-          );
+        const token =
+          crypto.randomUUID();
 
-
-
-        const apiKey =
-          "am_live_" +
-          randomBytes(24)
-            .toString("hex");
 
 
 
 
 
         await db
-          .collection("partners")
+          .collection("partner_invitations")
           .insertOne({
 
             companyName:
@@ -186,26 +212,11 @@ export async function PATCH(req: Request) {
               application.email,
 
 
-            passwordHash,
-
-
-            apiKey,
+            token,
 
 
             status:
-              "approved",
-
-
-            monthlyFee:
-              1999,
-
-
-            pricePerMessage:
-              0.05,
-
-
-            messages:
-              0,
+              "pending",
 
 
             createdAt:
@@ -216,46 +227,61 @@ export async function PATCH(req: Request) {
 
 
 
+
+
+
         console.log(
-          "NEW PARTNER ACCOUNT CREATED"
+          "=============================="
         );
 
 
         console.log(
-          "Temporary Password:",
-          temporaryPassword
+          "PARTNER REGISTRATION LINK:"
         );
 
 
         console.log(
-          "API Key:",
-          apiKey
+          `https://askmichaelai.org/partner-register/${token}`
         );
+
+
+        console.log(
+          "=============================="
+        );
+
 
 
       }
+
 
     }
 
 
 
 
+
+
+
     return NextResponse.json(
       {
-        success: true,
+        success:true,
         status,
       }
     );
 
 
 
-  } catch (error) {
+
+
+  } catch(error) {
+
 
 
     console.error(
       "Partner status update error:",
       error
     );
+
 
 
     return NextResponse.json(
@@ -266,11 +292,13 @@ export async function PATCH(req: Request) {
             : "Unknown error",
       },
       {
-        status: 500,
+        status:500,
       }
     );
 
 
+
   }
+
 
 }
