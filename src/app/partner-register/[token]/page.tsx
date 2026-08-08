@@ -13,7 +13,9 @@ export default function PartnerRegisterPage() {
 
 
   const token =
-    params.token as string;
+  typeof params.token === "string"
+    ? params.token
+    : "";
 
 
 
@@ -143,108 +145,93 @@ export default function PartnerRegisterPage() {
 
 return (
 
-<main className="min-h-screen bg-gray-50 flex items-center justify-center px-6">
+  <main className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+
+    <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md">
+
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">
+        Create Partner Account
+      </h1>
 
 
-<div className="bg-white rounded-xl shadow p-8 w-full max-w-md">
+      <form onSubmit={handleSubmit} className="space-y-4">
 
 
-<h1 className="text-3xl font-bold text-gray-900 mb-6 text-center">
+        <input
 
-Create Partner Account
+          type="password"
 
-</h1>
+          placeholder="Create Password"
 
+          className="w-full border rounded p-3 text-black"
 
+          value={password}
 
+          onChange={(e)=>
+            setPassword(e.target.value)
+          }
 
-<form
-onSubmit={handleSubmit}
-className="space-y-4"
->
-
-
-<input
-
-type="password"
-
-placeholder="Create Password"
-
-className="w-full border rounded p-3 text-black"
-
-value={password}
-
-onChange={(e)=>
-setPassword(e.target.value)
-}
-
-/>
+        />
 
 
 
-<input
+        <input
 
-type="password"
+          type="password"
 
-placeholder="Confirm Password"
+          placeholder="Confirm Password"
 
-className="w-full border rounded p-3 text-black"
+          className="w-full border rounded p-3 text-black"
 
-value={confirmPassword}
+          value={confirmPassword}
 
-onChange={(e)=>
-setConfirmPassword(e.target.value)
-}
+          onChange={(e)=>
+            setConfirmPassword(e.target.value)
+          }
 
-/>
-
-
-
-
-<button
-
-disabled={loading}
-
-className="w-full bg-black text-white rounded p-3"
-
->
-
-
-{
-loading
-?
-"Creating Account..."
-:
-"Create Account"
-}
-
-
-</button>
+        />
 
 
 
-</form>
+        <button
+
+          type="submit"
+
+          disabled={loading}
+
+          className="w-full bg-black text-white rounded p-3"
+
+        >
+
+          {
+            loading
+            ?
+            "Creating Account..."
+            :
+            "Create Account"
+          }
+
+        </button>
 
 
 
+        {
+          message &&
 
-{
-message &&
+          <p className="text-gray-700 mt-4">
+            {message}
+          </p>
 
-<p className="mt-4 text-center text-gray-700">
-
-{message}
-
-</p>
-
-}
+        }
 
 
+      </form>
 
-</div>
+
+    </div>
 
 
-</main>
+  </main>
 
 );
 
