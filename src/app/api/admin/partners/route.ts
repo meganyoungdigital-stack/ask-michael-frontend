@@ -94,7 +94,7 @@ console.log("ID:", id);
 
     }
 
-
+      
 
 
     const { db } = await connectToDatabase();
@@ -305,5 +305,96 @@ console.log(
 
   }
 
+
+}
+export async function DELETE(req: Request) {
+
+  try {
+
+    const { id } = await req.json();
+
+    console.log("DELETE CALLED");
+    console.log("ID:", id);
+
+
+    if (!id) {
+
+      return NextResponse.json(
+        {
+          error: "Missing partner application id",
+        },
+        {
+          status: 400,
+        }
+      );
+
+    }
+
+
+    const { db } = await connectToDatabase();
+
+
+    const result =
+      await db
+        .collection("partner_applications")
+        .deleteOne({
+
+          _id:
+            new ObjectId(id),
+
+        });
+
+
+
+    if (result.deletedCount === 0) {
+
+
+      return NextResponse.json(
+        {
+          error:
+            "Partner application not found",
+        },
+        {
+          status:404,
+        }
+      );
+
+
+    }
+
+
+
+    return NextResponse.json(
+      {
+        success:true,
+        message:
+          "Partner application deleted",
+      }
+    );
+
+
+  } catch(error) {
+
+
+    console.error(
+      "Partner delete error:",
+      error
+    );
+
+
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unknown error",
+      },
+      {
+        status:500,
+      }
+    );
+
+
+  }
 
 }

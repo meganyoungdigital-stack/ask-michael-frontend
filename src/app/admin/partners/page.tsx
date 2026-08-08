@@ -160,6 +160,62 @@ async function updatePartnerStatus(
   }
 
 }
+async function deletePartner(id: string) {
+
+  const confirmed = window.confirm(
+    "Are you sure you want to permanently delete this partner application?"
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  try {
+
+    setUpdating(id);
+
+    const response = await fetch(
+      "/api/admin/partners",
+      {
+        method: "DELETE",
+
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify({
+          id,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        "Failed to delete partner application"
+      );
+    }
+
+    setApplications((current) =>
+      current.filter(
+        (partner) =>
+          partner._id !== id
+      )
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Delete failed:",
+      error
+    );
+
+  } finally {
+
+    setUpdating("");
+
+  }
+
+}
   return (
 
     <main className="min-h-screen bg-gray-50 pt-32 px-10 pb-10">
@@ -321,6 +377,23 @@ async function updatePartnerStatus(
     }
 
   </button>
+
+<button
+  onClick={() =>
+    updatePartnerStatus(
+      partner._id,
+      "suspended"
+    )
+  }
+  disabled={updating === partner._id}
+  className="rounded bg-orange-500 px-4 py-2 text-white hover:bg-orange-600 disabled:opacity-50"
+>
+  {updating === partner._id
+    ? "Updating..."
+    : "Suspend"
+  }
+</button>
+
 <button
   onClick={() =>
     updatePartnerStatus(
@@ -335,7 +408,18 @@ async function updatePartnerStatus(
     ? "Updating..."
     : "Suspend"}
 </button>
-
+<button
+  onClick={() =>
+    deletePartner(partner._id)
+  }
+  disabled={updating === partner._id}
+  className="rounded bg-gray-900 px-4 py-2 text-white hover:bg-gray-700 disabled:opacity-50"
+>
+  {updating === partner._id
+    ? "Deleting..."
+    : "Delete"
+  }
+</button>
 </div>
 
 
