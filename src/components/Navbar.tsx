@@ -30,14 +30,55 @@ const [isPartnerLoggedIn, setIsPartnerLoggedIn] =
 
 useEffect(() => {
 
-  const token =
-    localStorage.getItem(
-      "partnerToken"
+
+  const checkPartnerLogin = () => {
+
+    const token =
+      localStorage.getItem(
+        "partnerToken"
+      );
+
+
+    setIsPartnerLoggedIn(
+      !!token
     );
 
-  if(token){
-    setIsPartnerLoggedIn(true);
-  }
+  };
+
+
+  // Check when navbar loads
+  checkPartnerLogin();
+
+
+  // Listen for login event
+  window.addEventListener(
+    "partnerLogin",
+    checkPartnerLogin
+  );
+
+
+  // Listen for logout event
+  window.addEventListener(
+    "partnerLogout",
+    checkPartnerLogin
+  );
+
+
+  return () => {
+
+    window.removeEventListener(
+      "partnerLogin",
+      checkPartnerLogin
+    );
+
+
+    window.removeEventListener(
+      "partnerLogout",
+      checkPartnerLogin
+    );
+
+  };
+
 
 }, []);
 
@@ -49,7 +90,14 @@ const partnerLogout = () => {
     "partnerToken"
   );
 
-  window.location.href = "/partner-login";
+
+  window.dispatchEvent(
+    new Event("partnerLogout")
+  );
+
+
+  window.location.href =
+    "/partner-login";
 
 };
 
