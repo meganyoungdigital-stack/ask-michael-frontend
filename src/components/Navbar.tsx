@@ -12,9 +12,12 @@ export default function Navbar() {
 const t = translations[lang];
 
   const { isLoaded, isSignedIn } = useUser();
-  const pathname = usePathname();
+const pathname = usePathname();
 
-  const [visible, setVisible] = useState(false); // navbar hover
+const isPartnerLogin =
+  pathname === "/partner-login";
+
+const [visible, setVisible] = useState(false);
   const [langOpen, setLangOpen] = useState(false); // dropdown
 
   useEffect(() => {
@@ -125,14 +128,24 @@ const t = translations[lang];
 
           {/* Right Side */}
           {isSignedIn ? (
-            <UserButton appearance={{ elements: { avatarBox: "w-8 h-8" } }} />
-          ) : (
-            <Link href="/portal">
-              <button className="px-5 py-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm hover:scale-105 transition">
-                {t.login}
-              </button>
-            </Link>
-          )}
+  <UserButton appearance={{ elements: { avatarBox: "w-8 h-8" } }} />
+) : (
+  <Link
+    href={
+      isPartnerLogin
+        ? "/partner-login"
+        : "/portal"
+    }
+  >
+    <button className="px-5 py-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm hover:scale-105 transition">
+      {
+        isPartnerLogin
+          ? "Partner Login"
+          : t.login
+      }
+    </button>
+  </Link>
+)}
         </div>
       </nav>
     );
@@ -234,14 +247,24 @@ const t = translations[lang];
 
           {/* Right Side */}
           {isSignedIn ? (
-            <UserButton appearance={{ elements: { avatarBox: "w-8 h-8" } }} />
-          ) : (
-            <Link href="/portal">
-              <button className="px-5 py-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm hover:scale-105 transition">
-                {t.login}
-              </button>
-            </Link>
-          )}
+  <UserButton appearance={{ elements: { avatarBox: "w-8 h-8" } }} />
+) : (
+  <Link
+    href={
+      isPartnerLogin
+        ? "/partner-login"
+        : "/portal"
+    }
+  >
+    <button className="px-5 py-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm hover:scale-105 transition">
+      {
+        isPartnerLogin
+          ? "Partner Login"
+          : t.login
+      }
+    </button>
+  </Link>
+)}
         </div>
       </nav>
     </div>
