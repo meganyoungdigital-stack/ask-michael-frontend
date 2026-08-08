@@ -19,11 +19,26 @@ const isPartnerLogin =
 
 const [visible, setVisible] = useState(false);
   const [langOpen, setLangOpen] = useState(false); // dropdown
-
+const [isPartnerLoggedIn, setIsPartnerLoggedIn] =
+  useState(false);
+  
   useEffect(() => {
   const handleClickOutside = () => setLangOpen(false);
   window.addEventListener("click", handleClickOutside);
   return () => window.removeEventListener("click", handleClickOutside);
+}, []);
+
+useEffect(() => {
+
+  const token =
+    localStorage.getItem(
+      "partnerToken"
+    );
+
+  if(token){
+    setIsPartnerLoggedIn(true);
+  }
+
 }, []);
 
   const language = lang; // ✅ single source of truth
@@ -126,10 +141,28 @@ const [visible, setVisible] = useState(false);
             </Link>
           </div>
 
-          {/* Right Side */}
-          {isSignedIn ? (
+          
+            {/* Right Side */}
+{isPartnerLoggedIn ? (
+
+  <Link href="/partner-dashboard">
+
+    <button className="px-5 py-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm hover:scale-105 transition">
+
+      Partner Account
+
+    </button>
+
+  </Link>
+
+
+) : isSignedIn ? (
+
   <UserButton appearance={{ elements: { avatarBox: "w-8 h-8" } }} />
+
+
 ) : (
+
   <Link
     href={
       isPartnerLogin
@@ -137,14 +170,19 @@ const [visible, setVisible] = useState(false);
         : "/portal"
     }
   >
+
     <button className="px-5 py-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm hover:scale-105 transition">
+
       {
         isPartnerLogin
           ? "Partner Login"
           : t.login
       }
+
     </button>
+
   </Link>
+
 )}
         </div>
       </nav>
