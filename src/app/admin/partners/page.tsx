@@ -396,20 +396,6 @@ async function deletePartner(id: string) {
 
 <button
   onClick={() =>
-    updatePartnerStatus(
-      partner._id,
-      "suspended"
-    )
-  }
-  disabled={updating === partner._id}
-  className="rounded bg-orange-600 px-4 py-2 text-white hover:bg-orange-700 disabled:opacity-50"
->
-  {updating === partner._id
-    ? "Updating..."
-    : "Suspend"}
-</button>
-<button
-  onClick={() =>
     deletePartner(partner._id)
   }
   disabled={updating === partner._id}
