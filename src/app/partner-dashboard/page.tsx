@@ -2,9 +2,11 @@
 
 
 import {useEffect,useState} from "react";
+import { useRouter } from "next/navigation";
 
 
 export default function PartnerDashboard(){
+    const router = useRouter();
 
 
 const [partner,setPartner]=useState<any>(null);
@@ -267,12 +269,14 @@ Next Billing:
 
 <button
 
+onClick={() =>
+router.push("/partner-billing")
+}
+
 className="bg-green-600 text-white px-5 py-2 rounded"
 
 >
-
 Manage Subscription
-
 </button>
 
 
