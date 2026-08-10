@@ -14,8 +14,7 @@ const t = translations[lang];
   const { isLoaded, isSignedIn } = useUser();
 const pathname = usePathname();
 
-const isPartnerLogin =
-  pathname === "/partner-login";
+
 
 const [visible, setVisible] = useState(false);
   const [langOpen, setLangOpen] = useState(false); // dropdown
@@ -200,59 +199,84 @@ const partnerLogout = () => {
 
           
             {/* Right Side */}
-{isPartnerLoggedIn ? (
+{/* Right Side */}
 
-  <div className="flex items-center gap-3">
+<div className="flex items-center gap-3">
 
-    <Link href="/partner-dashboard">
 
-      <button
-        className="px-5 py-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm hover:scale-105 transition"
-      >
-        Partner Account
+  {/* Ask Michael Login */}
+
+  {!isSignedIn && (
+
+    <Link href="/portal">
+
+      <button className="px-5 py-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm hover:scale-105 transition">
+
+        {t.login}
+
       </button>
 
     </Link>
 
-
-    <button
-      onClick={partnerLogout}
-      className="px-4 py-2 rounded-full border border-white/30 text-white text-sm hover:bg-white/10 transition"
-    >
-      Logout
-    </button>
+  )}
 
 
-  </div>
 
-) : isSignedIn ? (
+  {/* Partner Login / Account */}
 
-  <UserButton appearance={{ elements: { avatarBox: "w-8 h-8" } }} />
+  {isPartnerLoggedIn ? (
+
+    <>
+
+      <Link href="/partner-dashboard">
+
+        <button className="px-5 py-2 rounded-full bg-green-600 text-white text-sm hover:scale-105 transition">
+
+          Partner Account
+
+        </button>
+
+      </Link>
 
 
-) : (
+      <button
+        onClick={partnerLogout}
+        className="px-4 py-2 rounded-full border border-white/30 text-white text-sm hover:bg-white/10 transition"
+      >
 
-  <Link
-    href={
-      isPartnerLogin
-        ? "/partner-login"
-        : "/portal"
-    }
-  >
+        Logout
 
-    <button className="px-5 py-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm hover:scale-105 transition">
+      </button>
 
-      {
-        isPartnerLogin
-          ? "Partner Login"
-          : t.login
-      }
+    </>
 
-    </button>
 
-  </Link>
+  ) : (
 
-)}
+    <Link href="/partner-login">
+
+      <button className="px-5 py-2 rounded-full border border-white/30 text-white text-sm hover:bg-white/10 transition">
+
+        Partner Login
+
+      </button>
+
+    </Link>
+
+  )}
+
+
+
+  {/* Clerk Account */}
+
+  {isSignedIn && (
+
+    <UserButton appearance={{ elements: { avatarBox: "w-8 h-8" } }} />
+
+  )}
+
+
+</div>
         </div>
       </nav>
     );
@@ -353,25 +377,84 @@ const partnerLogout = () => {
           </div>
 
           {/* Right Side */}
-          {isSignedIn ? (
-  <UserButton appearance={{ elements: { avatarBox: "w-8 h-8" } }} />
-) : (
-  <Link
-    href={
-      isPartnerLogin
-        ? "/partner-login"
-        : "/portal"
-    }
-  >
-    <button className="px-5 py-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm hover:scale-105 transition">
-      {
-        isPartnerLogin
-          ? "Partner Login"
-          : t.login
-      }
-    </button>
-  </Link>
-)}
+          {/* Right Side */}
+
+<div className="flex items-center gap-3">
+
+
+  {/* Ask Michael Login */}
+
+  {!isSignedIn && (
+
+    <Link href="/portal">
+
+      <button className="px-5 py-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm hover:scale-105 transition">
+
+        {t.login}
+
+      </button>
+
+    </Link>
+
+  )}
+
+
+
+  {/* Partner Login / Account */}
+
+  {isPartnerLoggedIn ? (
+
+    <>
+
+      <Link href="/partner-dashboard">
+
+        <button className="px-5 py-2 rounded-full bg-green-600 text-white text-sm hover:scale-105 transition">
+
+          Partner Account
+
+        </button>
+
+      </Link>
+
+
+      <button
+        onClick={partnerLogout}
+        className="px-4 py-2 rounded-full border border-white/30 text-white text-sm hover:bg-white/10 transition"
+      >
+
+        Logout
+
+      </button>
+
+    </>
+
+
+  ) : (
+
+    <Link href="/partner-login">
+
+      <button className="px-5 py-2 rounded-full border border-white/30 text-white text-sm hover:bg-white/10 transition">
+
+        Partner Login
+
+      </button>
+
+    </Link>
+
+  )}
+
+
+
+  {/* Clerk Account */}
+
+  {isSignedIn && (
+
+    <UserButton appearance={{ elements: { avatarBox: "w-8 h-8" } }} />
+
+  )}
+
+
+</div>
         </div>
       </nav>
     </div>
