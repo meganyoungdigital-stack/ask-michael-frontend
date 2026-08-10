@@ -43,7 +43,7 @@ await response.json();
 
 console.log(
 "Dashboard response:",
-data
+JSON.stringify(data, null, 2)
 );
 
 
@@ -86,7 +86,7 @@ Loading dashboard...
 
 return(
 
-<main className="min-h-screen bg-gray-50 p-10">
+<main className="min-h-screen bg-gray-50 pt-40 px-10 pb-10">
 
 
 <h1 className="text-4xl font-bold text-gray-900">
