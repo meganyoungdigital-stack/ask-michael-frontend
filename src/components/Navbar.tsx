@@ -100,7 +100,6 @@ const partnerLogout = () => {
     "/partner-login";
 
 };
-
   const changeLanguage = (lang: string) => {
     if (typeof window !== "undefined") {
       localStorage.setItem("lang", lang);

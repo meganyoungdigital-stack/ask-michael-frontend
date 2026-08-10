@@ -54,15 +54,19 @@ export default function PartnerLoginPage() {
 
 
       localStorage.setItem(
-        "partnerToken",
-        data.token
-      );
+  "partnerToken",
+  data.token
+);
 
 
-      router.push(
-        "/partner-dashboard"
-      );
+window.dispatchEvent(
+  new Event("partnerLogin")
+);
 
+
+router.push(
+  "/partner-dashboard"
+);
 
     } catch(error){
 
