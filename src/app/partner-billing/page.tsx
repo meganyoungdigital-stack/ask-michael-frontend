@@ -1,15 +1,33 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 export default function PartnerBilling(){
+
+    const router = useRouter();
 
 return (
 
 <main className="min-h-screen bg-gray-50 pt-40 px-10">
 
 
+<div className="flex items-center gap-3">
+
+<button
+onClick={() =>
+router.push("/partner-dashboard")
+}
+className="text-gray-700 hover:text-black text-2xl"
+>
+←
+</button>
+
+
 <h1 className="text-4xl font-bold text-gray-900">
 Manage Subscription
 </h1>
+
+
+</div>
 
 
 <div className="mt-8 grid md:grid-cols-2 gap-6">
