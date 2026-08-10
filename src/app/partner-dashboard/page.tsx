@@ -163,7 +163,7 @@ Messages Used
 
 
 
-<div className="mt-8 bg-white rounded-xl p-6 shadow">
+<div className="mt-8 bg-white rounded-xl p-6 shadow text-gray-700">
 
 
 <h2 className="text-xl font-bold text-black">
@@ -211,7 +211,7 @@ Copy API Key
 
 
 
-<div className="mt-8 bg-white rounded-xl p-6 shadow">
+<div className="mt-8 bg-white rounded-xl p-6 shadow text-gray-700">
 
 
 <h2 className="text-xl font-bold text-black">
@@ -295,7 +295,7 @@ Cancel Subscription
 
 
 
-<div className="mt-8 bg-white rounded-xl p-6 shadow">
+<div className="mt-8 bg-white rounded-xl p-6 shadow text-gray-700">
 
 
 <h2 className="text-xl font-bold text-black">
