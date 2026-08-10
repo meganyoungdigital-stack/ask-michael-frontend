@@ -1,17 +1,16 @@
-import {NextResponse} from "next/server";
-import {connectToDatabase} from "@/lib/mongodb";
-import {ObjectId} from "mongodb";
+import { NextResponse } from "next/server";
+import { connectToDatabase } from "@/lib/mongodb";
+import { ObjectId } from "mongodb";
 
 
-export async function GET(req:Request){
+export async function POST(req:Request){
 
-try{
+try {
 
 
-const token =
-req.headers.get(
-"authorization"
-);
+const {
+token
+}=await req.json();
 
 
 
@@ -19,10 +18,10 @@ if(!token){
 
 return NextResponse.json(
 {
-error:"Unauthorized"
+error:"Missing token"
 },
 {
-status:401
+status:400
 }
 );
 
@@ -35,9 +34,13 @@ const {db}=await connectToDatabase();
 
 
 const partner =
-await db.collection("partners")
+await db
+.collection("partners")
 .findOne({
-_id:new ObjectId(token)
+
+_id:
+new ObjectId(token)
+
 });
 
 
@@ -62,19 +65,49 @@ return NextResponse.json({
 companyName:
 partner.companyName,
 
-monthlyFee:
-partner.monthlyFee || 0,
+contactName:
+partner.contactName,
+
+email:
+partner.email,
+
+apiKey:
+partner.apiKey,
 
 messages:
 partner.messages || 0,
 
+monthlyFee:
+partner.monthlyFee,
+
+pricePerMessage:
+partner.pricePerMessage,
+
 currentBill:
-partner.currentBill || 0
+partner.monthlyFee +
+(
+(partner.messages || 0)
+*
+partner.pricePerMessage
+),
+
+status:
+partner.status,
+
+subscriptionStatus:
+partner.subscriptionStatus || "inactive",
+
+nextBillingDate:
+partner.nextBillingDate || null
+
 
 });
 
 
-}catch(error){
+}
+catch(error){
+
+console.error(error);
 
 
 return NextResponse.json(
