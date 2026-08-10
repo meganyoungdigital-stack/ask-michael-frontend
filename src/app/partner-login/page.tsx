@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 
 export default function PartnerLoginPage() {
@@ -135,6 +136,22 @@ value={password}
 onChange={(e)=>setPassword(e.target.value)}
 
 />
+<Link
+
+href="/partner-forgot-password"
+
+className="block text-sm text-blue-600 hover:underline"
+
+>
+Forgot Password?
+</Link>
+
+<Link
+href="/partner-forgot-password"
+className="text-sm text-blue-600 hover:underline"
+>
+Forgot Password?
+</Link>
 
 
 
