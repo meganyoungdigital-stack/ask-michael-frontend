@@ -136,6 +136,8 @@ value={password}
 onChange={(e)=>setPassword(e.target.value)}
 
 />
+
+
 <Link
 
 href="/partner-forgot-password"
@@ -144,6 +146,7 @@ className="block text-sm text-blue-600 hover:underline"
 
 >
 Forgot Password?
+
 </Link>
 
 <Link
