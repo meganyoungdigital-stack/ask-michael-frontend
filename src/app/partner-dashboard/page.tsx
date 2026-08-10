@@ -41,6 +41,20 @@ const data =
 await response.json();
 
 
+console.log(
+"Dashboard response:",
+data
+);
+
+
+if(!response.ok){
+
+throw new Error(
+data.error || "Dashboard failed"
+);
+
+}
+
 
 setPartner(data);
 

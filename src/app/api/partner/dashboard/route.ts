@@ -3,14 +3,15 @@ import { connectToDatabase } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 
 
-export async function POST(req:Request){
+export async function GET(req:Request){
 
 try {
 
 
-const {
-token
-}=await req.json();
+const token =
+req.headers.get(
+  "Authorization"
+);
 
 
 
