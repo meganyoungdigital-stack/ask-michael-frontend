@@ -78,7 +78,7 @@ data.token
 
 
 router.push(
-"/admin"
+"/admin/partners"
 );
 
 
