@@ -1,9 +1,45 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { connectToDatabase } from "@/lib/mongodb";
 import bcrypt from "bcrypt";
+import {
+  SESSION_COOKIE,
+  verifyAdminSession,
+} from "@/lib/adminAuth";
+
+async function requireAdmin() {
+
+  const cookieStore = await cookies();
+
+  const session =
+    cookieStore.get(
+      SESSION_COOKIE
+    )?.value;
+
+  const adminId =
+    verifyAdminSession(session);
+
+  if (!adminId) {
+    return null;
+  }
+
+  return adminId;
+}
 
 
 export async function POST(req: Request){
+    const adminId = await requireAdmin();
+
+if (!adminId) {
+  return NextResponse.json(
+    {
+      error: "Unauthorized"
+    },
+    {
+      status: 401
+    }
+  );
+}
 
 try{
 

@@ -48,52 +48,72 @@ export default function PartnersAdminPage() {
 
   useEffect(() => {
 
-    async function loadApplications() {
+  async function loadApplications() {
 
-      try {
+    try {
 
-        const response = await fetch("/api/admin/accounts")
+      const response = await fetch(
+        "/api/admin/accounts"
+      );
 
-if (!response.ok) {
-  throw new Error("Failed to load partner applications");
-}
+      if (response.status === 401) {
 
-const data = await response.json();
+        window.location.href =
+          "/admin-login";
 
-console.log("Partner applications:", data);
-
-if (Array.isArray(data)) {
-  setApplications(data);
-} else {
-  console.error("Unexpected API response:", data);
-  setApplications([]);
-}
-
-
-      } catch (error) {
-
-        console.error(
-          "Failed loading partners:",
-          error
-        );
-
-      } finally {
-
-        setLoading(false);
+        return;
 
       }
 
+      if (!response.ok) {
+
+        throw new Error(
+          "Failed to load partner accounts"
+        );
+
+      }
+
+      const data =
+        await response.json();
+
+      console.log(
+        "Partner accounts:",
+        data
+      );
+
+      if (Array.isArray(data)) {
+
+        setApplications(data);
+
+      } else {
+
+        console.error(
+          "Unexpected API response:",
+          data
+        );
+
+        setApplications([]);
+
+      }
+
+    } catch (error) {
+
+      console.error(
+        "Failed loading partners:",
+        error
+      );
+
+    } finally {
+
+      setLoading(false);
+
     }
 
+  }
 
-    loadApplications();
+  loadApplications();
 
-
-  }, []);
-
-
-
-
+}, []);
 
   if (loading) {
 

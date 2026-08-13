@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import bcrypt from "bcrypt";
-
+import {
+  createAdminSession,
+  SESSION_COOKIE,
+} from "@/lib/adminAuth";
 
 export async function POST(req:Request){
 
@@ -67,19 +70,29 @@ status:401
 
 
 
-return NextResponse.json({
+const session = createAdminSession(
+  admin._id.toString()
+);
 
-success:true,
-
-token:
-admin._id.toString(),
-
-admin:{
-email:admin.email,
-role:admin.role
-}
-
+const response = NextResponse.json({
+  success: true,
+  admin: {
+    email: admin.email,
+    role: admin.role,
+  },
 });
+
+response.cookies.set({
+  name: SESSION_COOKIE,
+  value: session,
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax",
+  path: "/",
+  maxAge: 60 * 60 * 8,
+});
+
+return response;
 
 
 }catch(error){

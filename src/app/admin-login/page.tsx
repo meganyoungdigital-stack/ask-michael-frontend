@@ -68,15 +68,6 @@ return;
 
 }
 
-
-
-localStorage.setItem(
-"adminToken",
-data.token
-);
-
-
-
 router.push(
 "/admin/partners"
 );

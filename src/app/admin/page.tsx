@@ -12,27 +12,42 @@ const router=useRouter();
 
 
 
-useEffect(()=>{
+useEffect(() => {
 
+  async function checkAdminSession() {
 
-const token =
-localStorage.getItem(
-"adminToken"
-);
+    try {
 
+      const response = await fetch(
+        "/api/admin/session"
+      );
 
+      if (!response.ok) {
 
-if(!token){
+        router.push(
+          "/admin-login"
+        );
 
-router.push(
-"/admin-login"
-);
+      }
 
-}
+    } catch (error) {
 
+      console.error(
+        "Admin session check failed:",
+        error
+      );
 
-},[]);
+      router.push(
+        "/admin-login"
+      );
 
+    }
+
+  }
+
+  checkAdminSession();
+
+}, [router]);
 
 
 return(
