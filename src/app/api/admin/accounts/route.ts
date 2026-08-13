@@ -140,3 +140,67 @@ status:500
 
 
 }
+export async function DELETE(req: Request) {
+
+  try {
+
+    const { id } = await req.json();
+
+    if (!id) {
+
+      return NextResponse.json(
+        {
+          error: "Missing partner id"
+        },
+        {
+          status: 400
+        }
+      );
+
+    }
+
+    const { db } = await connectToDatabase();
+
+    const result = await db
+      .collection("partners")
+      .deleteOne({
+        _id: new ObjectId(id)
+      });
+
+    if (result.deletedCount === 0) {
+
+      return NextResponse.json(
+        {
+          error: "Partner account not found"
+        },
+        {
+          status: 404
+        }
+      );
+
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Partner account deleted"
+    });
+
+  } catch (error) {
+
+    console.error(
+      "Admin partner delete error:",
+      error
+    );
+
+    return NextResponse.json(
+      {
+        error: "Delete failed"
+      },
+      {
+        status: 500
+      }
+    );
+
+  }
+
+}
