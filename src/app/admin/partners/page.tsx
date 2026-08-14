@@ -35,6 +35,7 @@ export default function PartnersAdminPage() {
  const [applications, setApplications] = useState<PartnerAccount[]>([]);
   const [updating, setUpdating] = useState("");
   const [loading, setLoading] = useState(true);
+const [generatingInvoice, setGeneratingInvoice] = useState("");
 
   function handleLogout() {
   localStorage.removeItem("adminToken");
@@ -244,6 +245,137 @@ async function deletePartner(id: string) {
   }
 
 }
+async function generateInvoice(
+  partner: PartnerAccount
+) {
+
+  try {
+
+    setGeneratingInvoice(
+      partner._id
+    );
+
+
+    const usageAmount =
+      partner.messages *
+      partner.pricePerMessage;
+
+
+    const totalAmount =
+      usageAmount +
+      partner.monthlyFee;
+
+
+    const now =
+      new Date();
+
+
+    const billingPeriod =
+      now.toLocaleDateString(
+        "en-ZA",
+        {
+          month: "long",
+          year: "numeric",
+        }
+      );
+
+
+    const dueDate =
+      new Date(
+        now.getFullYear(),
+        now.getMonth() + 1,
+        0
+      ).toISOString();
+
+
+    const response =
+      await fetch(
+        "/api/admin/invoices",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+
+          body: JSON.stringify({
+
+            partnerId:
+              partner._id,
+
+            companyName:
+              partner.companyName,
+
+            contactName:
+              partner.contactName,
+
+            email:
+              partner.email,
+
+            billingPeriod,
+
+            messages:
+              partner.messages,
+
+            pricePerMessage:
+              partner.pricePerMessage,
+
+            monthlyFee:
+              partner.monthlyFee,
+
+            usageAmount,
+
+            totalAmount,
+
+            dueDate,
+
+          }),
+
+        }
+      );
+
+
+    const data =
+      await response.json();
+
+
+    if (!response.ok) {
+
+      throw new Error(
+        data.error ||
+        "Failed to generate invoice"
+      );
+
+    }
+
+
+    alert(
+      `Invoice ${data.invoice.invoiceNumber} created successfully.`
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      "Invoice generation failed:",
+      error
+    );
+
+
+    alert(
+      "Failed to generate invoice."
+    );
+
+
+  } finally {
+
+    setGeneratingInvoice("");
+
+  }
+
+}
+
  return (
   <main className="min-h-screen bg-gray-50 pt-32 px-10 pb-10">
 
@@ -420,6 +552,22 @@ async function deletePartner(id: string) {
                 ? "Deleting..."
                 : "Delete"}
             </button>
+
+<button
+  onClick={() =>
+    generateInvoice(partner)
+  }
+  disabled={
+    generatingInvoice ===
+    partner._id
+  }
+  className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
+>
+  {generatingInvoice ===
+  partner._id
+    ? "Generating..."
+    : "Generate Invoice"}
+</button>
 
           </div>
 
