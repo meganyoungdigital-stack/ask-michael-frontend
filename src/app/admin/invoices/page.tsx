@@ -300,7 +300,20 @@ export default function AdminInvoicesPage() {
                   )}
 
                 </div>
+<div className="mt-5">
 
+  <button
+    onClick={() =>
+      router.push(
+        `/admin/invoices/${invoice._id}`
+      )
+    }
+    className="rounded bg-black px-4 py-2 text-white hover:bg-gray-800"
+  >
+    View Invoice
+  </button>
+
+</div>
 
               </div>
 

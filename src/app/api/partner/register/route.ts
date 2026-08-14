@@ -168,6 +168,18 @@ messages:
 0,
 
 
+billingDay:
+new Date().getDate(),
+
+
+nextBillingDate:
+new Date(
+  new Date().setMonth(
+    new Date().getMonth() + 1
+  )
+),
+
+
 createdAt:
 new Date(),
 
