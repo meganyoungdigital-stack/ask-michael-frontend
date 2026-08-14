@@ -48,13 +48,20 @@ const {db} = await connectToDatabase();
 
 
 const partners =
-await db
-.collection("partners")
-.find({})
-.sort({
-createdAt:-1
-})
-.toArray();
+  await db
+    .collection("partners")
+    .find(
+      {},
+      {
+        projection: {
+          passwordHash: 0,
+        },
+      }
+    )
+    .sort({
+      createdAt: -1,
+    })
+    .toArray();
 
 
 

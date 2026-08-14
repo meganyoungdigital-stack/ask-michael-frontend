@@ -5,29 +5,25 @@ import { useEffect, useState } from "react";
 
 type PartnerAccount = {
 
-_id:string;
+  _id: string;
 
-companyName:string;
+  companyName: string;
 
-contactName:string;
+  contactName: string;
 
-email:string;
+  email: string;
 
-apiKey:string;
+  apiKey: string;
 
-messages:number;
+  messages: number;
 
-monthlyFee:number;
+  monthlyFee: number;
 
-pricePerMessage:number;
+  pricePerMessage: number;
 
-status:string;
+  status: string;
 
-subscriptionStatus:string;
-
-paymentStatus:string;
-
-createdAt:string;
+  createdAt: string;
 
 };
 
@@ -319,31 +315,17 @@ async function deletePartner(id: string) {
                     R{partner.monthlyFee}
                   </p>
                 </div>
-
-
                 <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-sm text-gray-500">
-                    Subscription
-                  </p>
+  <p className="text-sm text-gray-500">
+    Price Per Message
+  </p>
 
-                  <p className="text-xl font-semibold text-gray-900">
-                    {partner.subscriptionStatus}
-                  </p>
-                </div>
-
-
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-sm text-gray-500">
-                    Payment
-                  </p>
-
-                  <p className="text-xl font-semibold text-gray-900">
-                    {partner.paymentStatus}
-                  </p>
-                </div>
-
-
-                <div className="bg-gray-50 rounded-lg p-4 md:col-span-2">
+  <p className="text-xl font-semibold text-gray-900">
+    R{partner.pricePerMessage}
+  </p>
+</div>
+              
+                  <div className="bg-gray-50 rounded-lg p-4 md:col-span-2">
                   <p className="text-sm text-gray-500">
                     API Key
                   </p>
