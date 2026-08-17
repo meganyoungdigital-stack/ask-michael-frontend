@@ -224,9 +224,14 @@ export default function PartnerInvoicesPage() {
                   {invoices.map((invoice) => (
 
                     <tr
-                      key={invoice._id}
-                      className="border-t hover:bg-gray-50"
-                    >
+  key={invoice._id}
+  onClick={() =>
+    router.push(
+      `/partner-invoices/${invoice._id}`
+    )
+  }
+  className="border-t hover:bg-gray-50 cursor-pointer"
+>
 
                       <td className="px-6 py-4">
 
