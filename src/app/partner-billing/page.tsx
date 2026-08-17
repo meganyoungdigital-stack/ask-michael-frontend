@@ -105,18 +105,30 @@ Status: Active
 </p>
 
 
-<button
-className="mt-6 bg-red-600 text-white px-5 py-3 rounded"
->
-Cancel Subscription
-</button>
 
+<div className="mt-6 flex gap-3">
+
+  <button
+    className="bg-red-600 text-white px-5 py-3 rounded hover:bg-red-700"
+  >
+    Cancel Subscription
+  </button>
+
+  <button
+    onClick={() =>
+      router.push("/partner-invoices")
+    }
+    className="bg-blue-600 text-white px-5 py-3 rounded hover:bg-blue-700"
+  >
+    Invoices
+  </button>
 
 </div>
 
 
 </div>
 
+</div>
 
 </main>
 
