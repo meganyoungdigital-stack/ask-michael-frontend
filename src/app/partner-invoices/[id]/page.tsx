@@ -2,6 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import {
+  PDFDownloadLink,
+  pdf,
+} from "@react-pdf/renderer";
+import PartnerInvoicePDF from "@/components/PartnerInvoicePDF";
 
 type Invoice = {
   _id: string;
@@ -32,6 +37,8 @@ export default function PartnerInvoicePage() {
 
   const [error, setError] =
     useState("");
+
+
 
   useEffect(() => {
     async function loadInvoice() {
@@ -93,6 +100,24 @@ export default function PartnerInvoicePage() {
     loadInvoice();
   }, [params.id, router]);
 
+  async function viewPDF() {
+  if (!invoice) {
+    return;
+  }
+
+  const blob =
+    await pdf(
+      <PartnerInvoicePDF
+        invoice={invoice}
+      />
+    ).toBlob();
+
+  const url =
+    URL.createObjectURL(blob);
+
+  window.open(url, "_blank");
+}
+
   function formatCurrency(amount: number) {
     return `R${amount.toFixed(2)}`;
   }
@@ -144,6 +169,7 @@ export default function PartnerInvoicePage() {
   if (error || !invoice) {
     return (
       <main className="min-h-screen bg-gray-50 pt-40 px-10">
+
         <div className="max-w-4xl mx-auto">
 
           <button
@@ -169,6 +195,7 @@ export default function PartnerInvoicePage() {
           </div>
 
         </div>
+
       </main>
     );
   }
@@ -177,6 +204,8 @@ export default function PartnerInvoicePage() {
     <main className="min-h-screen bg-gray-50 pt-32 px-6 pb-10">
 
       <div className="max-w-4xl mx-auto">
+
+        {/* Top Controls */}
 
         <div className="flex items-center justify-between mb-8">
 
@@ -189,15 +218,40 @@ export default function PartnerInvoicePage() {
             ←
           </button>
 
-          <span
-            className={`rounded-full px-4 py-2 text-sm font-semibold ${getStatusClasses(
-              invoice.paymentStatus
-            )}`}
-          >
-            {invoice.paymentStatus}
-          </span>
+          <div className="flex items-center gap-3">
+
+            <button
+  onClick={viewPDF}
+  className="bg-blue-600 text-white px-5 py-3 rounded hover:bg-blue-700"
+>
+  View PDF
+</button>
+
+            <PDFDownloadLink
+              document={
+                <PartnerInvoicePDF
+                  invoice={invoice}
+                />
+              }
+              fileName={`${invoice.invoiceNumber}.pdf`}
+              className="bg-gray-800 text-white px-5 py-3 rounded hover:bg-gray-900"
+            >
+              Download PDF
+            </PDFDownloadLink>
+
+            <span
+              className={`rounded-full px-4 py-2 text-sm font-semibold ${getStatusClasses(
+                invoice.paymentStatus
+              )}`}
+            >
+              {invoice.paymentStatus}
+            </span>
+
+          </div>
 
         </div>
+
+        {/* Invoice */}
 
         <div className="bg-white rounded-xl shadow overflow-hidden">
 
@@ -292,9 +346,18 @@ export default function PartnerInvoicePage() {
 
               <div className="grid grid-cols-4 bg-gray-50 px-5 py-4 font-semibold text-gray-700">
 
-                <span>Description</span>
-                <span>Quantity</span>
-                <span>Rate</span>
+                <span>
+                  Description
+                </span>
+
+                <span>
+                  Quantity
+                </span>
+
+                <span>
+                  Rate
+                </span>
+
                 <span className="text-right">
                   Amount
                 </span>
@@ -303,7 +366,9 @@ export default function PartnerInvoicePage() {
 
               <div className="grid grid-cols-4 px-5 py-5 border-t text-gray-700">
 
-                <span>AI Message Usage</span>
+                <span>
+                  AI Message Usage
+                </span>
 
                 <span>
                   {invoice.messages}
@@ -325,9 +390,13 @@ export default function PartnerInvoicePage() {
 
               <div className="grid grid-cols-4 px-5 py-5 border-t text-gray-700">
 
-                <span>Monthly Subscription</span>
+                <span>
+                  Monthly Subscription
+                </span>
 
-                <span>1</span>
+                <span>
+                  1
+                </span>
 
                 <span>
                   {formatCurrency(
@@ -353,7 +422,9 @@ export default function PartnerInvoicePage() {
 
               <div className="flex justify-between text-gray-700">
 
-                <span>Usage</span>
+                <span>
+                  Usage
+                </span>
 
                 <span>
                   {formatCurrency(
@@ -365,7 +436,9 @@ export default function PartnerInvoicePage() {
 
               <div className="flex justify-between text-gray-700">
 
-                <span>Monthly Fee</span>
+                <span>
+                  Monthly Fee
+                </span>
 
                 <span>
                   {formatCurrency(
@@ -377,7 +450,9 @@ export default function PartnerInvoicePage() {
 
               <div className="border-t pt-3 flex justify-between text-xl font-bold text-gray-900">
 
-                <span>Total</span>
+                <span>
+                  Total
+                </span>
 
                 <span>
                   {formatCurrency(
@@ -395,6 +470,7 @@ export default function PartnerInvoicePage() {
 
       </div>
 
+      
     </main>
   );
 }
