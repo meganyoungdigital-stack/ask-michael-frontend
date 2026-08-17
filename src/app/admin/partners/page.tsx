@@ -43,96 +43,47 @@ const [generatingInvoice, setGeneratingInvoice] = useState("");
 }
 
 
-  useEffect(() => {
+   useEffect(() => {
+    async function loadApplications() {
+      try {
+        const response = await fetch("/api/admin/accounts");
 
-  async function loadApplications() {
+        if (response.status === 401) {
+          window.location.href = "/admin-login";
+          return;
+        }
 
-    try {
+        if (!response.ok) {
+          throw new Error("Failed to load partner accounts");
+        }
 
-      const response = await fetch(
-        "/api/admin/accounts"
-      );
+        const data = await response.json();
 
-      if (response.status === 401) {
+        console.log("Partner accounts:", data);
 
-        window.location.href =
-          "/admin-login";
-
-        return;
-
+        if (Array.isArray(data)) {
+          setApplications(data);
+        } else {
+          console.error("Unexpected API response:", data);
+          setApplications([]);
+        }
+      } catch (error) {
+        console.error("Failed loading partners:", error);
+      } finally {
+        setLoading(false);
       }
-
-      if (!response.ok) {
-
-        throw new Error(
-          "Failed to load partner accounts"
-        );
-
-      }
-
-      const data =
-        await response.json();
-
-      console.log(
-        "Partner accounts:",
-        data
-      );
-
-      if (Array.isArray(data)) {
-
-        setApplications(data);
-
-      } else {
-
-        console.error(
-          "Unexpected API response:",
-          data
-        );
-
-        setApplications([]);
-
-      }
-
-    } catch (error) {
-
-      console.error(
-        "Failed loading partners:",
-        error
-      );
-
-    } finally {
-
-      setLoading(false);
-
     }
 
-  }
-
-  loadApplications();
-
-}, []);
+    loadApplications();
+  }, []);
 
   if (loading) {
-
-  return (
-
-    <main className="min-h-screen pt-32 px-10 text-gray-900">
-
-      <p>
-        Loading partner applications...
-      </p>
-
-    </main>
-
-  );
-
-
-   
-    
-
-  }
-
-
+    return (
+      <main className="min-h-screen pt-32 px-10 text-gray-900">
+        <p>Loading partner applications...</p>
+      </main>
+    );
+   }
 
 
 async function updatePartnerStatus(
@@ -368,16 +319,99 @@ async function generateInvoice(
     );
 
 
-  } finally {
-
+    } finally {
     setGeneratingInvoice("");
+  }
+}
+
+async function viewLatestInvoice(
+  partnerId: string
+) {
+
+  try {
+
+    const response =
+      await fetch(
+        "/api/admin/invoices"
+      );
+
+
+    if (
+      response.status === 401
+    ) {
+
+      window.location.href =
+        "/admin-login";
+
+      return;
+
+    }
+
+
+    if (!response.ok) {
+
+      throw new Error(
+        "Failed loading invoices"
+      );
+
+    }
+
+
+    const invoices =
+      await response.json();
+
+
+    const partnerInvoices =
+      invoices.filter(
+        (invoice: {
+          partnerId: string;
+        }) =>
+          invoice.partnerId ===
+          partnerId
+      );
+
+
+    if (
+      partnerInvoices.length === 0
+    ) {
+
+      alert(
+        "No invoices have been created for this partner yet."
+      );
+
+      return;
+
+    }
+
+
+    const latestInvoice =
+      partnerInvoices[0];
+
+
+    window.location.href =
+      `/admin/invoices/${latestInvoice._id}`;
+
+
+  } catch (error) {
+
+    console.error(
+      "Failed loading latest invoice:",
+      error
+    );
+
+
+    alert(
+      "Failed to load the latest invoice."
+    );
 
   }
 
 }
 
- return (
-  <main className="min-h-screen bg-gray-50 pt-32 px-10 pb-10">
+
+ 
+    return (
+    <main className="min-h-screen bg-gray-50 pt-32 px-10 pb-10">
 
     <div className="flex items-center justify-between mb-8">
 
@@ -422,7 +456,7 @@ async function generateInvoice(
 
               <p className="text-gray-700">
                 {partner.email}
-              </p>
+             </p>
 
 
               <div className="mt-5 grid md:grid-cols-2 gap-4">
@@ -568,6 +602,15 @@ async function generateInvoice(
     ? "Generating..."
     : "Generate Invoice"}
 </button>
+<button
+  onClick={() =>
+    viewLatestInvoice(partner._id)
+  }
+  className="rounded bg-purple-600 px-4 py-2 text-white hover:bg-purple-700"
+>
+  View Latest Invoice
+</button>
+
 
           </div>
 
