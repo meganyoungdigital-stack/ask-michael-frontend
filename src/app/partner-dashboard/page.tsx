@@ -167,47 +167,57 @@ Messages Used
 
 <div className="mt-8 bg-white rounded-xl p-6 shadow text-gray-700">
 
+  <h2 className="text-xl font-bold text-black">
+    API Access
+  </h2>
 
-<h2 className="text-xl font-bold text-black">
+  <div className="mt-6">
 
-API Access
+    <p className="text-gray-600">
+      Live API Key
+    </p>
 
-</h2>
+    <div className="mt-2 bg-gray-100 p-4 rounded text-black break-all">
+      {partner.apiKey}
+    </div>
 
+    <button
+      className="mt-4 bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700"
+      onClick={() =>
+        navigator.clipboard.writeText(
+          partner.apiKey
+        )
+      }
+    >
+      Copy Live API Key
+    </button>
 
-<p className="mt-4 text-gray-600">
+  </div>
 
-Your API Key
+  <div className="mt-8 border-t pt-6">
 
-</p>
+    <p className="text-gray-600">
+      Test API Key
+    </p>
 
+    <div className="mt-2 bg-gray-100 p-4 rounded text-black break-all">
+      {partner.testApiKey}
+    </div>
 
-<div className="mt-2 bg-gray-100 p-4 rounded text-black break-all">
+    <button
+      className="mt-4 bg-gray-600 text-white px-5 py-2 rounded hover:bg-gray-700"
+      onClick={() =>
+        navigator.clipboard.writeText(
+          partner.testApiKey
+        )
+      }
+    >
+      Copy Test API Key
+    </button>
 
-{partner.apiKey}
+  </div>
 
 </div>
-
-
-<button
-
-className="mt-4 bg-blue-600 text-white px-5 py-2 rounded"
-
-onClick={()=>
-navigator.clipboard.writeText(
-partner.apiKey
-)
-}
-
->
-
-Copy API Key
-
-</button>
-
-
-</div>
-
 
 
 

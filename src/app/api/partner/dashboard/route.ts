@@ -75,6 +75,9 @@ partner.email,
 apiKey:
 partner.apiKey,
 
+testApiKey:
+partner.testApiKey,
+
 messages:
 partner.messages || 0,
 

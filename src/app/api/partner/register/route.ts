@@ -120,9 +120,12 @@ password,
 
 
 const apiKey =
-"am_live_" +
-crypto.randomBytes(24)
-.toString("hex");
+  "am_live_" +
+  crypto.randomBytes(24).toString("hex");
+
+const testApiKey =
+  "am_test_" +
+  crypto.randomBytes(24).toString("hex");
 
 
 
@@ -150,6 +153,7 @@ passwordHash,
 
 apiKey,
 
+testApiKey,
 
 status:
 "active",
