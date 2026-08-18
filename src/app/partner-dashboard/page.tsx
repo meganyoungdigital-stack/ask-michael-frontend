@@ -196,26 +196,44 @@ Messages Used
 
   <div className="mt-8 border-t pt-6">
 
-    <p className="text-gray-600">
-      Test API Key
-    </p>
+  <p className="text-gray-600">
+    Test API Key
+  </p>
 
-    <div className="mt-2 bg-gray-100 p-4 rounded text-black break-all">
-      {partner.testApiKey}
-    </div>
-
-    <button
-      className="mt-4 bg-gray-600 text-white px-5 py-2 rounded hover:bg-gray-700"
-      onClick={() =>
-        navigator.clipboard.writeText(
-          partner.testApiKey
-        )
-      }
-    >
-      Copy Test API Key
-    </button>
-
+  <div className="mt-2 bg-gray-100 p-4 rounded text-black break-all">
+    {partner.testApiKey || "Test API key not available"}
   </div>
+
+  <button
+    type="button"
+    className="mt-4 bg-gray-600 text-white px-5 py-2 rounded hover:bg-gray-700"
+    onClick={async () => {
+      if (!partner.testApiKey) {
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(
+          partner.testApiKey
+        );
+
+        alert("Test API Key copied!");
+      } catch (error) {
+        console.error(
+          "Failed copying test API key:",
+          error
+        );
+
+        alert(
+          "Unable to copy the Test API Key."
+        );
+      }
+    }}
+  >
+    Copy Test API Key
+  </button>
+
+</div>
 
 </div>
 
