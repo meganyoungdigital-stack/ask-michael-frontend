@@ -13,7 +13,9 @@ type PartnerAccount = {
 
   email: string;
 
-  apiKey: string;
+    apiKey: string;
+
+  testApiKey: string;
 
   messages: number;
 
@@ -343,6 +345,47 @@ async function viewLatestInvoice(
       window.location.href =
         "/admin-login";
 
+async function generateTestApiKey(
+  partnerId: string
+) {
+  try {
+    const response = await fetch(
+      "/api/admin/partners/generate-test-key",
+      {
+        method: "POST",
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data.error ||
+        "Failed generating test API key"
+      );
+    }
+
+    alert(
+      data.message ||
+      "Test API key generated successfully."
+    );
+
+    window.location.reload();
+
+  } catch (error) {
+
+    console.error(
+      "Test API key generation failed:",
+      error
+    );
+
+    alert(
+      "Failed to generate test API key."
+    );
+
+  }
+}
+
       return;
 
     }
@@ -408,7 +451,79 @@ async function viewLatestInvoice(
 
 }
 
+async function generateTestApiKey(
+  partnerId: string
+) {
 
+  try {
+
+    setUpdating(partnerId);
+
+    const response =
+      await fetch(
+        "/api/admin/generate-test-api-key",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+
+          body: JSON.stringify({
+            partnerId,
+          }),
+
+        }
+      );
+
+
+    const data =
+      await response.json();
+
+
+    if (!response.ok) {
+
+      throw new Error(
+        data.error ||
+        "Failed to generate test API key"
+      );
+
+    }
+
+
+    setApplications((current) =>
+      current.map((partner) =>
+        partner._id === partnerId
+          ? {
+              ...partner,
+              testApiKey:
+                data.testApiKey,
+            }
+          : partner
+      )
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      "Test API key generation failed:",
+      error
+    );
+
+    alert(
+      "Failed to generate test API key."
+    );
+
+
+  } finally {
+
+    setUpdating("");
+
+  }
+
+}
  
     return (
     <main className="min-h-screen bg-gray-50 pt-32 px-10 pb-10">
@@ -492,14 +607,24 @@ async function viewLatestInvoice(
 </div>
               
                   <div className="bg-gray-50 rounded-lg p-4 md:col-span-2">
-                  <p className="text-sm text-gray-500">
-                    API Key
-                  </p>
 
-                  <p className="text-sm font-mono break-all text-gray-900">
-                    {partner.apiKey}
-                  </p>
-                </div>
+  <p className="text-sm text-gray-500">
+    Live API Key
+  </p>
+
+  <p className="text-sm font-mono break-all text-gray-900">
+    {partner.apiKey}
+  </p>
+
+  <p className="text-sm text-gray-500 mt-4">
+    Test API Key
+  </p>
+
+  <p className="text-sm font-mono break-all text-gray-900">
+    {partner.testApiKey || "Test API key not generated"}
+  </p>
+
+</div>
 
               </div>
 
@@ -611,6 +736,17 @@ async function viewLatestInvoice(
   View Latest Invoice
 </button>
 
+<button
+  onClick={() =>
+    generateTestApiKey(partner._id)
+  }
+  disabled={!!partner.testApiKey}
+  className="rounded bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 disabled:opacity-50"
+>
+  {partner.testApiKey
+    ? "Test API Key Generated"
+    : "Generate Test API Key"}
+</button>
 
           </div>
 
