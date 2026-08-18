@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import crypto from "crypto";
+import { ObjectId } from "mongodb";
 
 import { connectToDatabase } from "@/lib/mongodb";
 import {
@@ -8,18 +9,14 @@ import {
   verifyAdminSession,
 } from "@/lib/adminAuth";
 
-export async function POST() {
+export async function POST(
+  request: Request
+) {
   try {
-    /*
-     * Verify admin session
-     */
-
     const cookieStore = await cookies();
 
     const session =
-      cookieStore.get(
-        SESSION_COOKIE
-      )?.value;
+      cookieStore.get(SESSION_COOKIE)?.value;
 
     const adminId =
       verifyAdminSession(session);
@@ -35,72 +32,47 @@ export async function POST() {
       );
     }
 
-    /*
-     * Connect to database
-     */
+    const body = await request.json();
+
+    const { partnerId } = body;
+
+    if (!partnerId) {
+      return NextResponse.json(
+        {
+          error: "Partner ID is required",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    if (!ObjectId.isValid(partnerId)) {
+      return NextResponse.json(
+        {
+          error: "Invalid partner ID",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
 
     const { db } =
       await connectToDatabase();
 
-    /*
-     * Find partners that do not
-     * have a test API key yet.
-     */
+    const testApiKey =
+      "am_test_" +
+      crypto
+        .randomBytes(24)
+        .toString("hex");
 
-    const partners =
-      await db
-        .collection("partners")
-        .find({
-          $or: [
-            {
-              testApiKey: {
-                $exists: false,
-              },
-            },
-            {
-              testApiKey: null,
-            },
-            {
-              testApiKey: "",
-            },
-          ],
-        })
-        .toArray();
-
-    let generated = 0;
-
-    /*
-     * Generate a unique test API key
-     * for each existing partner.
-     */
-
-    for (const partner of partners) {
-      let testApiKey = "";
-
-      do {
-        testApiKey =
-          "am_test_" +
-          crypto
-            .randomBytes(24)
-            .toString("hex");
-
-        const existingKey =
-          await db
-            .collection("partners")
-            .findOne({
-              testApiKey,
-            });
-
-        if (!existingKey) {
-          break;
-        }
-      } while (true);
-
+    const result =
       await db
         .collection("partners")
         .updateOne(
           {
-            _id: partner._id,
+            _id: new ObjectId(partnerId),
           },
           {
             $set: {
@@ -109,27 +81,33 @@ export async function POST() {
           }
         );
 
-      generated++;
+    if (result.matchedCount === 0) {
+      return NextResponse.json(
+        {
+          error: "Partner not found",
+        },
+        {
+          status: 404,
+        }
+      );
     }
 
     return NextResponse.json({
       success: true,
-      generated,
-      message:
-        generated === 0
-          ? "All partners already have test API keys."
-          : `Generated ${generated} test API key(s).`,
+      testApiKey,
     });
+
   } catch (error) {
+
     console.error(
-      "Generate test API keys error:",
+      "Generate test API key error:",
       error
     );
 
     return NextResponse.json(
       {
         error:
-          "Failed generating test API keys",
+          "Failed generating test API key",
       },
       {
         status: 500,

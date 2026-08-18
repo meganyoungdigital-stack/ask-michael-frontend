@@ -345,46 +345,7 @@ async function viewLatestInvoice(
       window.location.href =
         "/admin-login";
 
-async function generateTestApiKey(
-  partnerId: string
-) {
-  try {
-    const response = await fetch(
-      "/api/admin/partners/generate-test-key",
-      {
-        method: "POST",
-      }
-    );
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(
-        data.error ||
-        "Failed generating test API key"
-      );
-    }
-
-    alert(
-      data.message ||
-      "Test API key generated successfully."
-    );
-
-    window.location.reload();
-
-  } catch (error) {
-
-    console.error(
-      "Test API key generation failed:",
-      error
-    );
-
-    alert(
-      "Failed to generate test API key."
-    );
-
-  }
-}
 
       return;
 
@@ -461,7 +422,7 @@ async function generateTestApiKey(
 
     const response =
       await fetch(
-        "/api/admin/generate-test-api-key",
+        "/api/admin/partners/generate-test-api-key",
         {
           method: "POST",
 
