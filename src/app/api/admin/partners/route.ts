@@ -1,18 +1,52 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { connectToDatabase } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import crypto from "crypto";
 import { Resend } from "resend";
+import {
+  SESSION_COOKIE,
+  verifyAdminSession,
+} from "@/lib/adminAuth";
 
 const resend = new Resend(
   process.env.RESEND_API_KEY
 );
 
+async function requireAdmin() {
+  const cookieStore = await cookies();
 
+  const session =
+    cookieStore.get(
+      SESSION_COOKIE
+    )?.value;
+
+  const adminId =
+    verifyAdminSession(session);
+
+  if (!adminId) {
+    return null;
+  }
+
+  return adminId;
+}
 
 // GET - Load partner applications
 
 export async function GET() {
+
+  const adminId = await requireAdmin();
+
+  if (!adminId) {
+    return NextResponse.json(
+      {
+        error: "Unauthorized",
+      },
+      {
+        status: 401,
+      }
+    );
+  }
 
   try {
 
@@ -62,6 +96,19 @@ export async function GET() {
 // PATCH - Approve / Reject / Suspend partner
 
 export async function PATCH(req: Request) {
+
+  const adminId = await requireAdmin();
+
+  if (!adminId) {
+    return NextResponse.json(
+      {
+        error: "Unauthorized",
+      },
+      {
+        status: 401,
+      }
+    );
+  }
 
   try {
 
@@ -482,6 +529,19 @@ export async function PATCH(req: Request) {
 // DELETE - Permanently delete partner application
 
 export async function DELETE(req: Request) {
+
+  const adminId = await requireAdmin();
+
+  if (!adminId) {
+    return NextResponse.json(
+      {
+        error: "Unauthorized",
+      },
+      {
+        status: 401,
+      }
+    );
+  }
 
   try {
 

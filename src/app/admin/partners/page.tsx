@@ -29,6 +29,16 @@ type PartnerAccount = {
 
 };
 
+type PartnerApplication = {
+  _id: string;
+  companyName: string;
+  contactName: string;
+  email: string;
+  website: string;
+  message: string;
+  status: string;
+  createdAt: string;
+};
 
 
 export default function PartnersAdminPage() {
@@ -38,6 +48,12 @@ export default function PartnersAdminPage() {
   const [updating, setUpdating] = useState("");
   const [loading, setLoading] = useState(true);
 const [generatingInvoice, setGeneratingInvoice] = useState("");
+
+const [pendingApplications, setPendingApplications] =
+  useState<PartnerApplication[]>([]);
+
+const [loadingApplications, setLoadingApplications] =
+  useState(true);
 
   function handleLogout() {
   localStorage.removeItem("adminToken");
@@ -79,6 +95,56 @@ const [generatingInvoice, setGeneratingInvoice] = useState("");
     loadApplications();
   }, []);
 
+  useEffect(() => {
+  async function loadPendingApplications() {
+    try {
+      const response = await fetch(
+        "/api/admin/partners"
+      );
+
+      if (response.status === 401) {
+        window.location.href = "/admin-login";
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          "Failed to load partner applications"
+        );
+      }
+
+      const data = await response.json();
+
+      if (Array.isArray(data)) {
+        setPendingApplications(
+          data.filter(
+            (application: PartnerApplication) =>
+              application.status === "pending"
+          )
+        );
+      } else {
+        console.error(
+          "Unexpected applications response:",
+          data
+        );
+
+        setPendingApplications([]);
+      }
+
+    } catch (error) {
+      console.error(
+        "Failed loading partner applications:",
+        error
+      );
+
+    } finally {
+      setLoadingApplications(false);
+    }
+  }
+
+  loadPendingApplications();
+}, []);
+
   if (loading) {
     return (
       <main className="min-h-screen pt-32 px-10 text-gray-900">
@@ -86,6 +152,64 @@ const [generatingInvoice, setGeneratingInvoice] = useState("");
       </main>
     );
    }
+
+   async function updateApplicationStatus(
+  id: string,
+  status: string
+) {
+  try {
+    setUpdating(id);
+
+    const response = await fetch(
+      "/api/admin/partners",
+      {
+        method: "PATCH",
+
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify({
+          id,
+          status,
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data.error ||
+        "Failed to update application"
+      );
+    }
+
+    setPendingApplications((current) =>
+      current.filter(
+        (application) =>
+          application._id !== id
+      )
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Partner application update failed:",
+      error
+    );
+
+    alert(
+      error instanceof Error
+        ? error.message
+        : "Failed to update application."
+    );
+
+  } finally {
+    setUpdating("");
+  }
+}
+
 
 
 async function updatePartnerStatus(
@@ -142,6 +266,70 @@ async function updatePartnerStatus(
   }
 
 }
+
+async function deleteApplication(
+  id: string
+) {
+  const confirmed = window.confirm(
+    "Are you sure you want to permanently delete this partner application?"
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  try {
+    setUpdating(id);
+
+    const response = await fetch(
+      "/api/admin/partners",
+      {
+        method: "DELETE",
+
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify({
+          id,
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data.error ||
+        "Failed to delete application"
+      );
+    }
+
+    setPendingApplications((current) =>
+      current.filter(
+        (application) =>
+          application._id !== id
+      )
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Partner application delete failed:",
+      error
+    );
+
+    alert(
+      error instanceof Error
+        ? error.message
+        : "Failed to delete application."
+    );
+
+  } finally {
+    setUpdating("");
+  }
+}
+
 async function deletePartner(id: string) {
 
   const confirmed = window.confirm(
@@ -489,7 +677,131 @@ async function generateTestApiKey(
     return (
     <main className="min-h-screen bg-gray-50 pt-32 px-10 pb-10">
 
-    <div className="flex items-center justify-between mb-8">
+  <div className="mb-10">
+    <h2 className="text-3xl font-bold text-gray-900 mb-6">
+      Pending Partner Applications
+    </h2>
+
+    {loadingApplications ? (
+      <div className="bg-white rounded-xl border p-6 text-gray-700">
+        Loading applications...
+      </div>
+    ) : pendingApplications.length === 0 ? (
+      <div className="bg-white rounded-xl border p-6 text-gray-700">
+        No pending partner applications.
+      </div>
+    ) : (
+      <div className="space-y-6">
+        {pendingApplications.map(
+          (application) => (
+            <div
+              key={application._id}
+              className="bg-white rounded-xl border p-6"
+            >
+              <div className="flex justify-between gap-6">
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-gray-900">
+                    {application.companyName}
+                  </h3>
+
+                  <p className="text-gray-700 mt-1">
+                    {application.contactName}
+                  </p>
+
+                  <p className="text-gray-700">
+                    {application.email}
+                  </p>
+
+                  {application.website && (
+                    <p className="text-gray-700 mt-1">
+                      {application.website}
+                    </p>
+                  )}
+
+                  <div className="mt-4">
+                    <p className="text-sm font-semibold text-gray-500">
+                      Application Message
+                    </p>
+
+                    <p className="mt-1 text-gray-800 whitespace-pre-wrap">
+                      {application.message}
+                    </p>
+                  </div>
+
+                  <p className="mt-4 text-sm text-gray-500">
+                    Applied:{" "}
+                    {new Date(
+                      application.createdAt
+                    ).toLocaleString("en-ZA")}
+                  </p>
+                </div>
+
+                <div>
+                  <span className="rounded px-3 py-1 text-sm font-semibold bg-yellow-100 text-yellow-700">
+                    {application.status}
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-6 flex flex-wrap gap-4">
+                <button
+                  onClick={() =>
+                    updateApplicationStatus(
+                      application._id,
+                      "approved"
+                    )
+                  }
+                  disabled={
+                    updating === application._id
+                  }
+                  className="rounded bg-green-600 px-4 py-2 text-white hover:bg-green-700 disabled:opacity-50"
+                >
+                  {updating === application._id
+                    ? "Processing..."
+                    : "Approve"}
+                </button>
+
+                <button
+                  onClick={() =>
+                    updateApplicationStatus(
+                      application._id,
+                      "rejected"
+                    )
+                  }
+                  disabled={
+                    updating === application._id
+                  }
+                  className="rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:opacity-50"
+                >
+                  {updating === application._id
+                    ? "Processing..."
+                    : "Reject"}
+                </button>
+
+                <button
+                  onClick={() =>
+                    deleteApplication(
+                      application._id
+                    )
+                  }
+                  disabled={
+                    updating === application._id
+                  }
+                  className="rounded bg-gray-900 px-4 py-2 text-white hover:bg-gray-700 disabled:opacity-50"
+                >
+                  {updating === application._id
+                    ? "Deleting..."
+                    : "Delete"}
+                </button>
+              </div>
+            </div>
+          )
+        )}
+      </div>
+    )}
+  </div>
+
+  <div className="flex items-center justify-between mb-8">
 
   <h1 className="text-4xl font-bold text-gray-900">
     Partner Accounts
