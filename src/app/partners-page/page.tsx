@@ -54,7 +54,7 @@ export default function PartnersPage() {
 
 
       const response = await fetch(
-        "/api/partners/apply",
+        "/api/partner/apply",
         {
           method: "POST",
 
