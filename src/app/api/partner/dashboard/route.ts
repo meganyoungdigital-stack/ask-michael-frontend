@@ -76,7 +76,7 @@ apiKey:
 partner.apiKey,
 
 testApiKey:
-partner.testApiKey,
+partner.testApiKey || null,
 
 messages:
 partner.messages || 0,
