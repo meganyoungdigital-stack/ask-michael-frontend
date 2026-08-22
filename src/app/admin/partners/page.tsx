@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type {
+  PartnerPlan,
+  PartnerCurrency,
+} from "@/lib/partnerPlans";
 
 
 type PartnerAccount = {
-
   _id: string;
 
   companyName: string;
@@ -13,7 +16,7 @@ type PartnerAccount = {
 
   email: string;
 
-    apiKey: string;
+  apiKey: string;
 
   testApiKey: string;
 
@@ -23,13 +26,21 @@ type PartnerAccount = {
 
   pricePerMessage: number;
 
+  plan: PartnerPlan;
+
+  currency: PartnerCurrency;
+
+  includedMessages: number | null;
+
+  maxUsers: number | null;
+
+  maxMessages: number | null;
+
   status: string;
 
   createdAt: string;
-
 };
-
-type PartnerApplication = {
+ type PartnerApplication = {
   _id: string;
   companyName: string;
   contactName: string;
@@ -39,8 +50,6 @@ type PartnerApplication = {
   status: string;
   createdAt: string;
 };
-
-
 export default function PartnersAdminPage() {
 
 
@@ -54,6 +63,30 @@ const [pendingApplications, setPendingApplications] =
 
 const [loadingApplications, setLoadingApplications] =
   useState(true);
+
+const [selectedApplicationId, setSelectedApplicationId] =
+  useState<string | null>(null);
+
+const [approvalPlan, setApprovalPlan] =
+  useState<PartnerPlan>("starter");
+
+const [approvalCurrency, setApprovalCurrency] =
+  useState<PartnerCurrency>("ZAR");
+
+const [approvalMonthlyFee, setApprovalMonthlyFee] =
+  useState<number>(0);
+
+const [approvalIncludedMessages, setApprovalIncludedMessages] =
+  useState<number>(0);
+
+const [approvalPricePerMessage, setApprovalPricePerMessage] =
+  useState<number>(0);
+
+const [approvalMaxUsers, setApprovalMaxUsers] =
+  useState<number>(1);
+
+const [approvalMaxMessages, setApprovalMaxMessages] =
+  useState<number>(0);
 
   function handleLogout() {
   localStorage.removeItem("adminToken");
@@ -170,9 +203,30 @@ const [loadingApplications, setLoadingApplications] =
         },
 
         body: JSON.stringify({
-          id,
-          status,
-        }),
+  id,
+  status,
+
+  plan: approvalPlan,
+
+  currency: approvalCurrency,
+
+  ...(approvalPlan === "enterprise"
+    ? {
+        monthlyFee: approvalMonthlyFee,
+
+        includedMessages:
+          approvalIncludedMessages,
+
+        pricePerMessage:
+          approvalPricePerMessage,
+
+        maxUsers: approvalMaxUsers,
+
+        maxMessages:
+          approvalMaxMessages,
+      }
+    : {}),
+}),
       }
     );
 
@@ -736,14 +790,203 @@ async function generateTestApiKey(
                   </p>
                 </div>
 
-                <div>
-                  <span className="rounded px-3 py-1 text-sm font-semibold bg-yellow-100 text-yellow-700">
-                    {application.status}
-                  </span>
-                </div>
+                              <div>
+                <span className="rounded px-3 py-1 text-sm font-semibold bg-yellow-100 text-yellow-700">
+                  {application.status}
+                </span>
+              </div>
+            </div>
+
+                        <div className="mt-6 border-t pt-6">
+              <div className="flex items-center justify-between">
+                <h4 className="text-lg font-semibold text-gray-900">
+                  Partner Plan
+                </h4>
+
+                {selectedApplicationId !== application._id && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSelectedApplicationId(
+                        application._id
+                      )
+                    }
+                    className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+                  >
+                    Configure Plan
+                  </button>
+                )}
               </div>
 
-              <div className="mt-6 flex flex-wrap gap-4">
+              {selectedApplicationId === application._id && (
+                <div className="mt-4">
+
+                  <div className="grid md:grid-cols-2 gap-4">
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Plan
+                      </label>
+
+                      <select
+                        value={approvalPlan}
+                        onChange={(event) =>
+                          setApprovalPlan(
+                            event.target.value as PartnerPlan
+                          )
+                        }
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900"
+                      >
+                        <option value="starter">
+                          Starter
+                        </option>
+
+                        <option value="business">
+                          Business
+                        </option>
+
+                        <option value="enterprise">
+                          Enterprise
+                        </option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Currency
+                      </label>
+
+                      <select
+                        value={approvalCurrency}
+                        onChange={(event) =>
+                          setApprovalCurrency(
+                            event.target.value as PartnerCurrency
+                          )
+                        }
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900"
+                      >
+                        <option value="ZAR">
+                          ZAR
+                        </option>
+
+                        <option value="USD">
+                          USD
+                        </option>
+                      </select>
+                    </div>
+
+                  </div>
+
+                  {approvalPlan === "enterprise" && (
+                    <div className="mt-6 border-t pt-6">
+
+                      <h5 className="text-md font-semibold text-gray-900 mb-4">
+                        Enterprise Pricing
+                      </h5>
+
+                      <div className="grid md:grid-cols-2 gap-4">
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Monthly Fee
+                          </label>
+
+                          <input
+                            type="number"
+                            min="0"
+                            value={approvalMonthlyFee}
+                            onChange={(event) =>
+                              setApprovalMonthlyFee(
+                                Number(event.target.value)
+                              )
+                            }
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Included Messages
+                          </label>
+
+                          <input
+                            type="number"
+                            min="0"
+                            value={approvalIncludedMessages}
+                            onChange={(event) =>
+                              setApprovalIncludedMessages(
+                                Number(event.target.value)
+                              )
+                            }
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Price Per Message
+                          </label>
+
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={approvalPricePerMessage}
+                            onChange={(event) =>
+                              setApprovalPricePerMessage(
+                                Number(event.target.value)
+                              )
+                            }
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Maximum Users
+                          </label>
+
+                          <input
+                            type="number"
+                            min="1"
+                            value={approvalMaxUsers}
+                            onChange={(event) =>
+                              setApprovalMaxUsers(
+                                Number(event.target.value)
+                              )
+                            }
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Maximum Messages
+                          </label>
+
+                          <input
+                            type="number"
+                            min="0"
+                            value={approvalMaxMessages}
+                            onChange={(event) =>
+                              setApprovalMaxMessages(
+                                Number(event.target.value)
+                              )
+                            }
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900"
+                          />
+                        </div>
+
+                      </div>
+                    </div>
+                  )}
+
+                </div>
+              )}
+
+            </div>
+
+            <div className="mt-6 flex flex-wrap gap-4">
                 <button
                   onClick={() =>
                     updateApplicationStatus(

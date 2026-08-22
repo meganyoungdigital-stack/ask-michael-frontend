@@ -9,6 +9,12 @@ import {
   verifyAdminSession,
 } from "@/lib/adminAuth";
 
+import {
+  PARTNER_PLANS,
+  type PartnerPlan,
+  type PartnerCurrency,
+} from "@/lib/partnerPlans";
+
 const resend = new Resend(
   process.env.RESEND_API_KEY
 );
@@ -113,9 +119,16 @@ export async function PATCH(req: Request) {
   try {
 
     const {
-      id,
-      status,
-    } = await req.json();
+  id,
+  status,
+  plan,
+  monthlyFee,
+  includedMessages,
+  pricePerMessage,
+  maxUsers,
+  maxMessages,
+  currency,
+} = await req.json();
 
 
     console.log("PATCH CALLED");
@@ -124,17 +137,59 @@ export async function PATCH(req: Request) {
 
 
     if (!id || !status) {
+  return NextResponse.json(
+    {
+      error: "Missing id or status",
+    },
+    {
+      status: 400,
+    }
+  );
+}
 
+let selectedPlan: PartnerPlan | null = null;
+
+if (status === "approved") {
+
+  if (
+    plan !== "starter" &&
+    plan !== "business" &&
+    plan !== "enterprise"
+  ) {
+    return NextResponse.json(
+      {
+        error: "A valid partner plan is required.",
+      },
+      {
+        status: 400,
+      }
+    );
+  }
+
+  selectedPlan = plan;
+
+  if (plan === "enterprise") {
+
+    if (
+      typeof monthlyFee !== "number" ||
+      typeof includedMessages !== "number" ||
+      typeof pricePerMessage !== "number" ||
+      typeof maxUsers !== "number" ||
+      typeof maxMessages !== "number" ||
+      !currency
+    ) {
       return NextResponse.json(
         {
-          error: "Missing id or status",
+          error:
+            "Enterprise pricing details are required.",
         },
         {
           status: 400,
         }
       );
-
     }
+  }
+}
 
 
     const { db } =
@@ -174,26 +229,58 @@ export async function PATCH(req: Request) {
 
     // Update application status
 
-    await db
-      .collection("partner_applications")
-      .updateOne(
+    const applicationUpdate: Record<string, unknown> = {
+  status,
+  updatedAt: new Date(),
+};
 
-        {
-          _id:
-            new ObjectId(id),
-        },
+if (status === "approved" && selectedPlan) {
 
-        {
-          $set: {
-            status,
+  const planConfig =
+    PARTNER_PLANS[selectedPlan];
 
-            updatedAt:
-              new Date(),
-          },
-        }
+  applicationUpdate.plan = selectedPlan;
+  applicationUpdate.currency =
+    selectedPlan === "enterprise"
+      ? currency
+      : planConfig.currency;
 
-      );
+  applicationUpdate.monthlyFee =
+    selectedPlan === "enterprise"
+      ? monthlyFee
+      : planConfig.monthlyFee;
 
+  applicationUpdate.includedMessages =
+    selectedPlan === "enterprise"
+      ? includedMessages
+      : planConfig.includedMessages;
+
+  applicationUpdate.pricePerMessage =
+    selectedPlan === "enterprise"
+      ? pricePerMessage
+      : planConfig.pricePerMessage;
+
+  applicationUpdate.maxUsers =
+    selectedPlan === "enterprise"
+      ? maxUsers
+      : planConfig.maxUsers;
+
+  applicationUpdate.maxMessages =
+    selectedPlan === "enterprise"
+      ? maxMessages
+      : planConfig.maxMessages;
+}
+
+await db
+  .collection("partner_applications")
+  .updateOne(
+    {
+      _id: new ObjectId(id),
+    },
+    {
+      $set: applicationUpdate,
+    }
+  );
 
 
     // =====================================================
@@ -212,88 +299,99 @@ export async function PATCH(req: Request) {
       console.log(
         "APPROVAL BLOCK ENTERED"
       );
-
-
-      // Look for an existing pending invitation
-
-      const existingInvitation =
-        await db
-          .collection("partner_invitations")
-          .findOne({
-
-            email:
-              application.email,
-
-            status:
-              "pending",
-
-          });
-
-
-
-      let token: string;
-
-
+let token = "";
 
       // =================================================
-      // CREATE NEW INVITATION
-      // =================================================
+// LOOK FOR EXISTING PENDING INVITATION
+// =================================================
 
-      if (!existingInvitation) {
-
-        token =
-          crypto.randomUUID();
-
-
-        console.log(
-          "Creating invitation..."
-        );
+const existingInvitation =
+  await db
+    .collection("partner_invitations")
+    .findOne({
+      email: application.email,
+      status: "pending",
+    });
 
 
-        await db
-          .collection("partner_invitations")
-          .insertOne({
-
-            companyName:
-              application.companyName,
-
-            contactName:
-              application.contactName,
-
-            email:
-              application.email,
-
-            token,
-
-            status:
-              "pending",
-
-            createdAt:
-              new Date(),
-
-          });
 
 
-        console.log(
-          "Invitation created successfully"
-        );
+// =================================================
+// CREATE NEW INVITATION
+// =================================================
 
+if (!existingInvitation) {
 
-      } else {
+  token = crypto.randomUUID();
 
-        // =================================================
-        // EXISTING INVITATION
-        // =================================================
+  console.log(
+    "Creating invitation..."
+  );
 
-        token =
-          existingInvitation.token;
+  await db
+    .collection("partner_invitations")
+    .insertOne({
 
+      companyName:
+        application.companyName,
 
-        console.log(
-          "Existing pending invitation found."
-        );
+      contactName:
+        application.contactName,
 
-      }
+      email:
+        application.email,
+
+      token,
+
+      status:
+        "pending",
+
+      plan:
+        application.plan,
+
+      currency:
+        application.currency,
+
+      monthlyFee:
+        application.monthlyFee,
+
+      includedMessages:
+        application.includedMessages,
+
+      pricePerMessage:
+        application.pricePerMessage,
+
+      maxUsers:
+        application.maxUsers,
+
+      maxMessages:
+        application.maxMessages,
+
+      createdAt:
+        new Date(),
+
+    });
+
+  console.log(
+    "Invitation created successfully"
+  );
+
+} else {
+
+  // =================================================
+  // EXISTING INVITATION
+  // =================================================
+
+  token =
+    existingInvitation.token;
+
+  console.log(
+    "Existing pending invitation found."
+  );
+
+}
+
+      
 
 
 

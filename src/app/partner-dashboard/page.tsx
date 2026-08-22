@@ -157,6 +157,21 @@ Messages Used
 
 </div>
 
+<div className="bg-white rounded-xl p-6 shadow">
+
+  <h2 className="text-gray-500">
+    Plan
+  </h2>
+
+  <p className="text-2xl text-black mt-2 capitalize">
+    {partner.plan || "Not assigned"}
+  </p>
+
+  <p className="text-sm text-gray-500 mt-2">
+    Currency: {partner.currency || "Not assigned"}
+  </p>
+
+</div>
 
 
 </div>
@@ -238,7 +253,57 @@ Messages Used
 </div>
 
 
+<div className="mt-8 bg-white rounded-xl p-6 shadow text-gray-700">
 
+  <h2 className="text-xl font-bold text-black">
+    Plan Limits
+  </h2>
+
+  <div className="mt-6 grid md:grid-cols-2 gap-4">
+
+    <div>
+      <p className="text-sm text-gray-500">
+        Included Messages
+      </p>
+
+      <p className="text-xl font-semibold text-black">
+        {partner.includedMessages ?? "Custom"}
+      </p>
+    </div>
+
+    <div>
+      <p className="text-sm text-gray-500">
+        Maximum Messages
+      </p>
+
+      <p className="text-xl font-semibold text-black">
+        {partner.maxMessages ?? "Custom"}
+      </p>
+    </div>
+
+    <div>
+      <p className="text-sm text-gray-500">
+        Maximum Users
+      </p>
+
+      <p className="text-xl font-semibold text-black">
+        {partner.maxUsers ?? "Custom"}
+      </p>
+    </div>
+
+    <div>
+      <p className="text-sm text-gray-500">
+        Price Per Message
+      </p>
+
+      <p className="text-xl font-semibold text-black">
+        {partner.pricePerMessage ?? "Custom"}
+      </p>
+    </div>
+
+  </div>
+
+</div>
 
 
 <div className="mt-8 bg-white rounded-xl p-6 shadow text-gray-700">

@@ -1,244 +1,294 @@
 import { NextResponse } from "next/server";
+
 import { connectToDatabase } from "@/lib/mongodb";
+
 import bcrypt from "bcrypt";
+
 import crypto from "crypto";
 
 
 
-export async function POST(
-req:Request
-){
+export async function POST(req: Request) {
 
+  try {
 
-try{
+    const {
+      token,
+      password,
+    } = await req.json();
 
 
-const {
-token,
-password
-}=await req.json();
 
+    // =====================================================
+    // VALIDATE REGISTRATION DETAILS
+    // =====================================================
 
+    if (!token || !password) {
 
+      return NextResponse.json(
+        {
+          error: "Missing registration details",
+        },
+        {
+          status: 400,
+        }
+      );
 
-if(!token || !password){
+    }
 
-return NextResponse.json(
-{
-error:"Missing registration details"
-},
-{
-status:400
-}
-);
 
-}
 
+    const { db } =
+      await connectToDatabase();
 
 
 
-const {db}=await connectToDatabase();
+    // =====================================================
+    // FIND INVITATION
+    // =====================================================
 
+    const invitation =
+      await db
+        .collection("partner_invitations")
+        .findOne({
+          token,
+          status: "pending",
+        });
 
 
 
+    if (!invitation) {
 
-const invitation =
-await db
-.collection("partner_invitations")
-.findOne({
+      return NextResponse.json(
+        {
+          error:
+            "Invalid or expired registration link",
+        },
+        {
+          status: 404,
+        }
+      );
 
-token
+    }
 
-});
 
 
+    // =====================================================
+    // CHECK IF PARTNER ALREADY EXISTS
+    // =====================================================
 
+    const existingPartner =
+      await db
+        .collection("partners")
+        .findOne({
+          email:
+            invitation.email,
+        });
 
 
-if(!invitation){
 
+    if (existingPartner) {
 
-return NextResponse.json(
-{
-error:"Invalid registration link"
-},
-{
-status:404
-}
-);
+      return NextResponse.json(
+        {
+          error:
+            "Partner already registered",
+        },
+        {
+          status: 400,
+        }
+      );
 
+    }
 
-}
 
 
+    // =====================================================
+    // HASH PASSWORD
+    // =====================================================
 
+    const passwordHash =
+      await bcrypt.hash(
+        password,
+        10
+      );
 
 
 
-const existingPartner =
-await db
-.collection("partners")
-.findOne({
+    // =====================================================
+    // GENERATE API KEYS
+    // =====================================================
 
-email:
-invitation.email
+    const apiKey =
+      "am_live_" +
+      crypto
+        .randomBytes(24)
+        .toString("hex");
 
-});
 
+    const testApiKey =
+      "am_test_" +
+      crypto
+        .randomBytes(24)
+        .toString("hex");
 
 
 
+    // =====================================================
+    // BILLING DATES
+    // =====================================================
 
-if(existingPartner){
+    const createdAt =
+      new Date();
 
 
-return NextResponse.json(
-{
-error:"Partner already registered"
-},
-{
-status:400
-}
-);
+    const billingDay =
+      createdAt.getDate();
 
 
-}
+    const nextBillingDate =
+      new Date(createdAt);
 
 
+    nextBillingDate.setMonth(
+      nextBillingDate.getMonth() + 1
+    );
 
 
 
-const passwordHash =
-await bcrypt.hash(
-password,
-10
-);
+    // =====================================================
+    // CREATE PARTNER ACCOUNT
+    // =====================================================
 
+    await db
+      .collection("partners")
+      .insertOne({
 
+        companyName:
+          invitation.companyName,
 
+        contactName:
+          invitation.contactName,
 
+        email:
+          invitation.email,
 
-const apiKey =
-  "am_live_" +
-  crypto.randomBytes(24).toString("hex");
+        passwordHash,
 
-const testApiKey =
-  "am_test_" +
-  crypto.randomBytes(24).toString("hex");
+        apiKey,
 
+        testApiKey,
 
+        status:
+          "active",
 
 
+        // ===============================================
+        // PLAN INFORMATION FROM ADMIN APPROVAL
+        // ===============================================
 
+        plan:
+          invitation.plan,
 
-await db
-.collection("partners")
-.insertOne({
+        currency:
+          invitation.currency,
 
-companyName:
-invitation.companyName,
+        monthlyFee:
+          invitation.monthlyFee,
 
+        includedMessages:
+          invitation.includedMessages,
 
-contactName:
-invitation.contactName,
+        pricePerMessage:
+          invitation.pricePerMessage,
 
+        maxUsers:
+          invitation.maxUsers,
 
-email:
-invitation.email,
+        maxMessages:
+          invitation.maxMessages,
 
 
-passwordHash,
+        // ===============================================
+        // USAGE
+        // ===============================================
 
+        messages:
+          0,
 
-apiKey,
 
-testApiKey,
+        // ===============================================
+        // BILLING
+        // ===============================================
 
-status:
-"active",
+        billingDay,
 
+        nextBillingDate,
 
 
-monthlyFee:
-1999,
+        // ===============================================
+        // ACCOUNT DATES
+        // ===============================================
 
+        createdAt,
 
-pricePerMessage:
-0.05,
+        updatedAt:
+          createdAt,
 
+      });
 
-messages:
-0,
 
 
-billingDay:
-new Date().getDate(),
+    // =====================================================
+    // MARK INVITATION AS USED
+    // =====================================================
 
+    await db
+      .collection("partner_invitations")
+      .updateOne(
+        {
+          token,
+        },
+        {
+          $set: {
+            status: "used",
+            usedAt: createdAt,
+          },
+        }
+      );
 
-nextBillingDate:
-new Date(
-  new Date().setMonth(
-    new Date().getMonth() + 1
-  )
-),
 
 
-createdAt:
-new Date(),
+    // =====================================================
+    // SUCCESS
+    // =====================================================
 
-});
+    return NextResponse.json(
+      {
+        success: true,
+      }
+    );
 
 
 
+  } catch (error) {
 
+    console.error(
+      "Partner registration error:",
+      error
+    );
 
 
+    return NextResponse.json(
+      {
+        error:
+          "Registration failed",
+      },
+      {
+        status: 500,
+      }
+    );
 
-await db
-.collection("partner_invitations")
-.deleteOne({
-
-token
-
-});
-
-
-
-
-
-
-return NextResponse.json({
-
-success:true
-
-});
-
-
-
-
-
-
-}catch(error){
-
-
-console.error(
-"Partner registration error",
-error
-);
-
-
-return NextResponse.json(
-{
-error:"Registration failed"
-},
-{
-status:500
-}
-);
-
-
-}
-
+  }
 
 }

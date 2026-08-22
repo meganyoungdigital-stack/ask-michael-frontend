@@ -63,47 +63,60 @@ status:404
 
 return NextResponse.json({
 
-companyName:
-partner.companyName,
+  companyName:
+    partner.companyName,
 
-contactName:
-partner.contactName,
+  contactName:
+    partner.contactName,
 
-email:
-partner.email,
+  email:
+    partner.email,
 
-apiKey:
-partner.apiKey,
+  apiKey:
+    partner.apiKey,
 
-testApiKey:
-partner.testApiKey || null,
+  testApiKey:
+    partner.testApiKey || null,
 
-messages:
-partner.messages || 0,
+  messages:
+    partner.messages || 0,
 
-monthlyFee:
-partner.monthlyFee,
+  plan:
+    partner.plan || null,
 
-pricePerMessage:
-partner.pricePerMessage,
+  currency:
+    partner.currency || null,
 
-currentBill:
-partner.monthlyFee +
-(
-(partner.messages || 0)
-*
-partner.pricePerMessage
-),
+  monthlyFee:
+    partner.monthlyFee ?? null,
 
-status:
-partner.status,
+  includedMessages:
+    partner.includedMessages ?? null,
 
-subscriptionStatus:
-partner.subscriptionStatus || "inactive",
+  pricePerMessage:
+    partner.pricePerMessage ?? null,
 
-nextBillingDate:
-partner.nextBillingDate || null
+  maxUsers:
+    partner.maxUsers ?? null,
 
+  maxMessages:
+    partner.maxMessages ?? null,
+
+  currentBill:
+    (partner.monthlyFee || 0) +
+    (
+      (partner.messages || 0) *
+      (partner.pricePerMessage || 0)
+    ),
+
+  status:
+    partner.status,
+
+  subscriptionStatus:
+    partner.subscriptionStatus || "inactive",
+
+  nextBillingDate:
+    partner.nextBillingDate || null
 
 });
 
