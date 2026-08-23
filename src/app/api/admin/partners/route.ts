@@ -380,13 +380,62 @@ if (!existingInvitation) {
 
   // =================================================
   // EXISTING INVITATION
+  // UPDATE IT WITH THE NEW APPROVED PLAN
   // =================================================
 
   token =
     existingInvitation.token;
 
   console.log(
-    "Existing pending invitation found."
+    "Existing pending invitation found. Updating plan..."
+  );
+
+  await db
+    .collection("partner_invitations")
+    .updateOne(
+      {
+        _id: existingInvitation._id,
+      },
+      {
+        $set: {
+          companyName:
+            application.companyName,
+
+          contactName:
+            application.contactName,
+
+          email:
+            application.email,
+
+          plan:
+            application.plan,
+
+          currency:
+            application.currency,
+
+          monthlyFee:
+            application.monthlyFee,
+
+          includedMessages:
+            application.includedMessages,
+
+          pricePerMessage:
+            application.pricePerMessage,
+
+          maxUsers:
+            application.maxUsers,
+
+          maxMessages:
+            application.maxMessages,
+
+          updatedAt:
+            new Date(),
+        },
+      }
+    );
+
+  console.log(
+    "Existing invitation updated successfully."
   );
 
 }
