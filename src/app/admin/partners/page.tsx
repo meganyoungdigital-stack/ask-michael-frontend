@@ -58,6 +58,11 @@ export default function PartnersAdminPage() {
   const [loading, setLoading] = useState(true);
 const [generatingInvoice, setGeneratingInvoice] = useState("");
 
+
+
+const [partnerSearch, setPartnerSearch] = useState("");
+const [expandedPartnerId, setExpandedPartnerId] = useState<string | null>(null);
+
 const [pendingApplications, setPendingApplications] =
   useState<PartnerApplication[]>([]);
 
@@ -440,6 +445,21 @@ async function deletePartner(id: string) {
   }
 
 }
+
+const filteredApplications = applications.filter((partner) => {
+  const search = partnerSearch.toLowerCase().trim();
+
+  if (!search) {
+    return true;
+  }
+
+  return (
+    partner.companyName.toLowerCase().includes(search) ||
+    partner.contactName.toLowerCase().includes(search) ||
+    partner.email.toLowerCase().includes(search)
+  );
+});
+
 async function generateInvoice(
   partner: PartnerAccount
 ) {
@@ -1061,215 +1081,435 @@ async function generateTestApiKey(
 
     <div className="space-y-6">
 
-      {applications.length === 0 && (
-        <div className="bg-white rounded-xl border p-6 text-gray-900">
-          No partner accounts found.
-        </div>
-      )}
+  {applications
+    .filter((partner) => {
+      const search =
+        partnerSearch.trim().toLowerCase();
 
-      {applications.map((partner) => (
+      if (!search) {
+        return true;
+      }
+
+      return (
+        partner.companyName
+          .toLowerCase()
+          .includes(search) ||
+        partner.contactName
+          .toLowerCase()
+          .includes(search) ||
+        partner.email
+          .toLowerCase()
+          .includes(search)
+      );
+    })
+    .map((partner) => {
+
+      const isExpanded =
+        expandedPartnerId === partner._id;
+
+      return (
         <div
           key={partner._id}
-          className="bg-white rounded-xl border p-6"
+          className="bg-white rounded-xl border shadow-sm overflow-hidden"
         >
 
-          <div className="flex justify-between gap-6">
+          {/* PARTNER SUMMARY */}
 
-            <div className="flex-1">
+          <button
+            type="button"
+            onClick={() =>
+              setExpandedPartnerId(
+                isExpanded
+                  ? null
+                  : partner._id
+              )
+            }
+            className="w-full text-left p-6 hover:bg-gray-50 transition"
+          >
 
-              <h2 className="text-xl font-bold text-gray-900">
-                {partner.companyName}
-              </h2>
+            <div className="flex items-center justify-between gap-6">
 
-              <p className="text-gray-700 mt-1">
-                {partner.contactName}
-              </p>
+              <div className="flex-1">
 
-              <p className="text-gray-700">
-                {partner.email}
-             </p>
+                <h2 className="text-xl font-bold text-gray-900">
+                  {partner.companyName}
+                </h2>
 
+                <p className="text-gray-700 mt-1">
+                  {partner.contactName}
+                </p>
 
-              <div className="mt-5 grid md:grid-cols-2 gap-4">
+                <p className="text-gray-600 text-sm">
+                  {partner.email}
+                </p>
 
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-sm text-gray-500">
-                    Messages Used
-                  </p>
+              </div>
 
-                  <p className="text-xl font-semibold text-gray-900">
-                    {partner.messages}
-                  </p>
-                </div>
+              <div className="flex items-center gap-4">
 
+                <span
+                  className={`rounded px-3 py-1 text-sm font-semibold ${
+                    partner.status === "active"
+                      ? "bg-green-100 text-green-700"
+                      : partner.status === "suspended"
+                      ? "bg-orange-100 text-orange-700"
+                      : partner.status === "rejected"
+                      ? "bg-red-100 text-red-700"
+                      : "bg-yellow-100 text-yellow-700"
+                  }`}
+                >
+                  {partner.status}
+                </span>
 
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-sm text-gray-500">
-                    Monthly Fee
-                  </p>
-
-                  <p className="text-xl font-semibold text-gray-900">
-                    R{partner.monthlyFee}
-                  </p>
-                </div>
-                <div className="bg-gray-50 rounded-lg p-4">
-  <p className="text-sm text-gray-500">
-    Price Per Message
-  </p>
-
-  <p className="text-xl font-semibold text-gray-900">
-    R{partner.pricePerMessage}
-  </p>
-</div>
-              
-                  <div className="bg-gray-50 rounded-lg p-4 md:col-span-2">
-
-  <p className="text-sm text-gray-500">
-    Live API Key
-  </p>
-
-  <p className="text-sm font-mono break-all text-gray-900">
-    {partner.apiKey}
-  </p>
-
-  <p className="text-sm text-gray-500 mt-4">
-    Test API Key
-  </p>
-
-  <p className="text-sm font-mono break-all text-gray-900">
-    {partner.testApiKey || "Test API key not generated"}
-  </p>
-
-</div>
+                <span className="text-2xl text-gray-500">
+                  {isExpanded ? "▲" : "▼"}
+                </span>
 
               </div>
 
             </div>
 
+          </button>
 
-            <div>
-              <span
-                className={`rounded px-3 py-1 text-sm font-semibold ${
-                  partner.status === "active"
-                    ? "bg-green-100 text-green-700"
-                    : partner.status === "suspended"
-                    ? "bg-orange-100 text-orange-700"
-                    : partner.status === "rejected"
-                    ? "bg-red-100 text-red-700"
-                    : "bg-yellow-100 text-yellow-700"
-                }`}
-              >
-                {partner.status}
-              </span>
+
+          {/* EXPANDED DETAILS */}
+
+          {isExpanded && (
+            <div className="border-t bg-gray-50 p-6">
+
+              {/* PLAN AND BILLING */}
+
+              <div className="mb-6">
+
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Partner Plan & Billing
+                </h3>
+
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+                  <div className="bg-white rounded-lg border p-4">
+
+                    <p className="text-sm text-gray-500">
+                      Plan
+                    </p>
+
+                    <p className="text-xl font-semibold text-gray-900">
+                      {partner.plan || "Not assigned"}
+                    </p>
+
+                  </div>
+
+
+                  <div className="bg-white rounded-lg border p-4">
+
+                    <p className="text-sm text-gray-500">
+                      Currency
+                    </p>
+
+                    <p className="text-xl font-semibold text-gray-900">
+                      {partner.currency || "ZAR"}
+                    </p>
+
+                  </div>
+
+
+                  <div className="bg-white rounded-lg border p-4">
+
+                    <p className="text-sm text-gray-500">
+                      Messages Used
+                    </p>
+
+                    <p className="text-xl font-semibold text-gray-900">
+                      {partner.messages}
+                    </p>
+
+                  </div>
+
+
+                  <div className="bg-white rounded-lg border p-4">
+
+                    <p className="text-sm text-gray-500">
+                      Monthly Fee
+                    </p>
+
+                    <p className="text-xl font-semibold text-gray-900">
+                      {partner.currency || "ZAR"}{" "}
+                      {Number(
+                        partner.monthlyFee || 0
+                      ).toFixed(2)}
+                    </p>
+
+                  </div>
+
+
+                  <div className="bg-white rounded-lg border p-4">
+
+                    <p className="text-sm text-gray-500">
+                      Price Per Message
+                    </p>
+
+                    <p className="text-xl font-semibold text-gray-900">
+                      {partner.currency || "ZAR"}{" "}
+                      {Number(
+                        partner.pricePerMessage || 0
+                      ).toFixed(2)}
+                    </p>
+
+                  </div>
+
+
+                  <div className="bg-white rounded-lg border p-4">
+
+                    <p className="text-sm text-gray-500">
+                      Included Messages
+                    </p>
+
+                    <p className="text-xl font-semibold text-gray-900">
+                      {partner.includedMessages ??
+                        "Unlimited"}
+                    </p>
+
+                  </div>
+
+
+                  <div className="bg-white rounded-lg border p-4">
+
+                    <p className="text-sm text-gray-500">
+                      Maximum Users
+                    </p>
+
+                    <p className="text-xl font-semibold text-gray-900">
+                      {partner.maxUsers ??
+                        "Unlimited"}
+                    </p>
+
+                  </div>
+
+
+                  <div className="bg-white rounded-lg border p-4">
+
+                    <p className="text-sm text-gray-500">
+                      Maximum Messages
+                    </p>
+
+                    <p className="text-xl font-semibold text-gray-900">
+                      {partner.maxMessages ??
+                        "Unlimited"}
+                    </p>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+
+              {/* API KEYS */}
+
+              <div className="mb-6">
+
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  API Keys
+                </h3>
+
+                <div className="bg-white rounded-lg border p-4">
+
+                  <p className="text-sm text-gray-500">
+                    Live API Key
+                  </p>
+
+                  <p className="text-sm font-mono break-all text-gray-900 mt-1">
+                    {partner.apiKey}
+                  </p>
+
+
+                  <p className="text-sm text-gray-500 mt-5">
+                    Test API Key
+                  </p>
+
+                  <p className="text-sm font-mono break-all text-gray-900 mt-1">
+                    {partner.testApiKey ||
+                      "Test API key not generated"}
+                  </p>
+
+                </div>
+
+              </div>
+
+
+              {/* ACTION BUTTONS */}
+
+              <div>
+
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Account Actions
+                </h3>
+
+                <div className="flex flex-wrap gap-4">
+
+                  <button
+                    onClick={() =>
+                      updatePartnerStatus(
+                        partner._id,
+                        "active"
+                      )
+                    }
+                    disabled={
+                      updating === partner._id
+                    }
+                    className="rounded bg-green-600 px-4 py-2 text-white hover:bg-green-700 disabled:opacity-50"
+                  >
+                    {updating === partner._id
+                      ? "Updating..."
+                      : "Activate"}
+                  </button>
+
+
+                  <button
+                    onClick={() =>
+                      updatePartnerStatus(
+                        partner._id,
+                        "suspended"
+                      )
+                    }
+                    disabled={
+                      updating === partner._id
+                    }
+                    className="rounded bg-orange-500 px-4 py-2 text-white hover:bg-orange-600 disabled:opacity-50"
+                  >
+                    {updating === partner._id
+                      ? "Updating..."
+                      : "Suspend"}
+                  </button>
+
+
+                  <button
+                    onClick={() =>
+                      updatePartnerStatus(
+                        partner._id,
+                        "rejected"
+                      )
+                    }
+                    disabled={
+                      updating === partner._id
+                    }
+                    className="rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:opacity-50"
+                  >
+                    {updating === partner._id
+                      ? "Updating..."
+                      : "Reject"}
+                  </button>
+
+
+                  <button
+                    onClick={() =>
+                      deletePartner(
+                        partner._id
+                      )
+                    }
+                    disabled={
+                      updating === partner._id
+                    }
+                    className="rounded bg-gray-900 px-4 py-2 text-white hover:bg-gray-700 disabled:opacity-50"
+                  >
+                    {updating === partner._id
+                      ? "Deleting..."
+                      : "Delete"}
+                  </button>
+
+
+                  <button
+                    onClick={() =>
+                      generateInvoice(
+                        partner
+                      )
+                    }
+                    disabled={
+                      generatingInvoice ===
+                      partner._id
+                    }
+                    className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {generatingInvoice ===
+                    partner._id
+                      ? "Generating..."
+                      : "Generate Invoice"}
+                  </button>
+
+
+                  <button
+                    onClick={() =>
+                      viewLatestInvoice(
+                        partner._id
+                      )
+                    }
+                    className="rounded bg-purple-600 px-4 py-2 text-white hover:bg-purple-700"
+                  >
+                    View Latest Invoice
+                  </button>
+
+
+                  <button
+                    onClick={() =>
+                      generateTestApiKey(
+                        partner._id
+                      )
+                    }
+                    disabled={
+                      !!partner.testApiKey
+                    }
+                    className="rounded bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 disabled:opacity-50"
+                  >
+                    {partner.testApiKey
+                      ? "Test API Key Generated"
+                      : "Generate Test API Key"}
+                  </button>
+
+                </div>
+
+              </div>
+
             </div>
-
-          </div>
-
-
-          <div className="mt-6 flex flex-wrap gap-4">
-
-            <button
-              onClick={() =>
-                updatePartnerStatus(
-                  partner._id,
-                  "active"
-                )
-              }
-              disabled={updating === partner._id}
-              className="rounded bg-green-600 px-4 py-2 text-white hover:bg-green-700 disabled:opacity-50"
-            >
-              {updating === partner._id
-                ? "Updating..."
-                : "Activate"}
-            </button>
-
-
-            <button
-              onClick={() =>
-                updatePartnerStatus(
-                  partner._id,
-                  "suspended"
-                )
-              }
-              disabled={updating === partner._id}
-              className="rounded bg-orange-500 px-4 py-2 text-white hover:bg-orange-600 disabled:opacity-50"
-            >
-              {updating === partner._id
-                ? "Updating..."
-                : "Suspend"}
-            </button>
-
-
-            <button
-              onClick={() =>
-                updatePartnerStatus(
-                  partner._id,
-                  "rejected"
-                )
-              }
-              disabled={updating === partner._id}
-              className="rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:opacity-50"
-            >
-              {updating === partner._id
-                ? "Updating..."
-                : "Reject"}
-            </button>
-
-
-            <button
-              onClick={() =>
-                deletePartner(partner._id)
-              }
-              disabled={updating === partner._id}
-              className="rounded bg-gray-900 px-4 py-2 text-white hover:bg-gray-700 disabled:opacity-50"
-            >
-              {updating === partner._id
-                ? "Deleting..."
-                : "Delete"}
-            </button>
-
-<button
-  onClick={() =>
-    generateInvoice(partner)
-  }
-  disabled={
-    generatingInvoice ===
-    partner._id
-  }
-  className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
->
-  {generatingInvoice ===
-  partner._id
-    ? "Generating..."
-    : "Generate Invoice"}
-</button>
-<button
-  onClick={() =>
-    viewLatestInvoice(partner._id)
-  }
-  className="rounded bg-purple-600 px-4 py-2 text-white hover:bg-purple-700"
->
-  View Latest Invoice
-</button>
-
-<button
-  onClick={() =>
-    generateTestApiKey(partner._id)
-  }
-  disabled={!!partner.testApiKey}
-  className="rounded bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 disabled:opacity-50"
->
-  {partner.testApiKey
-    ? "Test API Key Generated"
-    : "Generate Test API Key"}
-</button>
-
-          </div>
+          )}
 
         </div>
-      ))}
+      );
 
+    })}
+
+  {applications.length > 0 &&
+    applications.filter((partner) => {
+      const search =
+        partnerSearch.trim().toLowerCase();
+
+      if (!search) {
+        return true;
+      }
+
+      return (
+        partner.companyName
+          .toLowerCase()
+          .includes(search) ||
+        partner.contactName
+          .toLowerCase()
+          .includes(search) ||
+        partner.email
+          .toLowerCase()
+          .includes(search)
+      );
+    }).length === 0 && (
+      <div className="bg-white rounded-xl border p-6 text-gray-900">
+        No partners match your search.
+      </div>
+    )}
+
+  {applications.length === 0 && (
+    <div className="bg-white rounded-xl border p-6 text-gray-900">
+      No partner accounts found.
     </div>
+  )}
+
+</div>
 
   </main>
 );
