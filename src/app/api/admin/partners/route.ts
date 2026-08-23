@@ -282,6 +282,28 @@ await db
     }
   );
 
+// Re-fetch the application after saving the approved
+// plan and pricing so the invitation receives the
+// updated values.
+
+const updatedApplication =
+  await db
+    .collection("partner_applications")
+    .findOne({
+      _id: new ObjectId(id),
+    });
+
+if (!updatedApplication) {
+  return NextResponse.json(
+    {
+      error:
+        "Failed to reload updated partner application",
+    },
+    {
+      status: 500,
+    }
+  );
+}
 
     // =====================================================
     // APPROVED
@@ -347,25 +369,25 @@ if (!existingInvitation) {
         "pending",
 
       plan:
-        application.plan,
+  updatedApplication.plan,
 
-      currency:
-        application.currency,
+currency:
+  updatedApplication.currency,
 
-      monthlyFee:
-        application.monthlyFee,
+monthlyFee:
+  updatedApplication.monthlyFee,
 
-      includedMessages:
-        application.includedMessages,
+includedMessages:
+  updatedApplication.includedMessages,
 
-      pricePerMessage:
-        application.pricePerMessage,
+pricePerMessage:
+  updatedApplication.pricePerMessage,
 
-      maxUsers:
-        application.maxUsers,
+maxUsers:
+  updatedApplication.maxUsers,
 
-      maxMessages:
-        application.maxMessages,
+maxMessages:
+  updatedApplication.maxMessages,
 
       createdAt:
         new Date(),
@@ -408,25 +430,25 @@ if (!existingInvitation) {
             application.email,
 
           plan:
-            application.plan,
+  updatedApplication.plan,
 
-          currency:
-            application.currency,
+currency:
+  updatedApplication.currency,
 
-          monthlyFee:
-            application.monthlyFee,
+monthlyFee:
+  updatedApplication.monthlyFee,
 
-          includedMessages:
-            application.includedMessages,
+includedMessages:
+  updatedApplication.includedMessages,
 
-          pricePerMessage:
-            application.pricePerMessage,
+pricePerMessage:
+  updatedApplication.pricePerMessage,
 
-          maxUsers:
-            application.maxUsers,
+maxUsers:
+  updatedApplication.maxUsers,
 
-          maxMessages:
-            application.maxMessages,
+maxMessages:
+  updatedApplication.maxMessages,
 
           updatedAt:
             new Date(),
