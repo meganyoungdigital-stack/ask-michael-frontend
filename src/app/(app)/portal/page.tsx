@@ -1,14 +1,10 @@
 "use client";
 
-import { useLanguage } from "@/hooks/useLanguage";
-import { translations } from "@/lib/translations";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 
 export default function PortalPage() {
-  const lang = useLanguage() as keyof typeof translations;
-const t = translations[lang];
   const router = useRouter();
   const { isLoaded, isSignedIn } = useUser();
 
@@ -51,28 +47,28 @@ const t = translations[lang];
       const data = await res.json();
 
       setUsage({
-  count: typeof data.used === "number" ? data.used : 0,
-  limit: typeof data.limit === "number" ? data.limit : 10,
-  isPro: data.isPro || false,
-});
+        count: typeof data.used === "number" ? data.used : 0,
+        limit: typeof data.limit === "number" ? data.limit : 10,
+        isPro: data.isPro || false,
+      });
     } catch (err) {
       console.error("Failed to fetch usage");
     }
   }
 
   useEffect(() => {
-  fetchUsage();
-
-  const handleRefresh = () => {
     fetchUsage();
-  };
 
-  window.addEventListener("refreshSidebar", handleRefresh);
+    const handleRefresh = () => {
+      fetchUsage();
+    };
 
-  return () => {
-    window.removeEventListener("refreshSidebar", handleRefresh);
-  };
-}, []);
+    window.addEventListener("refreshSidebar", handleRefresh);
+
+    return () => {
+      window.removeEventListener("refreshSidebar", handleRefresh);
+    };
+  }, []);
 
   /* =========================
      CREATE CHAT
@@ -109,7 +105,7 @@ const t = translations[lang];
   if (!isLoaded || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen text-white">
-        {t.loading}
+        Loading portal...
       </div>
     );
   }
@@ -127,18 +123,18 @@ const t = translations[lang];
       />
 
       <h1 className="text-3xl font-bold mb-2">
-        {t.portalTitle}
+        Ask Michael
       </h1>
 
       <p className="text-gray-400 mb-4">
-        {t.portalSubtitle}
+        Your AI engineering assistant
       </p>
 
       {/* USAGE */}
       <p className="text-sm text-gray-400 mb-6">
         {isLimitReached
-  ? t.limitReached
-  : t.messagesLeft(remaining)}
+          ? "Daily message limit reached"
+          : `${remaining} messages left today`}
       </p>
 
       {/* BUTTON */}
@@ -151,7 +147,7 @@ const t = translations[lang];
             : "bg-blue-600 hover:bg-blue-700"
         }`}
       >
-       {isLimitReached ? t.limitReached : t.newChat}
+        {isLimitReached ? "Daily message limit reached" : "+ New Chat"}
       </button>
 
     </div>

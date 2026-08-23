@@ -1,110 +1,45 @@
 "use client";
 
-import { useLanguage } from "@/hooks/useLanguage";
-import { translations } from "@/lib/translations";
 import Link from "next/link";
 import { useUser, UserButton } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 
 export default function Navbar() {
-  const lang = useLanguage() as keyof typeof translations;
-const t = translations[lang];
-
   const { isLoaded, isSignedIn } = useUser();
-const pathname = usePathname();
+  const pathname = usePathname();
 
+  const [visible, setVisible] = useState(false);
+  const [isPartnerLoggedIn, setIsPartnerLoggedIn] = useState(false);
 
-
-const [visible, setVisible] = useState(false);
-  const [langOpen, setLangOpen] = useState(false); // dropdown
-const [isPartnerLoggedIn, setIsPartnerLoggedIn] =
-  useState(false);
-  
   useEffect(() => {
-  const handleClickOutside = () => setLangOpen(false);
-  window.addEventListener("click", handleClickOutside);
-  return () => window.removeEventListener("click", handleClickOutside);
-}, []);
+    const checkPartnerLogin = () => {
+      const token = localStorage.getItem("partnerToken");
 
-useEffect(() => {
+      setIsPartnerLoggedIn(!!token);
+    };
 
+    // Check when navbar loads
+    checkPartnerLogin();
 
-  const checkPartnerLogin = () => {
+    // Listen for login event
+    window.addEventListener("partnerLogin", checkPartnerLogin);
 
-    const token =
-      localStorage.getItem(
-        "partnerToken"
-      );
+    // Listen for logout event
+    window.addEventListener("partnerLogout", checkPartnerLogin);
 
+    return () => {
+      window.removeEventListener("partnerLogin", checkPartnerLogin);
+      window.removeEventListener("partnerLogout", checkPartnerLogin);
+    };
+  }, []);
 
-    setIsPartnerLoggedIn(
-      !!token
-    );
+  const partnerLogout = () => {
+    localStorage.removeItem("partnerToken");
 
-  };
+    window.dispatchEvent(new Event("partnerLogout"));
 
-
-  // Check when navbar loads
-  checkPartnerLogin();
-
-
-  // Listen for login event
-  window.addEventListener(
-    "partnerLogin",
-    checkPartnerLogin
-  );
-
-
-  // Listen for logout event
-  window.addEventListener(
-    "partnerLogout",
-    checkPartnerLogin
-  );
-
-
-  return () => {
-
-    window.removeEventListener(
-      "partnerLogin",
-      checkPartnerLogin
-    );
-
-
-    window.removeEventListener(
-      "partnerLogout",
-      checkPartnerLogin
-    );
-
-  };
-
-
-}, []);
-
-  const language = lang; // ✅ single source of truth
-
-const partnerLogout = () => {
-
-  localStorage.removeItem(
-    "partnerToken"
-  );
-
-
-  window.dispatchEvent(
-    new Event("partnerLogout")
-  );
-
-
-  window.location.href =
-    "/partner-login";
-
-};
-  const changeLanguage = (lang: string) => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("lang", lang);
-      window.dispatchEvent(new Event("languageChange"));
-      window.location.reload(); // ensures UI updates
-    }
+    window.location.href = "/partner-login";
   };
 
   const isPlatform =
@@ -122,161 +57,99 @@ const partnerLogout = () => {
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
 
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 text-white text-lg font-semibold">
-            <img src="/m-logo.png" className="w-8" alt="Michael AI" />
+          <Link
+            href="/"
+            className="flex items-center gap-2 text-white text-lg font-semibold"
+          >
+            <img
+              src="/m-logo.png"
+              className="w-8"
+              alt="Michael AI"
+            />
             Ask Michael
           </Link>
 
           {/* Navigation */}
           <div className="hidden md:flex items-center gap-8 text-sm text-blue-100">
 
-            {/* 🌍 LANGUAGE DROPDOWN */}
-            <div className="relative">
-              <button
-                onClick={(e) => {
-  e.stopPropagation();
-  setLangOpen((prev) => !prev);
-}}
-                className="flex items-center gap-2 border border-white/20 rounded-lg px-3 py-1 text-white hover:bg-white/10 transition"
-              >
-                <span>
-                  {language === "en" && "🇬🇧"}
-                  {language === "af" && "🇿🇦"}
-                  {language === "zu" && "🇿🇦"}
-                  {language === "fr" && "🇫🇷"}
-                </span>
-                <span className="text-sm font-medium">
-                  {language.toUpperCase()}
-                </span>
-              </button>
-
-              {langOpen && (
-                <div
-  onClick={(e) => e.stopPropagation()}
-  className="absolute right-0 mt-2 w-40 rounded-xl border border-white/10 bg-blue-950 shadow-lg z-50"
->
-                  {[
-                    { code: "en", name: "English", flag: "🇬🇧" },
-                    { code: "af", name: "Afrikaans", flag: "🇿🇦" },
-                    { code: "zu", name: "Zulu", flag: "🇿🇦" },
-                    { code: "fr", name: "Français", flag: "🇫🇷" },
-                  ].map((langOption) => (
-                    <button
-                      key={langOption.code}
-                      onClick={() => {
-                        changeLanguage(langOption.code);
-                        setLangOpen(false);
-                      }}
-                      className="w-full flex items-center gap-3 px-4 py-2 text-left text-white hover:bg-white/10 transition"
-                    >
-                      <span>{langOption.flag}</span>
-                      <span>{langOption.name}</span>
-                      <span className="ml-auto text-xs opacity-60">
-                        {langOption.code.toUpperCase()}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <Link href="/solutions" className="hover:text-white transition">
-              {t.footerSolutions}
+            <Link
+              href="/solutions"
+              className="hover:text-white transition"
+            >
+              Solutions
             </Link>
 
-            <Link href="/portal" className="hover:text-white transition">
-              {t.footerPlatform}
+            <Link
+              href="/portal"
+              className="hover:text-white transition"
+            >
+              Platform
             </Link>
 
-            <Link href="/pricing" className="hover:text-white transition">
-              {t.footerPricing}
+            <Link
+              href="/pricing"
+              className="hover:text-white transition"
+            >
+              Pricing
             </Link>
 
-            <Link href="/contact" className="hover:text-white transition">
-              {t.footerContact}
+            <Link
+              href="/contact"
+              className="hover:text-white transition"
+            >
+              Contact
             </Link>
+
           </div>
 
-          
-            {/* Right Side */}
-{/* Right Side */}
+          {/* Right Side */}
+          <div className="flex items-center gap-3">
 
-<div className="flex items-center gap-3">
+            {/* Ask Michael Login */}
+            {!isSignedIn && (
+              <Link href="/portal">
+                <button className="px-5 py-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm hover:scale-105 transition">
+                  Login
+                </button>
+              </Link>
+            )}
 
+            {/* Partner Login / Account */}
+            {isPartnerLoggedIn ? (
+              <>
+                <Link href="/partner-dashboard">
+                  <button className="px-5 py-2 rounded-full bg-green-600 text-white text-sm hover:scale-105 transition">
+                    Partner Account
+                  </button>
+                </Link>
 
-  {/* Ask Michael Login */}
+                <button
+                  onClick={partnerLogout}
+                  className="px-4 py-2 rounded-full border border-white/30 text-white text-sm hover:bg-white/10 transition"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link href="/partner-login">
+                <button className="px-5 py-2 rounded-full border border-white/30 text-white text-sm hover:bg-white/10 transition">
+                  Partner Login
+                </button>
+              </Link>
+            )}
 
-  {!isSignedIn && (
+            {/* Clerk Account */}
+            {isSignedIn && (
+              <UserButton
+                appearance={{
+                  elements: {
+                    avatarBox: "w-8 h-8",
+                  },
+                }}
+              />
+            )}
 
-    <Link href="/portal">
-
-      <button className="px-5 py-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm hover:scale-105 transition">
-
-        {t.login}
-
-      </button>
-
-    </Link>
-
-  )}
-
-
-
-  {/* Partner Login / Account */}
-
-  {isPartnerLoggedIn ? (
-
-    <>
-
-      <Link href="/partner-dashboard">
-
-        <button className="px-5 py-2 rounded-full bg-green-600 text-white text-sm hover:scale-105 transition">
-
-          Partner Account
-
-        </button>
-
-      </Link>
-
-
-      <button
-        onClick={partnerLogout}
-        className="px-4 py-2 rounded-full border border-white/30 text-white text-sm hover:bg-white/10 transition"
-      >
-
-        Logout
-
-      </button>
-
-    </>
-
-
-  ) : (
-
-    <Link href="/partner-login">
-
-      <button className="px-5 py-2 rounded-full border border-white/30 text-white text-sm hover:bg-white/10 transition">
-
-        Partner Login
-
-      </button>
-
-    </Link>
-
-  )}
-
-
-
-  {/* Clerk Account */}
-
-  {isSignedIn && (
-
-    <UserButton appearance={{ elements: { avatarBox: "w-8 h-8" } }} />
-
-  )}
-
-
-</div>
+          </div>
         </div>
       </nav>
     );
@@ -301,160 +174,99 @@ const partnerLogout = () => {
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
 
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 text-white text-lg font-semibold">
-            <img src="/m-logo.png" className="w-8" alt="Michael AI" />
+          <Link
+            href="/"
+            className="flex items-center gap-2 text-white text-lg font-semibold"
+          >
+            <img
+              src="/m-logo.png"
+              className="w-8"
+              alt="Michael AI"
+            />
             Ask Michael
           </Link>
 
           {/* Navigation */}
           <div className="hidden md:flex items-center gap-8 text-sm text-blue-100">
 
-            {/* 🌍 LANGUAGE DROPDOWN */}
-            <div className="relative">
-              <button
-                onClick={(e) => {
-  e.stopPropagation();
-  setLangOpen((prev) => !prev);
-}}
-                className="flex items-center gap-2 border border-white/20 rounded-lg px-3 py-1 text-white hover:bg-white/10 transition"
-              >
-                <span>
-                  {language === "en" && "🇬🇧"}
-                  {language === "af" && "🇿🇦"}
-                  {language === "zu" && "🇿🇦"}
-                  {language === "fr" && "🇫🇷"}
-                </span>
-                <span className="text-sm font-medium">
-                  {language.toUpperCase()}
-                </span>
-              </button>
-
-              {langOpen && (
-                <div
-  onClick={(e) => e.stopPropagation()}
-  className="absolute right-0 mt-2 w-40 rounded-xl border border-white/10 bg-blue-950 shadow-lg z-50"
->
-                  {[
-                    { code: "en", name: "English", flag: "🇬🇧" },
-                    { code: "af", name: "Afrikaans", flag: "🇿🇦" },
-                    { code: "zu", name: "Zulu", flag: "🇿🇦" },
-                    { code: "fr", name: "Français", flag: "🇫🇷" },
-                  ].map((langOption) => (
-                    <button
-                      key={langOption.code}
-                      onClick={() => {
-                        changeLanguage(langOption.code);
-                        setLangOpen(false);
-                      }}
-                      className="w-full flex items-center gap-3 px-4 py-2 text-left text-white hover:bg-white/10 transition"
-                    >
-                      <span>{langOption.flag}</span>
-                      <span>{langOption.name}</span>
-                      <span className="ml-auto text-xs opacity-60">
-                        {langOption.code.toUpperCase()}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <Link href="/solutions" className="hover:text-white transition">
-              {t.footerSolutions}
+            <Link
+              href="/solutions"
+              className="hover:text-white transition"
+            >
+              Solutions
             </Link>
 
-            <Link href="/portal" className="hover:text-white transition">
-              {t.footerPlatform}
+            <Link
+              href="/portal"
+              className="hover:text-white transition"
+            >
+              Platform
             </Link>
 
-            <Link href="/pricing" className="hover:text-white transition">
-              {t.footerPricing}
+            <Link
+              href="/pricing"
+              className="hover:text-white transition"
+            >
+              Pricing
             </Link>
 
-            <Link href="/contact" className="hover:text-white transition">
-              {t.footerContact}
+            <Link
+              href="/contact"
+              className="hover:text-white transition"
+            >
+              Contact
             </Link>
+
           </div>
 
           {/* Right Side */}
-          {/* Right Side */}
+          <div className="flex items-center gap-3">
 
-<div className="flex items-center gap-3">
+            {/* Ask Michael Login */}
+            {!isSignedIn && (
+              <Link href="/portal">
+                <button className="px-5 py-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm hover:scale-105 transition">
+                  Login
+                </button>
+              </Link>
+            )}
 
+            {/* Partner Login / Account */}
+            {isPartnerLoggedIn ? (
+              <>
+                <Link href="/partner-dashboard">
+                  <button className="px-5 py-2 rounded-full bg-green-600 text-white text-sm hover:scale-105 transition">
+                    Partner Account
+                  </button>
+                </Link>
 
-  {/* Ask Michael Login */}
+                <button
+                  onClick={partnerLogout}
+                  className="px-4 py-2 rounded-full border border-white/30 text-white text-sm hover:bg-white/10 transition"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link href="/partner-login">
+                <button className="px-5 py-2 rounded-full border border-white/30 text-white text-sm hover:bg-white/10 transition">
+                  Partner Login
+                </button>
+              </Link>
+            )}
 
-  {!isSignedIn && (
+            {/* Clerk Account */}
+            {isSignedIn && (
+              <UserButton
+                appearance={{
+                  elements: {
+                    avatarBox: "w-8 h-8",
+                  },
+                }}
+              />
+            )}
 
-    <Link href="/portal">
-
-      <button className="px-5 py-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm hover:scale-105 transition">
-
-        {t.login}
-
-      </button>
-
-    </Link>
-
-  )}
-
-
-
-  {/* Partner Login / Account */}
-
-  {isPartnerLoggedIn ? (
-
-    <>
-
-      <Link href="/partner-dashboard">
-
-        <button className="px-5 py-2 rounded-full bg-green-600 text-white text-sm hover:scale-105 transition">
-
-          Partner Account
-
-        </button>
-
-      </Link>
-
-
-      <button
-        onClick={partnerLogout}
-        className="px-4 py-2 rounded-full border border-white/30 text-white text-sm hover:bg-white/10 transition"
-      >
-
-        Logout
-
-      </button>
-
-    </>
-
-
-  ) : (
-
-    <Link href="/partner-login">
-
-      <button className="px-5 py-2 rounded-full border border-white/30 text-white text-sm hover:bg-white/10 transition">
-
-        Partner Login
-
-      </button>
-
-    </Link>
-
-  )}
-
-
-
-  {/* Clerk Account */}
-
-  {isSignedIn && (
-
-    <UserButton appearance={{ elements: { avatarBox: "w-8 h-8" } }} />
-
-  )}
-
-
-</div>
+          </div>
         </div>
       </nav>
     </div>

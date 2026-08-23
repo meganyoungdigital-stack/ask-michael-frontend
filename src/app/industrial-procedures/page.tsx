@@ -4,20 +4,17 @@ import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { useLanguage } from "@/hooks/useLanguage";
-import { translations } from "@/lib/translations";
 
 export default function IndustrialProceduresPage() {
-  const lang = useLanguage() as keyof typeof translations;
-const t = translations[lang];
-
   return (
     <div className="min-h-screen bg-background px-6 py-20">
 
       {/* NAV */}
       <div className="max-w-6xl mx-auto mb-10 flex justify-start items-center">
         <Link href="/">
-          <Button variant="outline">{t.backToPlatform}</Button>
+          <Button variant="outline">
+            ← Back to Platform
+          </Button>
         </Link>
       </div>
 
@@ -28,76 +25,125 @@ const t = translations[lang];
           animate={{ opacity: 1, y: 0 }}
           className="text-5xl font-bold mb-6"
         >
-          {t.industrialTitle}
+          Industrial Procedures & Workflows
         </motion.h1>
 
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-          {t.industrialDescription}
+          Support the creation, review, and management of industrial procedures
+          using AI-assisted tools designed to enhance consistency and
+          operational awareness.
         </p>
 
         <div className="flex justify-center gap-4">
           <Link href="/portal">
-            <Button size="lg">{t.enterPlatform}</Button>
+            <Button size="lg">
+              Enter Platform →
+            </Button>
           </Link>
 
           <Link href="/pricing">
             <Button variant="outline" size="lg">
-              {t.viewPricing}
+              View Pricing
             </Button>
           </Link>
         </div>
       </div>
 
+
       {/* SECTION GRID */}
       <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-8">
 
-        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+        >
           <Card className="p-6 rounded-2xl shadow">
             <CardContent>
               <h3 className="text-xl font-semibold mb-3">
-                {t.industrialSection1Title}
+                Procedure Development Support
               </h3>
+
               <p className="text-muted-foreground">
-                {t.industrialSection1Text}
+                Assist in drafting and structuring industrial procedures using
+                AI-supported guidance based on existing documentation and
+                standards.
+
+                {"\n\n"}
+
+                Outputs are intended to support internal workflows and should
+                be reviewed and approved by qualified personnel before use.
               </p>
             </CardContent>
           </Card>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}>
+
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+        >
           <Card className="p-6 rounded-2xl shadow">
             <CardContent>
               <h3 className="text-xl font-semibold mb-3">
-                {t.industrialSection2Title}
+                Standard Alignment Assistance
               </h3>
+
               <p className="text-muted-foreground">
-                {t.industrialSection2Text}
+                Reference relevant standards and internal guidelines to support
+                alignment of procedures with expected practices.
+
+                {"\n\n"}
+
+                The platform does not certify compliance and all procedures
+                must be validated against applicable standards by the user.
               </p>
             </CardContent>
           </Card>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}>
+
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+        >
           <Card className="p-6 rounded-2xl shadow">
             <CardContent>
               <h3 className="text-xl font-semibold mb-3">
-                {t.industrialSection3Title}
+                Workflow Structuring
               </h3>
+
               <p className="text-muted-foreground">
-                {t.industrialSection3Text}
+                Organize procedures into structured workflows to improve
+                clarity, traceability, and consistency across operations.
+
+                {"\n\n"}
+
+                These structures are intended to support operational visibility
+                and should be adapted to site-specific requirements.
               </p>
             </CardContent>
           </Card>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}>
+
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+        >
           <Card className="p-6 rounded-2xl shadow">
             <CardContent>
               <h3 className="text-xl font-semibold mb-3">
-                {t.industrialSection4Title}
+                Review & Continuous Improvement
               </h3>
+
               <p className="text-muted-foreground">
-                {t.industrialSection4Text}
+                Identify potential gaps, inconsistencies, or areas for
+                improvement in existing procedures using AI-assisted analysis.
+
+                {"\n\n"}
+
+                Insights are intended to support review processes and should be
+                validated before implementation.
               </p>
             </CardContent>
           </Card>
@@ -105,57 +151,92 @@ const t = translations[lang];
 
       </div>
 
+
       {/* WORKFLOW SECTION */}
       <div className="max-w-4xl mx-auto mt-24 text-center">
+
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           className="text-3xl font-semibold mb-4"
         >
-          {t.industrialWorkflowTitle}
+          Designed for Industrial Environments
         </motion.h2>
 
         <p className="text-muted-foreground">
-          {t.industrialWorkflowText}
+          Support teams in managing procedures across multiple operational
+          stages, from development to execution and review, within a unified
+          system.
         </p>
+
       </div>
 
-      {/* LEGAL DISCLAIMER */}
+
+      {/* DISCLAIMER */}
       <div className="max-w-4xl mx-auto mt-24">
+
         <Card className="p-6 rounded-2xl border border-border">
+
           <CardContent>
+
             <h3 className="text-xl font-semibold mb-3">
-              {t.industrialDisclaimerTitle}
+              Important Notice
             </h3>
+
             <p className="text-muted-foreground text-sm">
-              {t.industrialDisclaimerText}
+              This platform provides AI-assisted tools intended to support the
+              development and management of industrial procedures.
+
+              {"\n\n"}
+
+              It does not replace professional judgment, certified engineering
+              review, or regulatory compliance processes.
+
+              {"\n\n"}
+
+              Users are responsible for verifying all outputs, ensuring
+              compliance with applicable standards, and approving procedures
+              prior to implementation.
             </p>
+
           </CardContent>
+
         </Card>
+
       </div>
+
 
       {/* FINAL CTA */}
       <div className="text-center mt-24">
+
         <h3 className="text-3xl font-semibold mb-4">
-          {t.industrialFinalCtaTitle}
+          Improve Your Industrial Workflows with AI Support
         </h3>
 
         <p className="text-muted-foreground mb-6">
-          {t.industrialFinalCtaText}
+          Use AI-assisted tools to support procedure development, consistency,
+          and operational clarity.
         </p>
 
+
         <div className="flex justify-center gap-4">
+
           <Link href="/portal">
-            <Button size="lg">{t.startFree}</Button>
+            <Button size="lg">
+              Start Free
+            </Button>
           </Link>
 
           <Link href="/pricing">
             <Button variant="outline" size="lg">
-              {t.viewPricing}
+              View Pricing
             </Button>
           </Link>
+
         </div>
+
       </div>
+
     </div>
   );
 }

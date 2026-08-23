@@ -4,20 +4,17 @@ import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { useLanguage } from "@/hooks/useLanguage";
-import { translations } from "@/lib/translations";
 
-export default function AIPolicyPage() {
-  const lang = useLanguage() as keyof typeof translations;
-const t = translations[lang];
-
+export default function KnowledgePage() {
   return (
     <div className="min-h-screen bg-background px-6 py-20">
 
       {/* NAV */}
       <div className="max-w-6xl mx-auto mb-10 flex justify-start items-center">
         <Link href="/">
-          <Button variant="outline">{t.backToPlatform}</Button>
+          <Button variant="outline">
+            ← Back to Platform
+          </Button>
         </Link>
       </div>
 
@@ -28,21 +25,24 @@ const t = translations[lang];
           animate={{ opacity: 1, y: 0 }}
           className="text-5xl font-bold mb-6"
         >
-          {t.aiPolicyTitle}
+          AI Knowledge Engineering
         </motion.h1>
 
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-          {t.aiPolicyDescription}
+          Organize, retrieve, and interact with engineering knowledge using
+          AI-assisted tools designed to support informed decision-making.
         </p>
 
         <div className="flex justify-center gap-4">
           <Link href="/portal">
-            <Button size="lg">{t.enterPlatform}</Button>
+            <Button size="lg">
+              Enter Platform →
+            </Button>
           </Link>
 
           <Link href="/pricing">
             <Button variant="outline" size="lg">
-              {t.viewPricing}
+              View Pricing
             </Button>
           </Link>
         </div>
@@ -51,56 +51,89 @@ const t = translations[lang];
       {/* SECTION 1 */}
       <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-8">
 
-        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+        >
           <Card className="p-6 rounded-2xl shadow">
             <CardContent>
               <h3 className="text-xl font-semibold mb-3">
-                {t.aiPolicySection1Title}
+                Structured Knowledge Retrieval
               </h3>
+
               <p className="text-muted-foreground">
-                {t.aiPolicySection1Text}
+                Access engineering standards, internal documentation, and
+                technical resources through an AI-assisted retrieval system.
+                {"\n\n"}
+                The platform surfaces relevant information to support
+                workflows, while interpretation and application remain the
+                responsibility of qualified professionals.
               </p>
             </CardContent>
           </Card>
         </motion.div>
 
         {/* SECTION 2 */}
-        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+        >
           <Card className="p-6 rounded-2xl shadow">
             <CardContent>
               <h3 className="text-xl font-semibold mb-3">
-                {t.aiPolicySection2Title}
+                Context-Aware Document Analysis
               </h3>
+
               <p className="text-muted-foreground">
-                {t.aiPolicySection2Text}
+                Analyze documents with AI-assisted context awareness,
+                enabling faster navigation of complex engineering materials.
+                {"\n\n"}
+                Outputs are intended to support review processes and should be
+                verified before use in any operational or compliance context.
               </p>
             </CardContent>
           </Card>
         </motion.div>
 
         {/* SECTION 3 */}
-        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+        >
           <Card className="p-6 rounded-2xl shadow">
             <CardContent>
               <h3 className="text-xl font-semibold mb-3">
-                {t.aiPolicySection3Title}
+                AI-Assisted Querying
               </h3>
+
               <p className="text-muted-foreground">
-                {t.aiPolicySection3Text}
+                Interact with your knowledge base using natural language
+                queries to retrieve relevant insights efficiently.
+                {"\n\n"}
+                The system is designed to assist exploration and does not
+                guarantee completeness or accuracy of retrieved results.
               </p>
             </CardContent>
           </Card>
         </motion.div>
 
         {/* SECTION 4 */}
-        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+        >
           <Card className="p-6 rounded-2xl shadow">
             <CardContent>
               <h3 className="text-xl font-semibold mb-3">
-                {t.aiPolicySection4Title}
+                Custom Knowledge Integration
               </h3>
+
               <p className="text-muted-foreground">
-                {t.aiPolicySection4Text}
+                Integrate proprietary documents and datasets into a unified
+                knowledge environment tailored to your organization.
+                {"\n\n"}
+                Users are responsible for ensuring appropriate permissions,
+                data governance, and compliance with applicable regulations.
               </p>
             </CardContent>
           </Card>
@@ -108,20 +141,21 @@ const t = translations[lang];
 
       </div>
 
-      {/* SECTION 5 */}
-      <div className="max-w-4xl mx-auto mt-24">
-        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}>
-          <Card className="p-6 rounded-2xl shadow">
-            <CardContent>
-              <h3 className="text-xl font-semibold mb-3">
-                {t.aiPolicySection5Title}
-              </h3>
-              <p className="text-muted-foreground">
-                {t.aiPolicySection5Text}
-              </p>
-            </CardContent>
-          </Card>
-        </motion.div>
+      {/* WORKFLOW */}
+      <div className="max-w-4xl mx-auto mt-24 text-center">
+        <motion.h2
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          className="text-3xl font-semibold mb-4"
+        >
+          Built for Engineering Workflows
+        </motion.h2>
+
+        <p className="text-muted-foreground">
+          Designed to support engineers, analysts, and technical teams in
+          managing and interacting with complex knowledge systems across
+          multiple stages of work.
+        </p>
       </div>
 
       {/* LEGAL DISCLAIMER */}
@@ -129,10 +163,19 @@ const t = translations[lang];
         <Card className="p-6 rounded-2xl border border-border">
           <CardContent>
             <h3 className="text-xl font-semibold mb-3">
-              {t.aiPolicyDisclaimerTitle}
+              Important Notice
             </h3>
+
             <p className="text-muted-foreground text-sm">
-              {t.aiPolicyDisclaimerText}
+              This platform provides AI-assisted knowledge retrieval and
+              analysis tools intended to support engineering workflows.
+              {"\n\n"}
+              It does not replace professional judgment, certified engineering
+              review, or regulatory compliance processes.
+              {"\n\n"}
+              Users are responsible for verifying outputs, ensuring compliance
+              with applicable standards, and making final decisions based on
+              their professional expertise.
             </p>
           </CardContent>
         </Card>
@@ -141,25 +184,29 @@ const t = translations[lang];
       {/* FINAL CTA */}
       <div className="text-center mt-24">
         <h3 className="text-3xl font-semibold mb-4">
-          {t.aiPolicyFinalCtaTitle}
+          Start Using AI-Assisted Knowledge Tools
         </h3>
 
         <p className="text-muted-foreground mb-6">
-          {t.aiPolicyFinalCtaText}
+          Enhance how your team accesses and interacts with engineering
+          knowledge.
         </p>
 
         <div className="flex justify-center gap-4">
           <Link href="/portal">
-            <Button size="lg">{t.startFree}</Button>
+            <Button size="lg">
+              Start Free
+            </Button>
           </Link>
 
           <Link href="/pricing">
             <Button variant="outline" size="lg">
-              {t.viewPricing}
+              View Pricing
             </Button>
           </Link>
         </div>
       </div>
+
     </div>
   );
 }

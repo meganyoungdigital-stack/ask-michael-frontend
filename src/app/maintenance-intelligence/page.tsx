@@ -4,20 +4,17 @@ import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { useLanguage } from "@/hooks/useLanguage";
-import { translations } from "@/lib/translations";
 
 export default function MaintenanceIntelligencePage() {
-  const lang = useLanguage() as keyof typeof translations;
-const t = translations[lang];
-
   return (
     <div className="min-h-screen bg-background px-6 py-20">
 
       {/* NAV */}
       <div className="max-w-6xl mx-auto mb-10 flex justify-start items-center">
         <Link href="/">
-          <Button variant="outline">{t.backToPlatform}</Button>
+          <Button variant="outline">
+            ← Back to Platform
+          </Button>
         </Link>
       </div>
 
@@ -28,21 +25,24 @@ const t = translations[lang];
           animate={{ opacity: 1, y: 0 }}
           className="text-5xl font-bold mb-6"
         >
-          {t.maintenanceTitle}
+          Maintenance Intelligence
         </motion.h1>
 
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-          {t.maintenanceDescription}
+          Support maintenance planning and operational awareness with
+          AI-assisted insights derived from data, logs, and system activity.
         </p>
 
         <div className="flex justify-center gap-4">
           <Link href="/portal">
-            <Button size="lg">{t.enterPlatform}</Button>
+            <Button size="lg">
+              Enter Platform →
+            </Button>
           </Link>
 
           <Link href="/pricing">
             <Button variant="outline" size="lg">
-              {t.viewPricing}
+              View Pricing
             </Button>
           </Link>
         </div>
@@ -52,56 +52,80 @@ const t = translations[lang];
       <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-8">
 
         {/* SECTION 1 */}
-        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+        >
           <Card className="p-6 rounded-2xl shadow">
             <CardContent>
               <h3 className="text-xl font-semibold mb-3">
-                {t.maintenanceSection1Title}
+                Data-Driven Maintenance Insights
               </h3>
+
               <p className="text-muted-foreground whitespace-pre-line">
-                {t.maintenanceSection1Text}
+                {`Analyze operational data, logs, and historical records to identify patterns that may be relevant to maintenance activities.
+
+The system highlights trends and observations to assist teams in understanding system behavior over time.`}
               </p>
             </CardContent>
           </Card>
         </motion.div>
 
         {/* SECTION 2 */}
-        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+        >
           <Card className="p-6 rounded-2xl shadow">
             <CardContent>
               <h3 className="text-xl font-semibold mb-3">
-                {t.maintenanceSection2Title}
+                Anomaly Detection Support
               </h3>
+
               <p className="text-muted-foreground whitespace-pre-line">
-                {t.maintenanceSection2Text}
+                {`Surface unusual patterns or deviations in system data that may require further investigation.
+
+These signals are intended to support awareness and should be reviewed by qualified personnel before action is taken.`}
               </p>
             </CardContent>
           </Card>
         </motion.div>
 
         {/* SECTION 3 */}
-        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+        >
           <Card className="p-6 rounded-2xl shadow">
             <CardContent>
               <h3 className="text-xl font-semibold mb-3">
-                {t.maintenanceSection3Title}
+                Predictive Support for Planning
               </h3>
+
               <p className="text-muted-foreground whitespace-pre-line">
-                {t.maintenanceSection3Text}
+                {`Use AI-assisted analysis to support planning by identifying potential risks or inefficiencies based on available data.
+
+Outputs are indicative and should not be interpreted as guaranteed predictions or maintenance recommendations.`}
               </p>
             </CardContent>
           </Card>
         </motion.div>
 
         {/* SECTION 4 */}
-        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+        >
           <Card className="p-6 rounded-2xl shadow">
             <CardContent>
               <h3 className="text-xl font-semibold mb-3">
-                {t.maintenanceSection4Title}
+                Maintenance Workflow Support
               </h3>
+
               <p className="text-muted-foreground whitespace-pre-line">
-                {t.maintenanceSection4Text}
+                {`Integrate insights into maintenance workflows to improve visibility and coordination across teams.
+
+The platform supports decision-making processes but does not replace established maintenance procedures or protocols.`}
               </p>
             </CardContent>
           </Card>
@@ -116,11 +140,13 @@ const t = translations[lang];
           whileInView={{ opacity: 1, y: 0 }}
           className="text-3xl font-semibold mb-4"
         >
-          {t.maintenanceWorkflowTitle}
+          Supporting Proactive Maintenance Strategies
         </motion.h2>
 
         <p className="text-muted-foreground">
-          {t.maintenanceWorkflowText}
+          Designed to assist teams in improving maintenance awareness,
+          planning efficiency, and operational visibility across industrial
+          environments.
         </p>
       </div>
 
@@ -129,10 +155,15 @@ const t = translations[lang];
         <Card className="p-6 rounded-2xl border border-border">
           <CardContent>
             <h3 className="text-xl font-semibold mb-3">
-              {t.maintenanceDisclaimerTitle}
+              Important Notice
             </h3>
+
             <p className="text-muted-foreground text-sm whitespace-pre-line">
-              {t.maintenanceDisclaimerText}
+              {`This platform provides AI-assisted insights intended to support maintenance planning and operational awareness.
+
+It does not provide guaranteed predictions, maintenance instructions, or safety assurances.
+
+Users are responsible for verifying all outputs, following established procedures, and making final decisions based on qualified professional judgment.`}
             </p>
           </CardContent>
         </Card>
@@ -141,25 +172,29 @@ const t = translations[lang];
       {/* FINAL CTA */}
       <div className="text-center mt-24">
         <h3 className="text-3xl font-semibold mb-4">
-          {t.maintenanceFinalCtaTitle}
+          Improve Maintenance Visibility with AI Support
         </h3>
 
         <p className="text-muted-foreground mb-6">
-          {t.maintenanceFinalCtaText}
+          Use AI-assisted insights to support planning, identify trends, and
+          enhance operational awareness.
         </p>
 
         <div className="flex justify-center gap-4">
           <Link href="/portal">
-            <Button size="lg">{t.startFree}</Button>
+            <Button size="lg">
+              Start Free
+            </Button>
           </Link>
 
           <Link href="/pricing">
             <Button variant="outline" size="lg">
-              {t.viewPricing}
+              View Pricing
             </Button>
           </Link>
         </div>
       </div>
+
     </div>
   );
 }

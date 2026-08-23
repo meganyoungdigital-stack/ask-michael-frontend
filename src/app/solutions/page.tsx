@@ -4,14 +4,8 @@ import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { useLanguage } from "@/hooks/useLanguage";
-import { translations } from "@/lib/translations";
 
 export default function SolutionsPage() {
-
-  const lang = useLanguage() as keyof typeof translations;
-const t = translations[lang];
-
   return (
     <div className="min-h-screen bg-background px-6 py-20">
 
@@ -22,20 +16,25 @@ const t = translations[lang];
           animate={{ opacity: 1, y: 0 }}
           className="text-5xl font-bold mb-6"
         >
-          {t.solutionsHeroTitle}
+          Engineering Intelligence, Augmented by AI
         </motion.h1>
 
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-          {t.solutionsHeroText}
+          Support your engineering workflows with AI-assisted insights across
+          standards, operations, and design — built to enhance
+          decision-making, not replace it.
         </p>
 
         <div className="flex justify-center gap-4">
           <Link href="/portal">
-            <Button size="lg">{t.enterPlatform}</Button>
+            <Button size="lg">
+              Enter Platform →
+            </Button>
           </Link>
+
           <Link href="/pricing">
             <Button variant="outline" size="lg">
-              {t.viewPricing}
+              View Pricing
             </Button>
           </Link>
         </div>
@@ -44,67 +43,92 @@ const t = translations[lang];
       {/* SOLUTIONS GRID */}
       <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-8">
 
-        {/* Section 1 */}
-        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}>
+        {/* SECTION 1 */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+        >
           <Card className="p-6 rounded-2xl shadow">
             <CardContent>
               <h3 className="text-xl font-semibold mb-3">
-                {t.solutionsSection1Title}
+                AI-Assisted Access to Engineering Standards
               </h3>
-              <p className="text-muted-foreground">
-                {t.solutionsSection1Text}
+
+              <p className="text-muted-foreground whitespace-pre-line">
+                {`Quickly explore and reference engineering standards, internal documentation, and technical knowledge through an AI-assisted interface.
+
+The platform helps surface relevant information to support your work — while final interpretation and compliance remain the responsibility of qualified professionals.`}
               </p>
             </CardContent>
           </Card>
         </motion.div>
 
-        {/* Section 2 */}
-        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}>
+        {/* SECTION 2 */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+        >
           <Card className="p-6 rounded-2xl shadow">
             <CardContent>
               <h3 className="text-xl font-semibold mb-3">
-                {t.solutionsSection2Title}
+                Data-Informed Operational Insights
               </h3>
-              <p className="text-muted-foreground mb-4">
-                {t.solutionsSection2Text}
+
+              <p className="text-muted-foreground mb-4 whitespace-pre-line">
+                {`Analyze production logs, sensor data, and operational inputs with AI-supported pattern recognition.
+
+The system highlights trends and potential anomalies to assist teams in identifying areas for further investigation.`}
               </p>
 
               <ul className="text-sm text-muted-foreground space-y-2">
-                <li>{t.solutionsSection2Bullet1}</li>
-                <li>{t.solutionsSection2Bullet2}</li>
-                <li>{t.solutionsSection2Bullet3}</li>
+                <li>• Detect patterns in production data</li>
+                <li>• Surface anomalies for review</li>
+                <li>• Support data-driven decision-making</li>
               </ul>
             </CardContent>
           </Card>
         </motion.div>
 
-        {/* Section 3 */}
-        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}>
+        {/* SECTION 3 */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+        >
           <Card className="p-6 rounded-2xl shadow">
             <CardContent>
               <h3 className="text-xl font-semibold mb-3">
-                {t.solutionsSection3Title}
+                Predictive Analysis for Proactive Planning
               </h3>
-              <p className="text-muted-foreground">
-                {t.solutionsSection3Text}
+
+              <p className="text-muted-foreground whitespace-pre-line">
+                {`Use AI-driven analysis to identify potential risks and inefficiencies based on historical and real-time data.
+
+These insights are intended to support planning and operational awareness, and should be validated by engineering teams before implementation.`}
               </p>
             </CardContent>
           </Card>
         </motion.div>
 
-        {/* Section 4 */}
-        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}>
+        {/* SECTION 4 */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+        >
           <Card className="p-6 rounded-2xl shadow">
             <CardContent>
               <h3 className="text-xl font-semibold mb-3">
-                {t.solutionsSection4Title}
+                AI Co-Pilot for Drawings and Visual Data
               </h3>
-              <p className="text-muted-foreground">
-                {t.solutionsSection4Text}
+
+              <p className="text-muted-foreground whitespace-pre-line">
+                {`Interact with engineering drawings, CAD files, and visual data using AI-assisted interpretation tools.
+
+The platform can help identify elements, highlight patterns, and support review workflows — while final verification remains the responsibility of the user.`}
               </p>
             </CardContent>
           </Card>
         </motion.div>
+
       </div>
 
       {/* WORKFLOW SECTION */}
@@ -114,11 +138,13 @@ const t = translations[lang];
           whileInView={{ opacity: 1, y: 0 }}
           className="text-3xl font-semibold mb-4"
         >
-          {t.solutionsWorkflowTitle}
+          One Platform, Multiple Engineering Functions
         </motion.h2>
 
-        <p className="text-muted-foreground">
-          {t.solutionsWorkflowText}
+        <p className="text-muted-foreground whitespace-pre-line">
+          {`Bring together knowledge retrieval, operational insights, and visual analysis into a unified workflow.
+
+Designed to integrate into existing engineering environments and support teams across multiple stages of the process.`}
         </p>
       </div>
 
@@ -127,10 +153,13 @@ const t = translations[lang];
         <Card className="p-6 rounded-2xl border border-border">
           <CardContent>
             <h3 className="text-xl font-semibold mb-3">
-              {t.solutionsDisclaimerTitle}
+              Important Notice
             </h3>
-            <p className="text-muted-foreground text-sm">
-              {t.solutionsDisclaimerText}
+
+            <p className="text-muted-foreground text-sm whitespace-pre-line">
+              {`This platform provides AI-assisted insights intended to support engineering workflows. It does not replace professional judgment, certified engineering review, or regulatory compliance processes.
+
+Users are responsible for verifying outputs, ensuring compliance with applicable standards, and making final decisions.`}
             </p>
           </CardContent>
         </Card>
@@ -138,26 +167,32 @@ const t = translations[lang];
 
       {/* FINAL CTA */}
       <div className="text-center mt-24">
+
         <h3 className="text-3xl font-semibold mb-4">
-          {t.solutionsFinalTitle}
+          Enhance Your Engineering Workflow with AI Support
         </h3>
 
         <p className="text-muted-foreground mb-6">
-          {t.solutionsFinalText}
+          Start using AI-assisted tools to support analysis, improve
+          efficiency, and streamline engineering processes.
         </p>
 
         <div className="flex justify-center gap-4">
           <Link href="/portal">
-            <Button size="lg">{t.startFree}</Button>
+            <Button size="lg">
+              Start Free
+            </Button>
           </Link>
 
           <Link href="/pricing">
             <Button variant="outline" size="lg">
-              {t.viewPricing}
+              View Pricing
             </Button>
           </Link>
         </div>
+
       </div>
+
     </div>
   );
 }

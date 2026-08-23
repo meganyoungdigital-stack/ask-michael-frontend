@@ -9,30 +9,10 @@ import {
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
-import { translations } from "@/lib/translations";
+
 
 export default function LandingPage() {
-  const [lang, setLang] = useState("en");
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const loadLang = () => {
-      const savedLang = localStorage.getItem("lang") || "en";
-      setLang(savedLang);
-    };
-
-    loadLang();
-
-    window.addEventListener("languageChange", loadLang);
-
-    return () => {
-      window.removeEventListener("languageChange", loadLang);
-    };
-  }, []);
-
-const t = translations[lang as keyof typeof translations];
-
+  
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
@@ -137,7 +117,7 @@ const t = translations[lang as keyof typeof translations];
             transition={{ delay: 0.8 }}
             className="mt-6 text-xl text-gray-200 max-w-2xl"
           >
-            {t.heroSubtitle}
+            AI-assisted heavy metal engineering intelligence.
           </motion.p>
 
           <motion.div
@@ -148,7 +128,7 @@ const t = translations[lang as keyof typeof translations];
           >
             <Link href="/portal">
               <button className="px-8 py-4 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-lg font-semibold hover:scale-105 transition">
-                {t.enterPlatform}
+                Enter Platform →
               </button>
             </Link>
           </motion.div>
@@ -167,7 +147,7 @@ const t = translations[lang as keyof typeof translations];
             viewport={{ once: true }}
             className="text-4xl md:text-6xl font-bold mb-16"
           >
-            {t.howItWorks}
+            How It Works
           </motion.h2>
 
           <div className="grid md:grid-cols-3 gap-10">
@@ -181,10 +161,10 @@ const t = translations[lang as keyof typeof translations];
               className="p-8 bg-zinc-900/60 backdrop-blur rounded-2xl border border-white/10 hover:scale-105 transition"
             >
               <h3 className="text-2xl font-semibold mb-4">
-                {t.uploadDataTitle}
+                1. Upload Data
               </h3>
               <p className="text-gray-400">
-                {t.uploadDataDesc}
+                Import engineering documents, inspection reports, or operational data directly into the platform.
               </p>
             </motion.div>
 
@@ -196,10 +176,10 @@ const t = translations[lang as keyof typeof translations];
               className="p-8 bg-zinc-900/60 backdrop-blur rounded-2xl border border-white/10 hover:scale-105 transition"
             >
               <h3 className="text-2xl font-semibold mb-4">
-                {t.aiProcessingTitle}
+                2. AI Processing
               </h3>
               <p className="text-gray-400">
-                {t.aiProcessingDesc}
+                Ask Michael analyzes your data using advanced AI models tailored for heavy engineering environments.
               </p>
             </motion.div>
 
@@ -211,10 +191,10 @@ const t = translations[lang as keyof typeof translations];
               className="p-8 bg-zinc-900/60 backdrop-blur rounded-2xl border border-white/10 hover:scale-105 transition"
             >
               <h3 className="text-2xl font-semibold mb-4">
-                {t.getInsightsTitle}
+                3. Get Insights
               </h3>
               <p className="text-gray-400">
-                {t.getInsightsDesc}
+                Receive actionable insights, predictions, and recommendations to improve operations and safety.
               </p>
             </motion.div>
 

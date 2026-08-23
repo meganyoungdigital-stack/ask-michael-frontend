@@ -4,20 +4,17 @@ import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { useLanguage } from "@/hooks/useLanguage";
-import { translations } from "@/lib/translations";
 
 export default function ContactPage() {
-  const lang = useLanguage() as keyof typeof translations;
-const t = translations[lang];
-
   return (
     <div className="min-h-screen bg-background px-6 py-20">
 
       {/* NAV */}
       <div className="max-w-6xl mx-auto mb-10 flex justify-start items-center">
         <Link href="/">
-          <Button variant="outline">{t.backToPlatform}</Button>
+          <Button variant="outline">
+            ← Back to Platform
+          </Button>
         </Link>
       </div>
 
@@ -28,21 +25,25 @@ const t = translations[lang];
           animate={{ opacity: 1, y: 0 }}
           className="text-5xl font-bold mb-6"
         >
-          {t.contactTitle}
+          Contact & Support
         </motion.h1>
 
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-          {t.contactDescription}
+          Get in touch for support, platform inquiries, or collaboration
+          opportunities. We aim to respond promptly to all queries related to
+          the system.
         </p>
 
         <div className="flex justify-center gap-4">
           <a href="mailto:askmichael@askmichaelai.org">
-            <Button size="lg">{t.contactEmailSupport}</Button>
+            <Button size="lg">
+              Email Support
+            </Button>
           </a>
 
           <Link href="/portal">
             <Button variant="outline" size="lg">
-              {t.contactGoToPlatform}
+              Go to Platform
             </Button>
           </Link>
         </div>
@@ -52,56 +53,88 @@ const t = translations[lang];
       <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-8">
 
         {/* SECTION 1 */}
-        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+        >
           <Card className="p-6 rounded-2xl shadow">
             <CardContent>
               <h3 className="text-xl font-semibold mb-3">
-                {t.contactSection1Title}
+                General Inquiries
               </h3>
+
               <p className="text-muted-foreground">
-                {t.contactSection1Text}
+                For questions about the platform, features, or general usage,
+                please reach out via email.
+                {"\n\n"}
+                📧 askmichael@askmichaelai.org
               </p>
             </CardContent>
           </Card>
         </motion.div>
 
         {/* SECTION 2 */}
-        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+        >
           <Card className="p-6 rounded-2xl shadow">
             <CardContent>
               <h3 className="text-xl font-semibold mb-3">
-                {t.contactSection2Title}
+                Technical Support
               </h3>
+
               <p className="text-muted-foreground">
-                {t.contactSection2Text}
+                Report issues, bugs, or system errors. Include as much detail
+                as possible to help diagnose and resolve problems efficiently.
+                {"\n\n"}
+                Response times may vary depending on system load and
+                complexity.
               </p>
             </CardContent>
           </Card>
         </motion.div>
 
         {/* SECTION 3 */}
-        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+        >
           <Card className="p-6 rounded-2xl shadow">
             <CardContent>
               <h3 className="text-xl font-semibold mb-3">
-                {t.contactSection3Title}
+                Business & Partnerships
               </h3>
+
               <p className="text-muted-foreground">
-                {t.contactSection3Text}
+                For enterprise use, integrations, or partnership opportunities,
+                contact us to discuss how the platform can support your
+                operations.
+                {"\n\n"}
+                We work with industrial teams to improve workflows and system
+                intelligence.
               </p>
             </CardContent>
           </Card>
         </motion.div>
 
         {/* SECTION 4 */}
-        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+        >
           <Card className="p-6 rounded-2xl shadow">
             <CardContent>
               <h3 className="text-xl font-semibold mb-3">
-                {t.contactSection4Title}
+                Feedback & Improvements
               </h3>
+
               <p className="text-muted-foreground">
-                {t.contactSection4Text}
+                Suggestions and feedback are welcome to help improve the
+                platform’s functionality and usability.
+                {"\n\n"}
+                Continuous improvement is a core part of the system’s
+                development.
               </p>
             </CardContent>
           </Card>
@@ -116,11 +149,12 @@ const t = translations[lang];
           whileInView={{ opacity: 1, y: 0 }}
           className="text-3xl font-semibold mb-4"
         >
-          {t.contactSummaryTitle}
+          Direct Communication Channel
         </motion.h2>
 
         <p className="text-muted-foreground">
-          {t.contactSummaryText}
+          All communication is handled via a centralized email channel to
+          ensure proper tracking, response management, and support continuity.
         </p>
       </div>
 
@@ -129,10 +163,18 @@ const t = translations[lang];
         <Card className="p-6 rounded-2xl border border-border">
           <CardContent>
             <h3 className="text-xl font-semibold mb-3">
-              {t.contactPolicyTitle}
+              Response Policy
             </h3>
+
             <p className="text-muted-foreground text-sm">
-              {t.contactPolicyText}
+              This platform provides support for system-related inquiries and
+              operational assistance.
+              {"\n\n"}
+              Response times may vary depending on request complexity and
+              system demand.
+              {"\n\n"}
+              For critical issues, include detailed information in your message
+              to facilitate faster resolution.
             </p>
           </CardContent>
         </Card>
@@ -141,25 +183,28 @@ const t = translations[lang];
       {/* FINAL CTA */}
       <div className="text-center mt-24">
         <h3 className="text-3xl font-semibold mb-4">
-          {t.contactFinalCtaTitle}
+          Need Assistance?
         </h3>
 
         <p className="text-muted-foreground mb-6">
-          {t.contactFinalCtaText}
+          Contact us directly and we’ll help you get the support you need.
         </p>
 
         <div className="flex justify-center gap-4">
           <a href="mailto:askmichael@askmichaelai.org">
-            <Button size="lg">{t.contactSendEmail}</Button>
+            <Button size="lg">
+              Send Email
+            </Button>
           </a>
 
           <Link href="/portal">
             <Button variant="outline" size="lg">
-              {t.contactGoToPlatform}
+              Go to Platform
             </Button>
           </Link>
         </div>
       </div>
+
     </div>
   );
 }
