@@ -243,12 +243,11 @@ if (acceptedTerms !== true) {
 // TERMS AND CONDITIONS
 // ===============================================
 
-     termsAccepted: true,
+termsAccepted: acceptedTerms,
 
-     termsVersion: "2026-08-24",
+termsVersion: "2026-08-24",
 
-     termsAcceptedAt:
-      createdAt,
+termsAcceptedAt: new Date(),
 
         // ===============================================
         // ACCOUNT DATES
