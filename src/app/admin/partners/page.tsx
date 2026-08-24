@@ -36,10 +36,17 @@ type PartnerAccount = {
 
   maxMessages: number | null;
 
-  status: string;
+    status: string;
 
   createdAt: string;
+
+  termsAccepted: boolean;
+
+  termsVersion: string;
+
+  termsAcceptedAt: string | null;
 };
+
  type PartnerApplication = {
   _id: string;
   companyName: string;
@@ -1303,7 +1310,72 @@ async function generateTestApiKey(
 
               </div>
 
+              {/* TERMS AND CONDITIONS */}
 
+              <div className="mb-6">
+
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Terms and Conditions
+                </h3>
+
+                <div className="grid md:grid-cols-3 gap-4">
+
+                  <div className="bg-white rounded-lg border p-4">
+
+                    <p className="text-sm text-gray-500">
+                      Terms Accepted
+                    </p>
+
+                    <p
+                      className={`text-xl font-semibold mt-1 ${
+                        partner.termsAccepted
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
+                    >
+                      {partner.termsAccepted
+                        ? "Yes"
+                        : "No"}
+                    </p>
+
+                  </div>
+
+
+                  <div className="bg-white rounded-lg border p-4">
+
+                    <p className="text-sm text-gray-500">
+                      Terms Version
+                    </p>
+
+                    <p className="text-xl font-semibold text-gray-900 mt-1">
+                      {partner.termsVersion ||
+                        "Not recorded"}
+                    </p>
+
+                  </div>
+
+
+                  <div className="bg-white rounded-lg border p-4">
+
+                    <p className="text-sm text-gray-500">
+                      Accepted Date
+                    </p>
+
+                    <p className="text-xl font-semibold text-gray-900 mt-1">
+                      {partner.termsAcceptedAt
+                        ? new Date(
+                            partner.termsAcceptedAt
+                          ).toLocaleString("en-ZA")
+                        : "Not recorded"}
+                    </p>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+              
               {/* API KEYS */}
 
               <div className="mb-6">
