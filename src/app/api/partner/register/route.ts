@@ -13,10 +13,10 @@ export async function POST(req: Request) {
   try {
 
     const {
-      token,
-      password,
-    } = await req.json();
-
+  token,
+  password,
+  acceptedTerms,
+} = await req.json();
 
 
     // =====================================================
@@ -25,16 +25,30 @@ export async function POST(req: Request) {
 
     if (!token || !password) {
 
-      return NextResponse.json(
-        {
-          error: "Missing registration details",
-        },
-        {
-          status: 400,
-        }
-      );
-
+  return NextResponse.json(
+    {
+      error: "Missing registration details",
+    },
+    {
+      status: 400,
     }
+  );
+
+}
+
+if (acceptedTerms !== true) {
+
+  return NextResponse.json(
+    {
+      error:
+        "You must accept the Terms and Conditions before creating your account.",
+    },
+    {
+      status: 400,
+    }
+  );
+
+}
 
 
 
@@ -225,6 +239,16 @@ export async function POST(req: Request) {
 
         nextBillingDate,
 
+        // ===============================================
+// TERMS AND CONDITIONS
+// ===============================================
+
+     termsAccepted: true,
+
+     termsVersion: "2026-08-24",
+
+     termsAcceptedAt:
+      createdAt,
 
         // ===============================================
         // ACCOUNT DATES

@@ -31,7 +31,9 @@ export default function PartnerRegisterPage() {
   const [message,setMessage] =
     useState("");
 
-
+const [acceptedTerms, setAcceptedTerms] =
+    useState(false);
+ 
 
 
   async function handleSubmit(
@@ -52,7 +54,15 @@ export default function PartnerRegisterPage() {
 
     }
 
+if (!acceptedTerms) {
 
+  setMessage(
+    "You must accept the Terms and Conditions before creating your account."
+  );
+
+  return;
+
+}
 
     setLoading(true);
 
@@ -75,11 +85,13 @@ export default function PartnerRegisterPage() {
 
             body:JSON.stringify({
 
-              token,
+  token,
 
-              password,
+  password,
 
-            }),
+  acceptedTerms,
+
+}),
 
           }
         );
@@ -191,13 +203,42 @@ return (
 
         />
 
+<div className="flex items-start gap-3 pt-2">
 
+  <input
+    id="partnerRegisterTerms"
+    type="checkbox"
+    checked={acceptedTerms}
+    onChange={(e) =>
+      setAcceptedTerms(e.target.checked)
+    }
+    className="mt-1 h-4 w-4"
+  />
+
+  <label
+    htmlFor="partnerRegisterTerms"
+    className="text-sm text-gray-700"
+  >
+    I agree to the{" "}
+
+    <a
+      href="/terms"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-blue-600 hover:underline font-medium"
+    >
+      Terms and Conditions
+    </a>
+
+  </label>
+
+</div>
 
         <button
 
           type="submit"
 
-          disabled={loading}
+          disabled={loading || !acceptedTerms}
 
           className="w-full bg-black text-white rounded p-3"
 
