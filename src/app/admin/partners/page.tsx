@@ -124,6 +124,16 @@ const [approvalMaxMessages, setApprovalMaxMessages] =
 
         console.log("Partner accounts:", data);
 
+console.log(
+  "Terms data:",
+  data.map((partner: PartnerAccount) => ({
+    companyName: partner.companyName,
+    termsAccepted: partner.termsAccepted,
+    termsVersion: partner.termsVersion,
+    termsAcceptedAt: partner.termsAcceptedAt,
+  }))
+);
+
         if (Array.isArray(data)) {
           setApplications(data);
         } else {
