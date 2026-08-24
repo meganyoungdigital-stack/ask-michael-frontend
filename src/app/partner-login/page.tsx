@@ -15,6 +15,8 @@ const [email, setEmail] = useState("");
 
 const [password, setPassword] = useState("");
 
+const [acceptedTerms, setAcceptedTerms] = useState(false);
+
 const [loading, setLoading] = useState(false);
 
 
@@ -26,6 +28,17 @@ e: React.FormEvent
 
 
 e.preventDefault();
+
+
+if (!acceptedTerms) {
+
+  alert(
+    "You must accept the Terms and Conditions before logging in."
+  );
+
+  return;
+
+}
 
 
 setLoading(true);
@@ -210,7 +223,38 @@ Forgot Password?
 
 </Link>
 
+{/* TERMS AND CONDITIONS */}
 
+<div className="flex items-start gap-3 pt-2">
+
+  <input
+    id="partnerTerms"
+    type="checkbox"
+    checked={acceptedTerms}
+    onChange={(e) =>
+      setAcceptedTerms(e.target.checked)
+    }
+    className="mt-1 h-4 w-4"
+  />
+
+  <label
+    htmlFor="partnerTerms"
+    className="text-sm text-gray-700"
+  >
+    I agree to the{" "}
+
+    <Link
+      href="/terms"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-blue-600 hover:underline font-medium"
+    >
+      Terms and Conditions
+    </Link>
+
+  </label>
+
+</div>
 
 
 
@@ -218,7 +262,7 @@ Forgot Password?
 
 type="submit"
 
-disabled={loading}
+disabled={loading || !acceptedTerms}
 
 className="w-full bg-black text-white rounded p-3 hover:bg-gray-800 disabled:opacity-50"
 
