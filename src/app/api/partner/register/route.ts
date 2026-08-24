@@ -247,7 +247,9 @@ termsAccepted: acceptedTerms,
 
 termsVersion: "2026-08-24",
 
-termsAcceptedAt: new Date(),
+termsAcceptedAt: acceptedTerms
+  ? new Date()
+  : null,
 
         // ===============================================
         // ACCOUNT DATES
