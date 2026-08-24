@@ -347,29 +347,66 @@ export default function PricingPage() {
       </div>
 
       {/* TESTIMONIALS */}
-      <div className="max-w-6xl mx-auto mt-24 grid md:grid-cols-3 gap-6">
+<div className="max-w-6xl mx-auto mt-24 grid md:grid-cols-3 gap-6">
 
-        {[1, 2, 3].map((i) => (
-          <Card
-            key={i}
-            className="p-6 rounded-2xl shadow"
-          >
-            <CardContent>
+  <Card className="p-6 rounded-2xl shadow">
+    <CardContent>
+      <p className="mb-4 text-muted-foreground">
+        Ask Michael AI provides a practical way to work
+        through complex aluminium smelting and engineering
+        questions without spending hours searching through
+        technical documentation.
+      </p>
 
-              <p className="mb-4 text-muted-foreground">
-                This AI significantly reduced time spent
-                on engineering analysis.
-              </p>
-
-              <div className="font-semibold">
-                Engineering Lead
-              </div>
-
-            </CardContent>
-          </Card>
-        ))}
-
+      <div className="font-semibold">
+        Engineering Professional
       </div>
+
+      <div className="text-sm text-muted-foreground">
+        Aluminium &amp; Smelting
+      </div>
+    </CardContent>
+  </Card>
+
+  <Card className="p-6 rounded-2xl shadow">
+    <CardContent>
+      <p className="mb-4 text-muted-foreground">
+        Having engineering standards, repair guidance and
+        technical information available through one AI
+        platform can make it much easier to investigate
+        problems and develop a structured engineering response.
+      </p>
+
+      <div className="font-semibold">
+        Maintenance &amp; Reliability Professional
+      </div>
+
+      <div className="text-sm text-muted-foreground">
+        Industrial Engineering
+      </div>
+    </CardContent>
+  </Card>
+
+  <Card className="p-6 rounded-2xl shadow">
+    <CardContent>
+      <p className="mb-4 text-muted-foreground">
+        The combination of engineering knowledge, document
+        analysis and AI-assisted troubleshooting makes Ask
+        Michael AI particularly useful for technical teams
+        working with demanding industrial applications.
+      </p>
+
+      <div className="font-semibold">
+        Technical Engineering Professional
+      </div>
+
+      <div className="text-sm text-muted-foreground">
+        Heavy Industry
+      </div>
+    </CardContent>
+  </Card>
+
+</div>
 
       {/* FINAL CTA */}
       <div className="text-center mt-24">
