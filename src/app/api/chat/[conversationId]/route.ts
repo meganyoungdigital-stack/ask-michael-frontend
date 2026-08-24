@@ -77,8 +77,8 @@ try {
           index: "default",
           path: "embedding",
           queryVector: queryEmbedding,
-          numCandidates: 100,
-          limit: 10,
+          numCandidates: 50,
+          limit: 5,
           filter: {
             $or: [
               { company: company || null },
@@ -136,15 +136,6 @@ const { conversationId } = params;
 
     const { db } = await connectToDatabase();/* 🔥 FIX: REMOVE BROKEN INDEX */
 /* ✅ ENSURE CORRECT USAGE INDEX */
-try {
-  await db.collection("usage").createIndex(
-    { userId: 1, date: 1 },
-    { unique: true }
-  );
-} catch (err) {
-  console.error("Index creation error:", err);
-}
-
 
     /* ================= GET USER ================= */
     const user = await db.collection("users").findOne({ userId });
