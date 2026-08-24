@@ -124,6 +124,10 @@ const [approvalMaxMessages, setApprovalMaxMessages] =
 
         console.log("Partner accounts:", data);
 
+        console.log("FIRST PARTNER TERMS:", data[0]?.termsAccepted);
+console.log("FIRST PARTNER TERMS VERSION:", data[0]?.termsVersion);
+console.log("FIRST PARTNER TERMS ACCEPTED AT:", data[0]?.termsAcceptedAt);
+
 console.log(
   "Terms data:",
   data.map((partner: PartnerAccount) => ({
