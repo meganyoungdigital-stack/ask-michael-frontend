@@ -63,7 +63,15 @@ const partners =
     })
     .toArray();
 
-
+console.log(
+  "ADMIN PARTNER TERMS:",
+  partners.map((partner) => ({
+    companyName: partner.companyName,
+    termsAccepted: partner.termsAccepted,
+    termsVersion: partner.termsVersion,
+    termsAcceptedAt: partner.termsAcceptedAt,
+  }))
+);
 
 return NextResponse.json(
 partners
