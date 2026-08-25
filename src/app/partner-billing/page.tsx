@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Script from "next/script";
 
 type PartnerBillingData = {
   companyName: string;
@@ -60,6 +61,8 @@ export default function PartnerBilling() {
           router.push("/partner-login");
           return;
         }
+
+        
 
         const response =
           await fetch(
@@ -247,6 +250,13 @@ export default function PartnerBilling() {
       : "Not configured";
 
   return (
+
+        <>
+    <Script
+      src="https://js.paystack.co/v2/inline.js"
+      strategy="afterInteractive"
+    />
+
     <main className="min-h-screen bg-gray-50 pt-40 px-10 pb-10">
 
       <div className="flex items-center gap-3">
@@ -494,6 +504,7 @@ export default function PartnerBilling() {
 
       </div>
 
-    </main>
-  );
+        </main>
+  </>
+);
 }
