@@ -15,11 +15,15 @@ type PartnerBillingData = {
   maxUsers: number | null;
   maxMessages: number | null;
   messages: number;
+  extraMessages: number;
+  extraUsageCharge: number;
   status: string;
   subscriptionStatus: string;
   nextBillingDate: string | null;
   currentBill: number;
-};declare global {
+};
+
+declare global {
   interface Window {
     PaystackPop?: {
       setup: (config: {
@@ -332,6 +336,38 @@ export default function PartnerBilling() {
               </p>
             </div>
 
+<div>
+  <p className="text-sm text-gray-500">
+    Included Messages
+  </p>
+
+  <p className="text-gray-900 font-semibold">
+    {partner.includedMessages !== null
+      ? partner.includedMessages.toLocaleString()
+      : "Custom"}
+  </p>
+</div>
+
+<div>
+  <p className="text-sm text-gray-500">
+    Extra Messages
+  </p>
+
+  <p className="text-gray-900 font-semibold">
+    {partner.extraMessages.toLocaleString()}
+  </p>
+</div>
+
+<div>
+  <p className="text-sm text-gray-500">
+    Extra Usage Charge
+  </p>
+
+  <p className="text-gray-900 font-semibold">
+    {currencySymbol}
+    {partner.extraUsageCharge.toFixed(2)}
+  </p>
+</div>
 
             <div>
               <p className="text-sm text-gray-500">

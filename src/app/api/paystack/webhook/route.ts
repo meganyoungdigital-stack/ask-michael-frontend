@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { connectToDatabase } from "@/lib/mongodb";
+import { ObjectId } from "mongodb";
 
 export const runtime = "nodejs";
 
@@ -318,31 +319,161 @@ export async function POST(req: NextRequest) {
         break;
       }
 
-      case "subscription.create":
+            case "subscription.create":
       case "subscription.enable": {
         const data = event.data;
         const metadata = data.metadata || {};
 
-        const userId = metadata.userId;
-        const plan = metadata.plan;
+        /* =====================================================
+        PARTNER SUBSCRIPTION
+        ===================================================== */
 
-        if (!userId || !plan) break;
+        const partnerId = metadata.partnerId;
+        const paymentType = metadata.paymentType;
 
-        let tier: "free" | "pro" | "pro_plus" = "free";
+        if (
+          partnerId &&
+          paymentType === "partner_subscription"
+        ) {
+          console.log(
+            "✅ Partner subscription created/enabled:",
+            partnerId
+          );
 
-        if (plan === "pro") tier = "pro";
-        if (plan === "pro_plus") tier = "pro_plus";
+          if (!ObjectId.isValid(partnerId)) {
+            console.warn(
+              "⚠️ Invalid partner ID:",
+              partnerId
+            );
 
-        await db.collection("users").updateOne(
-          { userId },
-          {
-            $set: {
-              tier,
-              subscriptionStatus: "active",
-              updatedAt: new Date(),
-            },
+            break;
           }
-        );
+
+          const partner = await db
+            .collection("partners")
+            .findOne({
+              _id: new ObjectId(partnerId),
+            });
+
+          if (!partner) {
+            console.warn(
+              "⚠️ Partner not found:",
+              partnerId
+            );
+
+            break;
+          }
+
+          /* ==========================================
+          CALCULATE NEXT BILLING DATE
+          ========================================== */
+
+          const nextBillingDate =
+            new Date();
+
+          nextBillingDate.setMonth(
+            nextBillingDate.getMonth() + 1
+          );
+
+          /* ==========================================
+          UPDATE PARTNER SUBSCRIPTION
+          ========================================== */
+
+          await db
+            .collection("partners")
+            .updateOne(
+              {
+                _id: new ObjectId(partnerId),
+              },
+              {
+                $set: {
+                  subscriptionStatus:
+                    "active",
+
+                  paymentStatus:
+                    "paid",
+
+                  paystackCustomerCode:
+                    data.customer_code ||
+                    partner.paystackCustomerCode ||
+                    null,
+
+                  paystackSubscriptionCode:
+                    data.subscription_code ||
+                    partner.paystackSubscriptionCode ||
+                    null,
+
+                  paystackEmailToken:
+                    data.email_token ||
+                    partner.paystackEmailToken ||
+                    null,
+
+                  lastPaymentAt:
+                    new Date(),
+
+                  nextBillingDate,
+
+                  updatedAt:
+                    new Date(),
+                },
+              }
+            );
+
+          console.log(
+            "✅ Partner subscription activated:",
+            partnerId
+          );
+
+          break;
+        }
+
+        /* =====================================================
+        NORMAL ASK MICHAEL USER SUBSCRIPTION
+        ===================================================== */
+
+        const userId =
+          metadata.userId;
+
+        const plan =
+          metadata.plan;
+
+        if (!userId || !plan) {
+          console.warn(
+            "⚠️ Missing user subscription metadata — skipping"
+          );
+
+          break;
+        }
+
+        let tier:
+          | "free"
+          | "pro"
+          | "pro_plus" = "free";
+
+        if (plan === "pro") {
+          tier = "pro";
+        }
+
+        if (plan === "pro_plus") {
+          tier = "pro_plus";
+        }
+
+        await db
+          .collection("users")
+          .updateOne(
+            { userId },
+            {
+              $set: {
+                tier,
+
+                subscriptionStatus:
+                  "active",
+
+                updatedAt:
+                  new Date(),
+              },
+            }
+          );
 
         break;
       }

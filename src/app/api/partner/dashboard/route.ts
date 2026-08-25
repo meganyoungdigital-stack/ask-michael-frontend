@@ -1,147 +1,144 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
+import { calculatePartnerBilling } from "@/lib/partnerBilling";
 
+export async function GET(req: Request) {
+  try {
+    const token = req.headers.get("Authorization");
 
-export async function GET(req:Request){
+    if (!token) {
+      return NextResponse.json(
+        {
+          error: "Missing token",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
 
-try {
+    if (!ObjectId.isValid(token)) {
+      return NextResponse.json(
+        {
+          error: "Invalid partner token",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
 
+    const { db } = await connectToDatabase();
 
-const token =
-req.headers.get(
-  "Authorization"
-);
+    const partner = await db
+      .collection("partners")
+      .findOne({
+        _id: new ObjectId(token),
+      });
 
+    if (!partner) {
+      return NextResponse.json(
+        {
+          error: "Partner not found",
+        },
+        {
+          status: 404,
+        }
+      );
+    }
 
+    /* ============================
+       CALCULATE PARTNER BILLING
+    ============================ */
 
-if(!token){
+    const billing =
+      calculatePartnerBilling({
+        messages: partner.messages,
+        includedMessages:
+          partner.includedMessages,
+        pricePerMessage:
+          partner.pricePerMessage,
+        monthlyFee:
+          partner.monthlyFee,
+      });
 
-return NextResponse.json(
-{
-error:"Missing token"
-},
-{
-status:400
-}
-);
+    return NextResponse.json({
+      companyName:
+        partner.companyName,
 
-}
+      contactName:
+        partner.contactName,
 
+      email:
+        partner.email,
 
+      apiKey:
+        partner.apiKey,
 
-const {db}=await connectToDatabase();
+      testApiKey:
+        partner.testApiKey || null,
 
+      messages:
+        partner.messages || 0,
 
+      plan:
+        partner.plan || null,
 
-const partner =
-await db
-.collection("partners")
-.findOne({
+      currency:
+        partner.currency || null,
 
-_id:
-new ObjectId(token)
+      monthlyFee:
+        partner.monthlyFee ?? null,
 
-});
+      includedMessages:
+        partner.includedMessages ?? null,
 
+      pricePerMessage:
+        partner.pricePerMessage ?? null,
 
+      maxUsers:
+        partner.maxUsers ?? null,
 
-if(!partner){
+      maxMessages:
+        partner.maxMessages ?? null,
 
-return NextResponse.json(
-{
-error:"Partner not found"
-},
-{
-status:404
-}
-);
+      /* ============================
+         BILLING VALUES
+      ============================ */
 
-}
+      currentBill:
+        billing.totalBill,
 
+      extraMessages:
+        billing.extraMessages,
 
+      extraUsageCharge:
+        billing.extraUsageCharge,
 
-return NextResponse.json({
+      status:
+        partner.status,
 
-  companyName:
-    partner.companyName,
+      subscriptionStatus:
+        partner.subscriptionStatus ||
+        "inactive",
 
-  contactName:
-    partner.contactName,
+      nextBillingDate:
+        partner.nextBillingDate || null,
+    });
+  } catch (error) {
+    console.error(
+      "Partner dashboard error:",
+      error
+    );
 
-  email:
-    partner.email,
-
-  apiKey:
-    partner.apiKey,
-
-  testApiKey:
-    partner.testApiKey || null,
-
-  messages:
-    partner.messages || 0,
-
-  plan:
-    partner.plan || null,
-
-  currency:
-    partner.currency || null,
-
-  monthlyFee:
-    partner.monthlyFee ?? null,
-
-  includedMessages:
-    partner.includedMessages ?? null,
-
-  pricePerMessage:
-    partner.pricePerMessage ?? null,
-
-  maxUsers:
-    partner.maxUsers ?? null,
-
-  maxMessages:
-    partner.maxMessages ?? null,
-
-  currentBill:
-  (partner.monthlyFee || 0) +
-  (
-    Math.max(
-      0,
-      (partner.messages || 0) -
-        (partner.includedMessages || 0)
-    ) *
-    (partner.pricePerMessage || 0)
-  ),
-
-  
-  status:
-    partner.status,
-
-  subscriptionStatus:
-    partner.subscriptionStatus || "inactive",
-
-  nextBillingDate:
-    partner.nextBillingDate || null
-
-});
-
-
-}
-catch(error){
-
-console.error(error);
-
-
-return NextResponse.json(
-{
-error:"Dashboard failed"
-},
-{
-status:500
-}
-);
-
-
-}
-
+    return NextResponse.json(
+      {
+        error: "Dashboard failed",
+      },
+      {
+        status: 500,
+      }
+    );
+  }
 }
