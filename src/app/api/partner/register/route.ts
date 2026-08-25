@@ -194,7 +194,13 @@ if (acceptedTerms !== true) {
         testApiKey,
 
         status:
-          "active",
+  "active",
+
+subscriptionStatus:
+  "pending",
+
+paymentStatus:
+  "unpaid",
 
 
         // ===============================================

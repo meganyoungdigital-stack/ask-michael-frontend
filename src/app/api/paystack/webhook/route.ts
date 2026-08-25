@@ -128,7 +128,7 @@ export async function POST(req: NextRequest) {
           PREVENT DUPLICATE PAYMENT PROCESSING
           ========================================== */
 
-          if (partnerPayment.status === "paid") {
+          if (partnerPayment.status === "success") {
             console.log(
               "ℹ️ Partner payment already processed:",
               reference
@@ -168,7 +168,7 @@ export async function POST(req: NextRequest) {
               },
               {
                 $set: {
-                  status: "paid",
+                  status: "success",
                   paidAt: new Date(),
                   paystackTransactionId:
                     data.id || null,
@@ -199,7 +199,7 @@ export async function POST(req: NextRequest) {
                 $set: {
                   subscriptionStatus: "active",
                   paymentStatus: "paid",
-                  lastPaymentAt: new Date(),
+                  lastPaymentDate: new Date(),
                   nextBillingDate,
                   updatedAt: new Date(),
                 },
@@ -408,8 +408,8 @@ export async function POST(req: NextRequest) {
                     partner.paystackEmailToken ||
                     null,
 
-                  lastPaymentAt:
-                    new Date(),
+                  lastPaymentDate:
+                   new Date(),
 
                   nextBillingDate,
 
@@ -479,48 +479,188 @@ export async function POST(req: NextRequest) {
       }
 
       case "invoice.payment_succeeded": {
-        const data = event.data;
-        const metadata = data.metadata || {};
+  const data = event.data;
+  const metadata = data.metadata || {};
 
-        const userId = metadata.userId;
+  /* =====================================================
+  PARTNER SUBSCRIPTION RENEWAL
+  ===================================================== */
 
-        if (!userId) break;
+  const partnerId = metadata.partnerId;
+  const paymentType = metadata.paymentType;
 
-        await db.collection("users").updateOne(
-          { userId },
-          {
-            $set: {
-              subscriptionStatus: "active",
-              lastPaymentAt: new Date(),
-              updatedAt: new Date(),
-            },
-          }
-        );
+  if (
+    partnerId &&
+    paymentType === "partner_subscription"
+  ) {
+    console.log(
+      "✅ Partner subscription renewal payment:",
+      partnerId
+    );
 
-        break;
+    if (!ObjectId.isValid(partnerId)) {
+      console.warn(
+        "⚠️ Invalid partner ID:",
+        partnerId
+      );
+
+      break;
+    }
+
+    const partner = await db
+      .collection("partners")
+      .findOne({
+        _id: new ObjectId(partnerId),
+      });
+
+    if (!partner) {
+      console.warn(
+        "⚠️ Partner not found:",
+        partnerId
+      );
+
+      break;
+    }
+
+    /* ==========================================
+    CALCULATE NEXT BILLING DATE
+    ========================================== */
+
+    const paidAt = new Date();
+
+    const nextBillingDate =
+      new Date(paidAt);
+
+    nextBillingDate.setMonth(
+      nextBillingDate.getMonth() + 1
+    );
+
+    /* ==========================================
+    UPDATE PARTNER ACCOUNT
+    ========================================== */
+
+    await db
+      .collection("partners")
+      .updateOne(
+        {
+          _id: new ObjectId(partnerId),
+        },
+        {
+          $set: {
+            subscriptionStatus: "active",
+
+            paymentStatus: "paid",
+
+            lastPaymentDate: paidAt,
+
+            nextBillingDate,
+
+            updatedAt: new Date(),
+          },
+        }
+      );
+
+    /* ==========================================
+    STORE PARTNER RENEWAL TRANSACTION
+    ========================================== */
+
+    const reference =
+      data.reference ||
+      data.transaction_reference ||
+      data.subscription_code ||
+      `partner_renewal_${partnerId}_${Date.now()}`;
+
+    await db
+      .collection("partner_transactions")
+      .updateOne(
+        {
+          reference,
+        },
+        {
+          $set: {
+            reference,
+
+            partnerId:
+              new ObjectId(partnerId),
+
+            plan:
+              partner.plan || null,
+
+            amount:
+              data.amount || 0,
+
+            currency:
+              data.currency ||
+              partner.currency ||
+              "ZAR",
+
+            email:
+              data.customer?.email ||
+              partner.email,
+
+            paymentType:
+              "partner_subscription_renewal",
+
+            status:
+              "paid",
+
+            paystackTransactionId:
+              data.id || null,
+
+            paidAt,
+
+            updatedAt:
+              new Date(),
+          },
+        },
+        {
+          upsert: true,
+        }
+      );
+
+    console.log(
+      "✅ Partner subscription renewed:",
+      partnerId
+    );
+
+    break;
+  }
+
+  /* =====================================================
+  NORMAL ASK MICHAEL USER SUBSCRIPTION
+  ===================================================== */
+
+  const userId =
+    metadata.userId;
+
+  if (!userId) {
+    console.warn(
+      "⚠️ Missing user ID in invoice payment metadata"
+    );
+
+    break;
+  }
+
+  await db
+    .collection("users")
+    .updateOne(
+      { userId },
+      {
+        $set: {
+          subscriptionStatus:
+            "active",
+
+          lastPaymentDate:
+           new Date(),
+
+          updatedAt:
+            new Date(),
+        },
       }
+    );
 
-      case "subscription.disable": {
-        const data = event.data;
-        const metadata = data.metadata || {};
-
-        const userId = metadata.userId;
-
-        if (!userId) break;
-
-        await db.collection("users").updateOne(
-          { userId },
-          {
-            $set: {
-              tier: "free",
-              subscriptionStatus: "cancelled",
-              updatedAt: new Date(),
-            },
-          }
-        );
-
-        break;
-      }
+  break;
+}
 
       default:
         console.log("Unhandled event:", event.event);

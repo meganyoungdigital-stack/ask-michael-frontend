@@ -284,17 +284,47 @@ export async function POST(req: Request) {
     }
 
     // ==========================================
-    // DETERMINE PAYMENT AMOUNT FOR OUR RECORD
-    // ==========================================
+// DETERMINE PAYMENT AMOUNT FOR OUR RECORD
+// ==========================================
 
-    let recordedAmount =
-      partner.monthlyFee
-        ? Math.round(
-            Number(
-              partner.monthlyFee
-            ) * 100
-          )
-        : null;
+let recordedAmount: number | null =
+  null;
+
+if (plan === "enterprise") {
+  const monthlyFee =
+    Number(partner.monthlyFee);
+
+  if (
+    Number.isFinite(monthlyFee) &&
+    monthlyFee > 0
+  ) {
+    recordedAmount =
+      Math.round(monthlyFee * 100);
+  }
+} else {
+  // Starter / Business use the
+  // Paystack recurring plan amount.
+  //
+  // Paystack's plan controls the
+  // actual transaction amount.
+  recordedAmount =
+    Number(paystackData.amount ?? 0);
+
+  if (
+    !Number.isFinite(recordedAmount) ||
+    recordedAmount <= 0
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          "Paystack did not return a valid transaction amount.",
+      },
+      {
+        status: 500,
+      }
+    );
+  }
+}
 
     // ==========================================
     // SAVE PENDING PAYMENT

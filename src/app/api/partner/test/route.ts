@@ -46,11 +46,11 @@ export async function POST(req: Request) {
       await connectToDatabase();
 
     const partner =
-      await db
-        .collection("partners")
-        .findOne({
-          apiKey: cleanApiKey,
-        });
+  await db
+    .collection("partners")
+    .findOne({
+      testApiKey: cleanApiKey,
+    });
 
     if (!partner) {
       return NextResponse.json(

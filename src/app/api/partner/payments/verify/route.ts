@@ -120,9 +120,9 @@ export async function POST(req: Request) {
     // ==========================================
 
     if (
-      payment.status ===
-      "success"
-    ) {
+  payment.status ===
+  "paid"
+) {
       return NextResponse.json({
         success: true,
         message:
@@ -208,6 +208,77 @@ export async function POST(req: Request) {
       );
     }
 
+// ==========================================
+// CHECK PAYMENT AMOUNT
+// ==========================================
+
+const expectedAmount =
+  Number(payment.amount);
+
+const paidAmount =
+  Number(paystackData.amount);
+
+if (
+  !Number.isFinite(expectedAmount) ||
+  expectedAmount <= 0
+) {
+  return NextResponse.json(
+    {
+      error:
+        "Payment record does not contain a valid expected amount.",
+    },
+    {
+      status: 400,
+    }
+  );
+}
+
+if (
+  !Number.isFinite(paidAmount) ||
+  paidAmount !== expectedAmount
+) {
+  console.error(
+    "PAYSTACK AMOUNT MISMATCH:",
+    {
+      reference,
+      expectedAmount,
+      paidAmount,
+    }
+  );
+
+  await db
+    .collection(
+      "partner_payments"
+    )
+    .updateOne(
+      {
+        _id: payment._id,
+      },
+      {
+        $set: {
+          status:
+            "failed",
+
+          paystackStatus:
+            paystackData.status,
+
+          updatedAt:
+            new Date(),
+        },
+      }
+    );
+
+  return NextResponse.json(
+    {
+      error:
+        "Payment amount does not match the expected amount.",
+    },
+    {
+      status: 400,
+    }
+  );
+}
+
     // ==========================================
     // VERIFY PARTNER ID FROM PAYSTACK METADATA
     // ==========================================
@@ -267,7 +338,7 @@ export async function POST(req: Request) {
         {
           $set: {
             status:
-              "success",
+             "paid",
 
             paystackStatus:
               paystackData.status,
@@ -347,7 +418,7 @@ export async function POST(req: Request) {
             paymentStatus:
               "paid",
 
-            lastPaymentDate:
+            lastPaymentAt:
               paidAt,
 
             nextBillingDate,

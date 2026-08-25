@@ -133,9 +133,14 @@ Monthly Fee
 </h2>
 
 <p className="text-3xl text-black">
-
-R{partner.monthlyFee}
-
+  {partner.currency === "USD"
+    ? "$"
+    : partner.currency === "EUR"
+    ? "€"
+    : partner.currency === "GBP"
+    ? "£"
+    : "R"}
+  {partner.monthlyFee}
 </p>
 
 </div>
@@ -317,28 +322,36 @@ Billing
 
 
 <p className="mt-4 text-gray-700">
+  Current Balance:
 
-Current Balance:
-
-<strong>
-
- R{partner.currentBill}
-
-</strong>
-
+  <strong>
+    {" "}
+    {partner.currency === "USD"
+      ? "$"
+      : partner.currency === "EUR"
+      ? "€"
+      : partner.currency === "GBP"
+      ? "£"
+      : "R"}
+    {partner.currentBill}
+  </strong>
 </p>
 
 
 <p className="mt-2 text-gray-700">
+  Price per message:
 
-Price per message:
-
-<strong>
-
- R{partner.pricePerMessage}
-
-</strong>
-
+  <strong>
+    {" "}
+    {partner.currency === "USD"
+      ? "$"
+      : partner.currency === "EUR"
+      ? "€"
+      : partner.currency === "GBP"
+      ? "£"
+      : "R"}
+    {partner.pricePerMessage}
+  </strong>
 </p>
 
 

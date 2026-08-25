@@ -25,20 +25,10 @@ type PartnerBillingData = {
 
 declare global {
   interface Window {
-    PaystackPop?: {
-      setup: (config: {
-        key: string;
-        email: string;
-        amount: number;
-        currency: string;
-        ref: string;
-        callback: (response: {
-          reference: string;
-        }) => void;
-        onClose: () => void;
-      }) => {
-        openIframe: () => void;
-      };
+    PaystackPop?: new () => {
+      resumeTransaction: (
+        accessCode: string
+      ) => void;
     };
   }
 }
@@ -146,66 +136,38 @@ export default function PartnerBilling() {
       }
 
       if (!data.accessCode) {
-        throw new Error(
-          "Paystack did not return an access code."
-        );
-      }
+  throw new Error(
+    "Paystack did not return an access code."
+  );
+}
 
-      if (!window.PaystackPop) {
+if (!data.reference) {
+  throw new Error(
+    "Paystack did not return a payment reference."
+  );
+}
+
+if (!window.PaystackPop) {
         throw new Error(
           "Paystack is still loading. Please try again."
         );
       }
 
-      const paystackKey =
-        process.env
-          .NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
+      const PaystackPop =
+  window.PaystackPop;
 
-      if (!paystackKey) {
-        throw new Error(
-          "Paystack public key is not configured."
-        );
-      }
+if (!PaystackPop) {
+  throw new Error(
+    "Paystack is still loading. Please try again."
+  );
+}
 
-      const handler =
-        window.PaystackPop.setup({
-          key: paystackKey,
+const paystack =
+  new PaystackPop();
 
-          email: partner.email,
-
-          amount:
-            (partner.monthlyFee || 0) * 100,
-
-          currency:
-            partner.currency || "ZAR",
-
-          ref: data.reference,
-
-          callback: (
-            paymentResponse
-          ) => {
-            console.log(
-              "Paystack payment completed:",
-              paymentResponse.reference
-            );
-
-            alert(
-              "Payment received. Your payment is being verified."
-            );
-
-            window.location.reload();
-          },
-
-          onClose: () => {
-            console.log(
-              "Paystack payment window closed."
-            );
-
-            setPaymentLoading(false);
-          },
-        });
-
-      handler.openIframe();
+paystack.resumeTransaction(
+  data.accessCode
+);
 
     } catch (error) {
       console.error(
