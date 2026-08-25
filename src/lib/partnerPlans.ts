@@ -19,6 +19,7 @@ export type PartnerPlanConfig = {
   maxMessages: number | null;
   currency: PartnerCurrency;
   customPricing: boolean;
+  paystackPlanCode: string | null;
 };
 
 export const PARTNER_PLANS: Record<
@@ -35,6 +36,7 @@ export const PARTNER_PLANS: Record<
     maxMessages: 5000,
     currency: "USD",
     customPricing: false,
+    paystackPlanCode: "PLN_ktzatbfy1qx5qzw",
   },
 
   business: {
@@ -47,6 +49,7 @@ export const PARTNER_PLANS: Record<
     maxMessages: 25000,
     currency: "USD",
     customPricing: false,
+    paystackPlanCode: "PLN_vgi8zoav8kvqjp2",
   },
 
   enterprise: {
@@ -59,5 +62,6 @@ export const PARTNER_PLANS: Record<
     maxMessages: null,
     currency: "USD",
     customPricing: true,
+     paystackPlanCode: null,
   },
 };

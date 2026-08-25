@@ -103,12 +103,17 @@ return NextResponse.json({
     partner.maxMessages ?? null,
 
   currentBill:
-    (partner.monthlyFee || 0) +
-    (
-      (partner.messages || 0) *
-      (partner.pricePerMessage || 0)
-    ),
+  (partner.monthlyFee || 0) +
+  (
+    Math.max(
+      0,
+      (partner.messages || 0) -
+        (partner.includedMessages || 0)
+    ) *
+    (partner.pricePerMessage || 0)
+  ),
 
+  
   status:
     partner.status,
 

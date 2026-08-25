@@ -18,7 +18,25 @@ type PartnerBillingData = {
   subscriptionStatus: string;
   nextBillingDate: string | null;
   currentBill: number;
-};
+};declare global {
+  interface Window {
+    PaystackPop?: {
+      setup: (config: {
+        key: string;
+        email: string;
+        amount: number;
+        currency: string;
+        ref: string;
+        callback: (response: {
+          reference: string;
+        }) => void;
+        onClose: () => void;
+      }) => {
+        openIframe: () => void;
+      };
+    };
+  }
+}
 
 export default function PartnerBilling() {
   const router = useRouter();
@@ -28,6 +46,9 @@ export default function PartnerBilling() {
 
   const [loading, setLoading] =
     useState(true);
+
+  const [paymentLoading, setPaymentLoading] =
+    useState(false);
 
   useEffect(() => {
     async function loadBilling() {
@@ -61,6 +82,7 @@ export default function PartnerBilling() {
         }
 
         setPartner(data);
+
       } catch (error) {
         console.error(
           "Failed loading billing information:",
@@ -68,6 +90,7 @@ export default function PartnerBilling() {
         );
 
         router.push("/partner-login");
+
       } finally {
         setLoading(false);
       }
@@ -76,6 +99,125 @@ export default function PartnerBilling() {
     loadBilling();
   }, [router]);
 
+    const handleInitialPayment = async () => {
+    try {
+      setPaymentLoading(true);
+
+      const token =
+        localStorage.getItem("partnerToken");
+
+      if (!token) {
+        router.push("/partner-login");
+        return;
+      }
+
+      if (!partner) {
+        throw new Error(
+          "Partner information is not available."
+        );
+      }
+
+      const response =
+        await fetch(
+          "/api/partner/payments/initialize",
+          {
+            method: "POST",
+            headers: {
+              Authorization: token,
+            },
+          }
+        );
+
+      const data =
+        await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error ||
+            "Unable to initialize payment"
+        );
+      }
+
+      if (!data.accessCode) {
+        throw new Error(
+          "Paystack did not return an access code."
+        );
+      }
+
+      if (!window.PaystackPop) {
+        throw new Error(
+          "Paystack is still loading. Please try again."
+        );
+      }
+
+      const paystackKey =
+        process.env
+          .NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
+
+      if (!paystackKey) {
+        throw new Error(
+          "Paystack public key is not configured."
+        );
+      }
+
+      const handler =
+        window.PaystackPop.setup({
+          key: paystackKey,
+
+          email: partner.email,
+
+          amount:
+            (partner.monthlyFee || 0) * 100,
+
+          currency:
+            partner.currency || "ZAR",
+
+          ref: data.reference,
+
+          callback: (
+            paymentResponse
+          ) => {
+            console.log(
+              "Paystack payment completed:",
+              paymentResponse.reference
+            );
+
+            alert(
+              "Payment received. Your payment is being verified."
+            );
+
+            window.location.reload();
+          },
+
+          onClose: () => {
+            console.log(
+              "Paystack payment window closed."
+            );
+
+            setPaymentLoading(false);
+          },
+        });
+
+      handler.openIframe();
+
+    } catch (error) {
+      console.error(
+        "Partner payment failed:",
+        error
+      );
+
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Unable to start payment."
+      );
+
+      setPaymentLoading(false);
+    }
+  };
+        
+        
+       
   if (loading) {
     return (
       <main className="min-h-screen bg-gray-50 pt-40 px-10">
@@ -312,27 +454,41 @@ export default function PartnerBilling() {
           </div>
 
 
-          <div className="mt-6 flex gap-3">
+          <div className="mt-6 flex flex-wrap gap-3">
 
-            <button
-              className="bg-red-600 text-white px-5 py-3 rounded hover:bg-red-700"
-            >
-              Cancel Subscription
-            </button>
+  <button
+    onClick={handleInitialPayment}
+    disabled={
+      paymentLoading ||
+      partner.subscriptionStatus === "active"
+    }
+    className="bg-green-600 text-white px-5 py-3 rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+  >
+    {paymentLoading
+      ? "Preparing Payment..."
+      : partner.subscriptionStatus === "active"
+        ? "Subscription Active"
+        : `Pay ${currencySymbol}${partner.monthlyFee ?? 0}`}
+  </button>
 
+  <button
+    className="bg-red-600 text-white px-5 py-3 rounded hover:bg-red-700"
+  >
+    Cancel Subscription
+  </button>
 
-            <button
-              onClick={() =>
-                router.push(
-                  "/partner-invoices"
-                )
-              }
-              className="bg-blue-600 text-white px-5 py-3 rounded hover:bg-blue-700"
-            >
-              Invoices
-            </button>
+  <button
+    onClick={() =>
+      router.push(
+        "/partner-invoices"
+      )
+    }
+    className="bg-blue-600 text-white px-5 py-3 rounded hover:bg-blue-700"
+  >
+    Invoices
+  </button>
 
-          </div>
+</div>
 
         </div>
 

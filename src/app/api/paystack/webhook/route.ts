@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
     ============================ */
 
     switch (event.event) {
-      case "charge.success": {
+            case "charge.success": {
         const data = event.data;
 
         const reference = data.reference;
@@ -88,18 +88,200 @@ export async function POST(req: NextRequest) {
         console.log("✅ Payment success:", reference);
 
         const metadata = data.metadata || {};
+
+        /* =====================================================
+        PARTNER PAYMENT
+        ===================================================== */
+
+        const partnerId = metadata.partnerId;
+        const paymentType = metadata.paymentType;
+
+        if (
+          partnerId &&
+          paymentType === "partner_subscription"
+        ) {
+          console.log(
+            "✅ Partner subscription payment:",
+            partnerId
+          );
+
+          /* ==========================================
+          FIND PARTNER PAYMENT
+          ========================================== */
+
+          const partnerPayment =
+            await db.collection("partner_payments").findOne({
+              reference,
+            });
+
+          if (!partnerPayment) {
+            console.warn(
+              "⚠️ Partner payment record not found:",
+              reference
+            );
+
+            break;
+          }
+
+          /* ==========================================
+          PREVENT DUPLICATE PAYMENT PROCESSING
+          ========================================== */
+
+          if (partnerPayment.status === "paid") {
+            console.log(
+              "ℹ️ Partner payment already processed:",
+              reference
+            );
+
+            break;
+          }
+
+          /* ==========================================
+          VALIDATE PARTNER
+          ========================================== */
+
+          const partner = await db
+            .collection("partners")
+            .findOne({
+              _id: partnerPayment.partnerId,
+            });
+
+          if (!partner) {
+            console.warn(
+              "⚠️ Partner not found:",
+              partnerId
+            );
+
+            break;
+          }
+
+          /* ==========================================
+          MARK PAYMENT AS PAID
+          ========================================== */
+
+          await db
+            .collection("partner_payments")
+            .updateOne(
+              {
+                reference,
+              },
+              {
+                $set: {
+                  status: "paid",
+                  paidAt: new Date(),
+                  paystackTransactionId:
+                    data.id || null,
+                  gatewayResponse:
+                    data.gateway_response || null,
+                  updatedAt: new Date(),
+                },
+              }
+            );
+
+          /* ==========================================
+          ACTIVATE PARTNER SUBSCRIPTION
+          ========================================== */
+
+          const nextBillingDate = new Date();
+
+          nextBillingDate.setMonth(
+            nextBillingDate.getMonth() + 1
+          );
+
+          await db
+            .collection("partners")
+            .updateOne(
+              {
+                _id: partnerPayment.partnerId,
+              },
+              {
+                $set: {
+                  subscriptionStatus: "active",
+                  paymentStatus: "paid",
+                  lastPaymentAt: new Date(),
+                  nextBillingDate,
+                  updatedAt: new Date(),
+                },
+              }
+            );
+
+          /* ==========================================
+          STORE PARTNER TRANSACTION
+          ========================================== */
+
+          await db
+            .collection("partner_transactions")
+            .updateOne(
+              {
+                reference,
+              },
+              {
+                $set: {
+                  reference,
+                  partnerId:
+                    partnerPayment.partnerId,
+                  plan:
+                    partnerPayment.plan || null,
+                  amount: data.amount,
+                  currency:
+                    data.currency ||
+                    partnerPayment.currency,
+                  email:
+                    data.customer?.email ||
+                    partner.email,
+                  paymentType:
+                    "partner_subscription",
+                  status: "paid",
+                  paystackTransactionId:
+                    data.id || null,
+                  paidAt: new Date(),
+                  updatedAt: new Date(),
+                },
+              },
+              {
+                upsert: true,
+              }
+            );
+
+          console.log(
+            "✅ Partner subscription activated:",
+            partnerPayment.partnerId.toString()
+          );
+
+          break;
+        }
+
+        /* =====================================================
+        NORMAL ASK MICHAEL USER PAYMENT
+        ===================================================== */
+
         const userId = metadata.userId;
         const plan = metadata.plan;
 
         if (!userId || !plan) {
-          console.warn("⚠️ Missing metadata — skipping upgrade");
+          console.warn(
+            "⚠️ Missing user payment metadata — skipping upgrade"
+          );
+
           break;
         }
 
-        let tier: "free" | "pro" | "pro_plus" = "free";
+        let tier:
+          | "free"
+          | "pro"
+          | "pro_plus" = "free";
 
-        if (plan === "pro") tier = "pro";
-        if (plan === "pro_plus") tier = "pro_plus";
+        if (plan === "pro") {
+          tier = "pro";
+        }
+
+        if (plan === "pro_plus") {
+          tier = "pro_plus";
+        }
+
+        /* ==========================================
+        UPDATE NORMAL USER
+        ========================================== */
 
         await db.collection("users").updateOne(
           { userId },
@@ -112,9 +294,9 @@ export async function POST(req: NextRequest) {
           }
         );
 
-        /* ============================
-        STORE TRANSACTION
-        ============================ */
+        /* ==========================================
+        STORE NORMAL USER TRANSACTION
+        ========================================== */
 
         await db.collection("transactions").updateOne(
           { reference },
@@ -128,7 +310,9 @@ export async function POST(req: NextRequest) {
               updatedAt: new Date(),
             },
           },
-          { upsert: true }
+          {
+            upsert: true,
+          }
         );
 
         break;
