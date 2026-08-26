@@ -36,7 +36,8 @@ export const PARTNER_PLANS: Record<
     maxMessages: 5000,
     currency: "ZAR",
     customPricing: false,
-    paystackPlanCode: "PLN_ktzatbfy1qx5qzw",
+    paystackPlanCode:
+  process.env.PLN_ktzatbfy1qx5qzw ?? null,
   },
 
   business: {
@@ -49,7 +50,8 @@ export const PARTNER_PLANS: Record<
     maxMessages: 25000,
     currency: "ZAR",
     customPricing: false,
-    paystackPlanCode: "PLN_vgi8zoav8kvqjp2",
+paystackPlanCode:
+  process.env.PLN_vgi8zoav8kvqjp2 ?? null,
   },
 
   enterprise: {
