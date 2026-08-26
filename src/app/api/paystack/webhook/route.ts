@@ -161,23 +161,37 @@ export async function POST(req: NextRequest) {
           ========================================== */
 
           await db
-            .collection("partner_payments")
-            .updateOne(
-              {
-                reference,
-              },
-              {
-                $set: {
-                  status: "success",
-                  paidAt: new Date(),
-                  paystackTransactionId:
-                    data.id || null,
-                  gatewayResponse:
-                    data.gateway_response || null,
-                  updatedAt: new Date(),
-                },
-              }
-            );
+  .collection("partner_payments")
+  .updateOne(
+    {
+      reference,
+    },
+    {
+      $set: {
+        status: "success",
+
+        paidAt:
+          new Date(),
+
+        paystackTransactionId:
+          data.id || null,
+
+        gatewayResponse:
+          data.gateway_response || null,
+
+        authorizationCode:
+          data.authorization?.authorization_code ||
+          null,
+
+        customerCode:
+          data.customer?.customer_code ||
+          null,
+
+        updatedAt:
+          new Date(),
+      },
+    }
+  );
 
           /* ==========================================
           ACTIVATE PARTNER SUBSCRIPTION
@@ -190,22 +204,39 @@ export async function POST(req: NextRequest) {
           );
 
           await db
-            .collection("partners")
-            .updateOne(
-              {
-                _id: partnerPayment.partnerId,
-              },
-              {
-                $set: {
-                  subscriptionStatus: "active",
-                  paymentStatus: "paid",
-                  lastPaymentDate: new Date(),
-                  nextBillingDate,
-                  updatedAt: new Date(),
-                },
-              }
-            );
+  .collection("partners")
+  .updateOne(
+    {
+      _id: partnerPayment.partnerId,
+    },
+    {
+      $set: {
+        subscriptionStatus:
+          "active",
 
+        paymentStatus:
+          "paid",
+
+        lastPaymentDate:
+          new Date(),
+
+        nextBillingDate,
+
+        paystackCustomerCode:
+          data.customer?.customer_code ||
+          partner.paystackCustomerCode ||
+          null,
+
+        paystackAuthorizationCode:
+          data.authorization?.authorization_code ||
+          partner.paystackAuthorizationCode ||
+          null,
+
+        updatedAt:
+          new Date(),
+      },
+    }
+  );
           /* ==========================================
           STORE PARTNER TRANSACTION
           ========================================== */

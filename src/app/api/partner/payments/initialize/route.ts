@@ -126,6 +126,13 @@ export async function POST(req: Request) {
     const planConfig =
       PARTNER_PLANS[plan];
 
+      const paystackPlanCode =
+  plan === "starter"
+    ? process.env.PAYSTACK_STARTER_PLAN
+    : plan === "business"
+      ? process.env.PAYSTACK_BUSINESS_PLAN
+      : null;
+
       console.log(
   "PARTNER PAYSTACK PLAN DEBUG:",
   {
@@ -133,11 +140,11 @@ export async function POST(req: Request) {
     paystackPlanCode:
       planConfig?.paystackPlanCode,
     starterEnv:
-      process.env.PAYSTACK_STARTER_PLAN_CODE
+      process.env.PAYSTACK_STARTER_PLAN
         ? "SET"
         : "MISSING",
     businessEnv:
-      process.env.PAYSTACK_BUSINESS_PLAN_CODE
+      process.env.PAYSTACK_BUSINESS_PLAN
         ? "SET"
         : "MISSING",
   }
@@ -208,7 +215,7 @@ export async function POST(req: Request) {
     if (
       plan !== "enterprise"
     ) {
-      if (!planConfig.paystackPlanCode) {
+      if (!paystackPlanCode) {
         return NextResponse.json(
           {
             error:
@@ -221,7 +228,7 @@ export async function POST(req: Request) {
       }
 
       paystackPayload.plan =
-        planConfig.paystackPlanCode;
+  paystackPlanCode;
     }
 
     // ==========================================
