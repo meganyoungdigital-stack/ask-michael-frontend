@@ -128,7 +128,7 @@ export async function POST(req: Request) {
 
       const paystackPlanCode =
   plan === "starter"
-    ? process.env.PAYSTACK_STARTER_PLAN
+    ? process.env.PAYSTACK_STARTER_PLAN_CODE
     : plan === "business"
       ? process.env.PAYSTACK_BUSINESS_PLAN
       : null;
@@ -212,24 +212,20 @@ export async function POST(req: Request) {
     // amount.
     // ==========================================
 
-    if (
-      plan !== "enterprise"
-    ) {
-      if (!paystackPlanCode) {
-        return NextResponse.json(
-          {
-            error:
-              "Paystack plan code is not configured.",
-          },
-          {
-            status: 500,
-          }
-        );
+   if (plan !== "enterprise") {
+  if (!paystackPlanCode) {
+    return NextResponse.json(
+      {
+        error: "Paystack plan code is not configured.",
+      },
+      {
+        status: 500,
       }
+    );
+  }
 
-      paystackPayload.plan =
-  paystackPlanCode;
-    }
+  paystackPayload.plan = paystackPlanCode;
+}
 
     // ==========================================
     // ENTERPRISE
