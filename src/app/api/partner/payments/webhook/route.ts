@@ -434,34 +434,46 @@ export async function POST(req: Request) {
     // ==========================================
 
     await db
-      .collection("partners")
-      .updateOne(
-        {
-          _id:
-            payment.partnerId,
-        },
-        {
-          $set: {
-            subscriptionStatus:
-              "active",
+  .collection("partners")
+  .updateOne(
+    {
+      _id: payment.partnerId,
+    },
+    {
+      $set: {
+        subscriptionStatus:
+          "active",
 
-            paymentStatus:
-              "paid",
+        paymentStatus:
+          "paid",
 
-            lastPaymentAt:
-              paidAt,
+        lastPaymentAt:
+          paidAt,
 
-            nextBillingDate,
+        nextBillingDate,
 
-            lastPaymentReference:
-              reference,
+        lastPaymentReference:
+          reference,
 
-            updatedAt:
-              new Date(),
-          },
-        }
-      );
+        // Save the reusable Paystack authorization.
+        // This will be used later to charge
+        // accumulated extra-message usage.
+        paystackAuthorizationCode:
+          transaction.authorization
+            ?.authorization_code ||
+          null,
 
+        paystackCustomerCode:
+          transaction.customer
+            ?.customer_code ||
+          null,
+
+        updatedAt:
+          new Date(),
+      },
+    }
+  );
+  
     // ==========================================
     // SUCCESS
     // ==========================================
