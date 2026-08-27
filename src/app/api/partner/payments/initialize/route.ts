@@ -140,9 +140,9 @@ export async function POST(req: Request) {
     paystackPlanCode:
       planConfig?.paystackPlanCode,
     starterEnv:
-      process.env.PAYSTACK_STARTER_PLAN
-        ? "SET"
-        : "MISSING",
+  process.env.PAYSTACK_STARTER_PLAN_CODE
+    ? "SET"
+    : "MISSING",
     businessEnv:
       process.env.PAYSTACK_BUSINESS_PLAN
         ? "SET"
