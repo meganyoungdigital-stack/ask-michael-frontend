@@ -27,7 +27,15 @@ declare global {
   interface Window {
     PaystackPop?: new () => {
       resumeTransaction: (
-        accessCode: string
+        accessCode: string,
+        callbacks?: {
+          onSuccess?: (response: {
+            reference?: string;
+          }) => void;
+          onCancel?: () => void;
+          onError?: (error: unknown) => void;
+          onClose?: () => void;
+        }
       ) => void;
     };
   }
@@ -45,58 +53,68 @@ export default function PartnerBilling() {
   const [paymentLoading, setPaymentLoading] =
     useState(false);
 
-  useEffect(() => {
-    async function loadBilling() {
-      try {
-        const token =
-          localStorage.getItem("partnerToken");
+  // ==========================================
+  // LOAD PARTNER BILLING INFORMATION
+  // ==========================================
 
-        if (!token) {
-          router.push("/partner-login");
-          return;
-        }
+  const loadBilling = async () => {
+    try {
+      const token =
+        localStorage.getItem("partnerToken");
 
-        
+      if (!token) {
+        router.push("/partner-login");
+        return;
+      }
 
-        const response =
-          await fetch(
-            "/api/partner/dashboard",
-            {
-              headers: {
-                Authorization: token,
-              },
-            }
-          );
-
-        const data =
-          await response.json();
-
-        if (!response.ok) {
-          throw new Error(
-            data.error ||
-              "Failed loading billing information"
-          );
-        }
-
-        setPartner(data);
-
-      } catch (error) {
-        console.error(
-          "Failed loading billing information:",
-          error
+      const response =
+        await fetch(
+          "/api/partner/dashboard",
+          {
+            headers: {
+              Authorization: token,
+            },
+          }
         );
 
-        router.push("/partner-login");
+      const data =
+        await response.json();
 
-      } finally {
-        setLoading(false);
+      if (!response.ok) {
+        throw new Error(
+          data.error ||
+            "Failed loading billing information"
+        );
       }
-    }
 
+      setPartner(data);
+
+    } catch (error) {
+      console.error(
+        "Failed loading billing information:",
+        error
+      );
+
+      router.push("/partner-login");
+
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ==========================================
+  // INITIAL LOAD
+  // ==========================================
+
+  useEffect(() => {
     loadBilling();
   }, [router]);
 
-    const handleInitialPayment = async () => {
+  // ==========================================
+  // INITIAL PAYMENT
+  // ==========================================
+
+  const handleInitialPayment = async () => {
     try {
       setPaymentLoading(true);
 
@@ -114,13 +132,20 @@ export default function PartnerBilling() {
         );
       }
 
+      // ==========================================
+      // INITIALIZE PAYMENT
+      // ==========================================
+
       const response =
         await fetch(
           "/api/partner/payments/initialize",
           {
             method: "POST",
+
             headers: {
               Authorization: token,
+              "Content-Type":
+                "application/json",
             },
           }
         );
@@ -136,38 +161,170 @@ export default function PartnerBilling() {
       }
 
       if (!data.accessCode) {
-  throw new Error(
-    "Paystack did not return an access code."
-  );
-}
+        throw new Error(
+          "Paystack did not return an access code."
+        );
+      }
 
-if (!data.reference) {
-  throw new Error(
-    "Paystack did not return a payment reference."
-  );
-}
+      if (!data.reference) {
+        throw new Error(
+          "Paystack did not return a payment reference."
+        );
+      }
 
-if (!window.PaystackPop) {
+      // ==========================================
+      // CHECK PAYSTACK SCRIPT
+      // ==========================================
+
+      if (!window.PaystackPop) {
         throw new Error(
           "Paystack is still loading. Please try again."
         );
       }
 
       const PaystackPop =
-  window.PaystackPop;
+        window.PaystackPop;
 
-if (!PaystackPop) {
-  throw new Error(
-    "Paystack is still loading. Please try again."
-  );
-}
+      const paystack =
+        new PaystackPop();
 
-const paystack =
-  new PaystackPop();
+      // ==========================================
+      // VERIFY PAYMENT AFTER PAYSTACK SUCCESS
+      // ==========================================
 
-paystack.resumeTransaction(
-  data.accessCode
-);
+      const verifyPayment = async (
+        paymentReference: string
+      ) => {
+        try {
+          console.log(
+            "VERIFYING PARTNER PAYMENT:",
+            paymentReference
+          );
+
+          const verifyResponse =
+            await fetch(
+              "/api/partner/payments/verify",
+              {
+                method: "POST",
+
+                headers: {
+                  Authorization: token,
+                  "Content-Type":
+                    "application/json",
+                },
+
+                body: JSON.stringify({
+                  reference:
+                    paymentReference,
+                }),
+              }
+            );
+
+          const verifyData =
+            await verifyResponse.json();
+
+          console.log(
+            "PARTNER PAYMENT VERIFICATION RESPONSE:",
+            verifyData
+          );
+
+          if (!verifyResponse.ok) {
+            throw new Error(
+              verifyData.error ||
+                "Payment verification failed."
+            );
+          }
+
+          if (
+            verifyData.subscriptionStatus !==
+            "active"
+          ) {
+            throw new Error(
+              "Payment was received, but the subscription could not be activated."
+            );
+          }
+
+          // ==========================================
+          // PAYMENT SUCCESSFULLY VERIFIED
+          // ==========================================
+
+          alert(
+            "Payment successful! Your partner subscription is now active."
+          );
+
+          // Reload billing information
+          await loadBilling();
+
+          setPaymentLoading(false);
+
+        } catch (error) {
+          console.error(
+            "Partner payment verification failed:",
+            error
+          );
+
+          alert(
+            error instanceof Error
+              ? error.message
+              : "Payment was received but could not be verified."
+          );
+
+          setPaymentLoading(false);
+        }
+      };
+
+      // ==========================================
+      // OPEN PAYSTACK
+      // ==========================================
+
+      paystack.resumeTransaction(
+        data.accessCode,
+        {
+          onSuccess: (
+            transaction
+          ) => {
+            console.log(
+              "PAYSTACK PAYMENT SUCCESS:",
+              transaction
+            );
+
+            const paymentReference =
+              transaction?.reference ||
+              data.reference;
+
+            verifyPayment(
+              paymentReference
+            );
+          },
+
+          onCancel: () => {
+            console.log(
+              "PAYSTACK PAYMENT CANCELLED"
+            );
+
+            setPaymentLoading(false);
+          },
+
+          onError: (error) => {
+            console.error(
+              "PAYSTACK PAYMENT ERROR:",
+              error
+            );
+
+            setPaymentLoading(false);
+
+            alert(
+              "Paystack reported a payment error. Please try again."
+            );
+          },
+
+          onClose: () => {
+            console.log(
+              "PAYSTACK CHECKOUT CLOSED"
+            );
+          },
+        }
+      );
 
     } catch (error) {
       console.error(
@@ -184,9 +341,11 @@ paystack.resumeTransaction(
       setPaymentLoading(false);
     }
   };
-        
-        
-       
+
+  // ==========================================
+  // LOADING
+  // ==========================================
+
   if (loading) {
     return (
       <main className="min-h-screen bg-gray-50 pt-40 px-10">
@@ -216,293 +375,282 @@ paystack.resumeTransaction(
       : "Not configured";
 
   return (
+    <>
+      <Script
+        src="https://js.paystack.co/v2/inline.js"
+        strategy="afterInteractive"
+      />
 
-        <>
-    <Script
-      src="https://js.paystack.co/v2/inline.js"
-      strategy="afterInteractive"
-    />
+      <main className="min-h-screen bg-gray-50 pt-40 px-10 pb-10">
 
-    <main className="min-h-screen bg-gray-50 pt-40 px-10 pb-10">
+        <div className="flex items-center gap-3">
 
-      <div className="flex items-center gap-3">
+          <button
+            onClick={() =>
+              router.push(
+                "/partner-dashboard"
+              )
+            }
+            className="text-gray-700 hover:text-black text-2xl"
+          >
+            ←
+          </button>
 
-        <button
-          onClick={() =>
-            router.push(
-              "/partner-dashboard"
-            )
-          }
-          className="text-gray-700 hover:text-black text-2xl"
-        >
-          ←
-        </button>
+          <h1 className="text-4xl font-bold text-gray-900">
+            Manage Subscription
+          </h1>
 
-        <h1 className="text-4xl font-bold text-gray-900">
-          Manage Subscription
-        </h1>
+        </div>
 
-      </div>
+        <div className="mt-8 grid md:grid-cols-2 gap-6">
 
+          <div className="bg-white rounded-xl p-6 shadow">
 
-      <div className="mt-8 grid md:grid-cols-2 gap-6">
+            <h2 className="text-xl font-bold text-gray-900">
+              Billing Summary
+            </h2>
 
-        <div className="bg-white rounded-xl p-6 shadow">
+            <div className="mt-5 space-y-4">
 
-          <h2 className="text-xl font-bold text-gray-900">
-            Billing Summary
-          </h2>
+              <div>
+                <p className="text-sm text-gray-500">
+                  Company
+                </p>
 
-          <div className="mt-5 space-y-4">
+                <p className="text-gray-900 font-semibold">
+                  {partner.companyName}
+                </p>
+              </div>
 
-            <div>
-              <p className="text-sm text-gray-500">
-                Company
-              </p>
+              <div>
+                <p className="text-sm text-gray-500">
+                  Billing Email
+                </p>
 
-              <p className="text-gray-900 font-semibold">
-                {partner.companyName}
-              </p>
+                <p className="text-gray-900">
+                  {partner.email}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-500">
+                  Currency
+                </p>
+
+                <p className="text-gray-900 font-semibold">
+                  {currency}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-500">
+                  Current Messages Used
+                </p>
+
+                <p className="text-gray-900 font-semibold">
+                  {partner.messages}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-500">
+                  Included Messages
+                </p>
+
+                <p className="text-gray-900 font-semibold">
+                  {partner.includedMessages !== null
+                    ? partner.includedMessages.toLocaleString()
+                    : "Custom"}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-500">
+                  Extra Messages
+                </p>
+
+                <p className="text-gray-900 font-semibold">
+                  {partner.extraMessages.toLocaleString()}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-500">
+                  Extra Usage Charge
+                </p>
+
+                <p className="text-gray-900 font-semibold">
+                  {currencySymbol}
+                  {partner.extraUsageCharge.toFixed(2)}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-500">
+                  Current Balance
+                </p>
+
+                <p className="text-gray-900 text-2xl font-bold">
+                  {currencySymbol}
+                  {partner.currentBill}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-500">
+                  Next Billing Date
+                </p>
+
+                <p className="text-gray-900">
+                  {partner.nextBillingDate
+                    ? new Date(
+                        partner.nextBillingDate
+                      ).toLocaleDateString(
+                        "en-ZA"
+                      )
+                    : "Not scheduled"}
+                </p>
+              </div>
+
             </div>
 
+          </div>
 
-            <div>
-              <p className="text-sm text-gray-500">
-                Billing Email
-              </p>
+          <div className="bg-white rounded-xl p-6 shadow">
 
-              <p className="text-gray-900">
-                {partner.email}
-              </p>
+            <h2 className="text-xl font-bold text-gray-900">
+              Subscription
+            </h2>
+
+            <div className="mt-5 space-y-4">
+
+              <div>
+                <p className="text-sm text-gray-500">
+                  Plan
+                </p>
+
+                <p className="text-xl font-semibold text-gray-900">
+                  {planName}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-500">
+                  Monthly Fee
+                </p>
+
+                <p className="text-xl font-semibold text-gray-900">
+                  {partner.monthlyFee !== null
+                    ? `${currencySymbol}${partner.monthlyFee}`
+                    : "Custom Pricing"}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-500">
+                  Included Messages
+                </p>
+
+                <p className="text-gray-900">
+                  {partner.includedMessages !== null
+                    ? partner.includedMessages.toLocaleString()
+                    : "Custom"}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-500">
+                  Price Per Message
+                </p>
+
+                <p className="text-gray-900">
+                  {partner.pricePerMessage !== null
+                    ? `${currencySymbol}${partner.pricePerMessage}`
+                    : "Custom"}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-500">
+                  Maximum Users
+                </p>
+
+                <p className="text-gray-900">
+                  {partner.maxUsers !== null
+                    ? partner.maxUsers
+                    : "Custom"}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-500">
+                  Maximum Messages
+                </p>
+
+                <p className="text-gray-900">
+                  {partner.maxMessages !== null
+                    ? partner.maxMessages.toLocaleString()
+                    : "Custom"}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-500">
+                  Status
+                </p>
+
+                <p className="text-gray-900 font-semibold">
+                  {partner.subscriptionStatus}
+                </p>
+              </div>
+
             </div>
 
+            <div className="mt-6 flex flex-wrap gap-3">
 
-            <div>
-              <p className="text-sm text-gray-500">
-                Currency
-              </p>
+              <button
+                onClick={
+                  handleInitialPayment
+                }
+                disabled={
+                  paymentLoading ||
+                  partner.subscriptionStatus ===
+                    "active"
+                }
+                className="bg-green-600 text-white px-5 py-3 rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {paymentLoading
+                  ? "Processing Payment..."
+                  : partner.subscriptionStatus ===
+                      "active"
+                    ? "Subscription Active"
+                    : `Pay ${currencySymbol}${partner.monthlyFee ?? 0}`}
+              </button>
 
-              <p className="text-gray-900 font-semibold">
-                {currency}
-              </p>
-            </div>
+              <button
+                className="bg-red-600 text-white px-5 py-3 rounded hover:bg-red-700"
+              >
+                Cancel Subscription
+              </button>
 
+              <button
+                onClick={() =>
+                  router.push(
+                    "/partner-invoices"
+                  )
+                }
+                className="bg-blue-600 text-white px-5 py-3 rounded hover:bg-blue-700"
+              >
+                Invoices
+              </button>
 
-            <div>
-              <p className="text-sm text-gray-500">
-                Current Messages Used
-              </p>
-
-              <p className="text-gray-900 font-semibold">
-                {partner.messages}
-              </p>
-            </div>
-
-<div>
-  <p className="text-sm text-gray-500">
-    Included Messages
-  </p>
-
-  <p className="text-gray-900 font-semibold">
-    {partner.includedMessages !== null
-      ? partner.includedMessages.toLocaleString()
-      : "Custom"}
-  </p>
-</div>
-
-<div>
-  <p className="text-sm text-gray-500">
-    Extra Messages
-  </p>
-
-  <p className="text-gray-900 font-semibold">
-    {partner.extraMessages.toLocaleString()}
-  </p>
-</div>
-
-<div>
-  <p className="text-sm text-gray-500">
-    Extra Usage Charge
-  </p>
-
-  <p className="text-gray-900 font-semibold">
-    {currencySymbol}
-    {partner.extraUsageCharge.toFixed(2)}
-  </p>
-</div>
-
-            <div>
-              <p className="text-sm text-gray-500">
-                Current Balance
-              </p>
-
-              <p className="text-gray-900 text-2xl font-bold">
-                {currencySymbol}
-                {partner.currentBill}
-              </p>
-            </div>
-
-
-            <div>
-              <p className="text-sm text-gray-500">
-                Next Billing Date
-              </p>
-
-              <p className="text-gray-900">
-                {partner.nextBillingDate
-                  ? new Date(
-                      partner.nextBillingDate
-                    ).toLocaleDateString(
-                      "en-ZA"
-                    )
-                  : "Not scheduled"}
-              </p>
             </div>
 
           </div>
 
         </div>
 
-
-        <div className="bg-white rounded-xl p-6 shadow">
-
-          <h2 className="text-xl font-bold text-gray-900">
-            Subscription
-          </h2>
-
-
-          <div className="mt-5 space-y-4">
-
-            <div>
-              <p className="text-sm text-gray-500">
-                Plan
-              </p>
-
-              <p className="text-xl font-semibold text-gray-900">
-                {planName}
-              </p>
-            </div>
-
-
-            <div>
-              <p className="text-sm text-gray-500">
-                Monthly Fee
-              </p>
-
-              <p className="text-xl font-semibold text-gray-900">
-                {partner.monthlyFee !== null
-                  ? `${currencySymbol}${partner.monthlyFee}`
-                  : "Custom Pricing"}
-              </p>
-            </div>
-
-
-            <div>
-              <p className="text-sm text-gray-500">
-                Included Messages
-              </p>
-
-              <p className="text-gray-900">
-                {partner.includedMessages !== null
-                  ? partner.includedMessages.toLocaleString()
-                  : "Custom"}
-              </p>
-            </div>
-
-
-            <div>
-              <p className="text-sm text-gray-500">
-                Price Per Message
-              </p>
-
-              <p className="text-gray-900">
-                {partner.pricePerMessage !== null
-                  ? `${currencySymbol}${partner.pricePerMessage}`
-                  : "Custom"}
-              </p>
-            </div>
-
-
-            <div>
-              <p className="text-sm text-gray-500">
-                Maximum Users
-              </p>
-
-              <p className="text-gray-900">
-                {partner.maxUsers !== null
-                  ? partner.maxUsers
-                  : "Custom"}
-              </p>
-            </div>
-
-
-            <div>
-              <p className="text-sm text-gray-500">
-                Maximum Messages
-              </p>
-
-              <p className="text-gray-900">
-                {partner.maxMessages !== null
-                  ? partner.maxMessages.toLocaleString()
-                  : "Custom"}
-              </p>
-            </div>
-
-
-            <div>
-              <p className="text-sm text-gray-500">
-                Status
-              </p>
-
-              <p className="text-gray-900 font-semibold">
-                {partner.subscriptionStatus}
-              </p>
-            </div>
-
-          </div>
-
-
-          <div className="mt-6 flex flex-wrap gap-3">
-
-  <button
-    onClick={handleInitialPayment}
-    disabled={
-      paymentLoading ||
-      partner.subscriptionStatus === "active"
-    }
-    className="bg-green-600 text-white px-5 py-3 rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-  >
-    {paymentLoading
-      ? "Preparing Payment..."
-      : partner.subscriptionStatus === "active"
-        ? "Subscription Active"
-        : `Pay ${currencySymbol}${partner.monthlyFee ?? 0}`}
-  </button>
-
-  <button
-    className="bg-red-600 text-white px-5 py-3 rounded hover:bg-red-700"
-  >
-    Cancel Subscription
-  </button>
-
-  <button
-    onClick={() =>
-      router.push(
-        "/partner-invoices"
-      )
-    }
-    className="bg-blue-600 text-white px-5 py-3 rounded hover:bg-blue-700"
-  >
-    Invoices
-  </button>
-
-</div>
-
-        </div>
-
-      </div>
-
-        </main>
-  </>
-);
+      </main>
+    </>
+  );
 }
