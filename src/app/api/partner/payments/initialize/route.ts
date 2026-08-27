@@ -267,6 +267,68 @@ export async function POST(req: Request) {
     }
 
     // ==========================================
+    // DEBUG PAYSTACK PLAN
+    // ==========================================
+
+    if (paystackPlanCode) {
+      try {
+        const planCheck =
+          await axios.get(
+            `https://api.paystack.co/plan/${paystackPlanCode}`,
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+              },
+            }
+          );
+
+        console.log(
+          "PAYSTACK PLAN CHECK:",
+          JSON.stringify(
+            {
+              success:
+                planCheck.data?.status ?? false,
+
+              message:
+                planCheck.data?.message ?? null,
+
+              planCode:
+                planCheck.data?.data?.plan_code ?? null,
+
+              domain:
+                planCheck.data?.data?.domain ?? null,
+
+              amount:
+                planCheck.data?.data?.amount ?? null,
+
+              currency:
+                planCheck.data?.data?.currency ?? null,
+            },
+            null,
+            2
+          )
+        );
+      } catch (planError: unknown) {
+        if (axios.isAxiosError(planError)) {
+          console.error(
+            "PAYSTACK PLAN CHECK FAILED:",
+            JSON.stringify(
+              planError.response?.data ?? null,
+              null,
+              2
+            )
+          );
+        } else {
+          console.error(
+            "PAYSTACK PLAN CHECK FAILED:",
+            planError
+          );
+        }
+      }
+    }
+
+    // ==========================================
     // INITIALIZE WITH PAYSTACK
     // ==========================================
 
