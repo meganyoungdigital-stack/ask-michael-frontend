@@ -401,36 +401,52 @@ if (
     );
 
     // ==========================================
-    // UPDATE PARTNER ACCOUNT
-    // ==========================================
+// UPDATE PARTNER ACCOUNT
+// ==========================================
 
-    await db
-      .collection("partners")
-      .updateOne(
-        {
-          _id: partner._id,
-        },
-        {
-          $set: {
-            subscriptionStatus:
-              "active",
+await db
+  .collection("partners")
+  .updateOne(
+    {
+      _id: partner._id,
+    },
+    {
+      $set: {
+        subscriptionStatus:
+          "active",
 
-            paymentStatus:
-              "paid",
+        paymentStatus:
+          "paid",
 
-            lastPaymentAt:
-              paidAt,
+        lastPaymentAt:
+          paidAt,
 
-            nextBillingDate,
+        nextBillingDate,
 
-            lastPaymentReference:
-              reference,
+        lastPaymentReference:
+          reference,
 
-            updatedAt:
-              new Date(),
-          },
-        }
-      );
+        // ==========================================
+        // PAYSTACK REUSABLE PAYMENT INFORMATION
+        // ==========================================
+
+        paystackAuthorizationCode:
+          paystackData.authorization?.authorization_code ||
+          null,
+
+        paystackCustomerCode:
+          paystackData.customer?.customer_code ||
+          null,
+
+        paystackSubscriptionCode:
+          paystackData.subscription?.subscription_code ||
+          null,
+
+        updatedAt:
+          new Date(),
+      },
+    }
+  );
 
     // ==========================================
     // SUCCESS
