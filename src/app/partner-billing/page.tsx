@@ -278,24 +278,29 @@ export default function PartnerBilling() {
       // ==========================================
 
       paystack.resumeTransaction(
-        data.accessCode,
-        {
-          onSuccess: (
-            transaction
-          ) => {
-            console.log(
-              "PAYSTACK PAYMENT SUCCESS:",
-              transaction
-            );
+  data.accessCode,
+  {
+    onSuccess: async (
+      transaction
+    ) => {
+      console.log(
+        "PAYSTACK PAYMENT SUCCESS:",
+        transaction
+      );
 
-            const paymentReference =
-              transaction?.reference ||
-              data.reference;
+      const paymentReference =
+        transaction?.reference ||
+        data.reference;
 
-            verifyPayment(
-              paymentReference
-            );
-          },
+      console.log(
+        "PAYSTACK REFERENCE USED FOR VERIFICATION:",
+        paymentReference
+      );
+
+      await verifyPayment(
+        paymentReference
+      );
+    },
 
           onCancel: () => {
             console.log(
