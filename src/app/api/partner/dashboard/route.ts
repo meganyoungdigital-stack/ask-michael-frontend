@@ -120,11 +120,15 @@ export async function GET(req: Request) {
         partner.status,
 
       subscriptionStatus:
-        partner.subscriptionStatus ||
-        "inactive",
+  partner.subscriptionStatus ||
+  "inactive",
 
-      nextBillingDate:
-        partner.nextBillingDate || null,
+paymentStatus:
+  partner.paymentStatus ||
+  "unpaid",
+
+nextBillingDate:
+  partner.nextBillingDate || null,
     });
   } catch (error) {
     console.error(

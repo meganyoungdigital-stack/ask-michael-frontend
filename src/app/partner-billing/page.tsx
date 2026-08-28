@@ -19,6 +19,7 @@ type PartnerBillingData = {
   extraUsageCharge: number;
   status: string;
   subscriptionStatus: string;
+  paymentStatus: string;
   nextBillingDate: string | null;
   currentBill: number;
 };
@@ -379,6 +380,10 @@ export default function PartnerBilling() {
         partner.plan.slice(1)
       : "Not configured";
 
+      const subscriptionIsActive =
+  partner.subscriptionStatus === "active" ||
+  partner.paymentStatus === "paid";
+
   return (
     <>
       <Script
@@ -618,18 +623,16 @@ export default function PartnerBilling() {
                   handleInitialPayment
                 }
                 disabled={
-                  paymentLoading ||
-                  partner.subscriptionStatus ===
-                    "active"
-                }
+  paymentLoading ||
+  subscriptionIsActive
+}
                 className="bg-green-600 text-white px-5 py-3 rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {paymentLoading
-                  ? "Processing Payment..."
-                  : partner.subscriptionStatus ===
-                      "active"
-                    ? "Subscription Active"
-                    : `Pay ${currencySymbol}${partner.monthlyFee ?? 0}`}
+  ? "Processing Payment..."
+  : subscriptionIsActive
+    ? "Subscription Active"
+    : `Pay ${currencySymbol}${partner.monthlyFee ?? 0}`}
               </button>
 
               <button
