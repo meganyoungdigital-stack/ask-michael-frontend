@@ -226,6 +226,34 @@ export async function POST(req: Request) {
         usageResult?.messages
       ) || currentMessages + 1;
 
+      // ==========================================
+// CALCULATE NEW EXTRA USAGE
+// ==========================================
+
+const includedMessages =
+  Number(
+    partner.includedMessages
+  ) || 0;
+
+const billedExtraMessages =
+  Number(
+    partner.billedExtraMessages
+  ) || 0;
+
+const totalExtraMessages =
+  Math.max(
+    0,
+    updatedMessages -
+      includedMessages
+  );
+
+const newExtraMessages =
+  Math.max(
+    0,
+    totalExtraMessages -
+      billedExtraMessages
+  );
+
     // ==========================================
     // SUCCESS
     // ==========================================
@@ -243,21 +271,19 @@ export async function POST(req: Request) {
       response,
 
       usage: {
-        messages:
-          updatedMessages,
+  messages:
+    updatedMessages,
 
-        includedMessages:
-          partner.includedMessages,
+  includedMessages:
+    partner.includedMessages,
 
-        extraMessages:
-          Math.max(
-            0,
-            updatedMessages -
-              (Number(
-                partner.includedMessages
-              ) || 0)
-          ),
-      },
+  billedExtraMessages,
+
+  extraMessages:
+    totalExtraMessages,
+
+  newExtraMessages,
+},
     });
   } catch (error) {
     console.error(

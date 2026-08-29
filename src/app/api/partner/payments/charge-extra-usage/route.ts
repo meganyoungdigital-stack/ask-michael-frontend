@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import axios from "axios";
-import { ObjectId } from "mongodb";
 
 import { connectToDatabase } from "@/lib/mongodb";
 import { calculatePartnerBilling } from "@/lib/partnerBilling";
@@ -8,37 +7,48 @@ import { calculatePartnerBilling } from "@/lib/partnerBilling";
 export async function POST(req: Request) {
   try {
     // ==========================================
-    // GET PARTNER TOKEN
-    // ==========================================
+// GET LIVE PARTNER API KEY
+// ==========================================
 
-    const token =
-      req.headers.get("Authorization");
+const authorization =
+  req.headers.get("Authorization");
 
-    if (!token) {
-      return NextResponse.json(
-        {
-          error: "Missing partner token.",
-        },
-        {
-          status: 401,
-        }
-      );
+if (!authorization) {
+  return NextResponse.json(
+    {
+      error: "Missing API key.",
+    },
+    {
+      status: 401,
     }
+  );
+}
 
-    // ==========================================
-    // VALIDATE PARTNER TOKEN
-    // ==========================================
+// ==========================================
+// REMOVE BEARER PREFIX
+// ==========================================
 
-    if (!ObjectId.isValid(token)) {
-      return NextResponse.json(
-        {
-          error: "Invalid partner token.",
-        },
-        {
-          status: 401,
-        }
-      );
+const cleanApiKey =
+  authorization.startsWith("Bearer ")
+    ? authorization.substring(7)
+    : authorization;
+
+// ==========================================
+// VALIDATE LIVE API KEY FORMAT
+// ==========================================
+
+if (
+  !cleanApiKey.startsWith("am_live_")
+) {
+  return NextResponse.json(
+    {
+      error: "Invalid live API key.",
+    },
+    {
+      status: 401,
     }
+  );
+}
 
     // ==========================================
     // CONNECT TO DATABASE
@@ -52,12 +62,11 @@ export async function POST(req: Request) {
     // ==========================================
 
     const partner =
-      await db
-        .collection("partners")
-        .findOne({
-          _id: new ObjectId(token),
-        });
-
+  await db
+    .collection("partners")
+    .findOne({
+      apiKey: cleanApiKey,
+    });
     if (!partner) {
       return NextResponse.json(
         {
@@ -131,20 +140,24 @@ export async function POST(req: Request) {
     // ==========================================
 
     const billing =
-      calculatePartnerBilling({
-        messages:
-          partner.messages,
+  calculatePartnerBilling({
+    messages:
+      partner.messages,
 
-        includedMessages:
-          partner.includedMessages,
+    includedMessages:
+      partner.includedMessages,
 
-        pricePerMessage:
-          partner.pricePerMessage,
+    billedExtraMessages:
+      partner.billedExtraMessages,
 
-        monthlyFee:
-          partner.monthlyFee,
-      });
+    pricePerMessage:
+      partner.pricePerMessage,
 
+    monthlyFee:
+      partner.monthlyFee,
+  });
+
+  
     // ==========================================
     // CHECK FOR EXTRA USAGE
     // ==========================================
@@ -406,6 +419,28 @@ export async function POST(req: Request) {
       paystackData.status ===
       "success"
     ) {
+
+// ==========================================
+// MARK EXTRA MESSAGES AS BILLED
+// ==========================================
+
+await db
+  .collection("partners")
+  .updateOne(
+    {
+      _id: partner._id,
+    },
+    {
+      $inc: {
+        billedExtraMessages:
+          billing.extraMessages,
+      },
+      $set: {
+        updatedAt: new Date(),
+      },
+    }
+  );
+
       await db
         .collection(
           "partner_payments"

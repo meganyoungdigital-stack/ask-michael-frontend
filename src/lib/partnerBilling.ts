@@ -1,6 +1,7 @@
 export type PartnerBillingCalculation = {
   messagesUsed: number;
   includedMessages: number;
+  billedExtraMessages: number;
   extraMessages: number;
   pricePerMessage: number;
   monthlyFee: number;
@@ -11,6 +12,7 @@ export type PartnerBillingCalculation = {
 export function calculatePartnerBilling(data: {
   messages?: number | null;
   includedMessages?: number | null;
+  billedExtraMessages?: number | null;
   pricePerMessage?: number | null;
   monthlyFee?: number | null;
 }): PartnerBillingCalculation {
@@ -24,6 +26,11 @@ export function calculatePartnerBilling(data: {
     Number(data.includedMessages ?? 0)
   );
 
+  const billedExtraMessages = Math.max(
+    0,
+    Number(data.billedExtraMessages ?? 0)
+  );
+
   const pricePerMessage = Math.max(
     0,
     Number(data.pricePerMessage ?? 0)
@@ -34,9 +41,14 @@ export function calculatePartnerBilling(data: {
     Number(data.monthlyFee ?? 0)
   );
 
-  const extraMessages = Math.max(
+  const totalExtraMessages = Math.max(
     0,
     messagesUsed - includedMessages
+  );
+
+  const extraMessages = Math.max(
+    0,
+    totalExtraMessages - billedExtraMessages
   );
 
   const extraUsageCharge =
@@ -48,6 +60,7 @@ export function calculatePartnerBilling(data: {
   return {
     messagesUsed,
     includedMessages,
+    billedExtraMessages,
     extraMessages,
     pricePerMessage,
     monthlyFee,

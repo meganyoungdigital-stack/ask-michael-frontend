@@ -53,15 +53,17 @@ export async function GET(req: Request) {
     ============================ */
 
     const billing =
-      calculatePartnerBilling({
-        messages: partner.messages,
-        includedMessages:
-          partner.includedMessages,
-        pricePerMessage:
-          partner.pricePerMessage,
-        monthlyFee:
-          partner.monthlyFee,
-      });
+  calculatePartnerBilling({
+    messages: partner.messages,
+    includedMessages:
+      partner.includedMessages,
+    billedExtraMessages:
+      partner.billedExtraMessages,
+    pricePerMessage:
+      partner.pricePerMessage,
+    monthlyFee:
+      partner.monthlyFee,
+  });
 
     return NextResponse.json({
       companyName:
@@ -92,10 +94,13 @@ export async function GET(req: Request) {
         partner.monthlyFee ?? null,
 
       includedMessages:
-        partner.includedMessages ?? null,
+  partner.includedMessages ?? null,
 
-      pricePerMessage:
-        partner.pricePerMessage ?? null,
+billedExtraMessages:
+  partner.billedExtraMessages ?? 0,
+
+pricePerMessage:
+  partner.pricePerMessage ?? null,
 
       maxUsers:
         partner.maxUsers ?? null,
