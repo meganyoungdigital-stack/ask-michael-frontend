@@ -7,7 +7,10 @@ import { calculatePartnerBilling } from "@/lib/partnerBilling";
 export async function POST(req: Request) {
   try {
     // ==========================================
-// GET LIVE PARTNER API KEY
+// GET PARTNER TOKEN
+//
+// The existing partner login system stores
+// partner._id in localStorage as partnerToken.
 // ==========================================
 
 const authorization =
@@ -16,7 +19,7 @@ const authorization =
 if (!authorization) {
   return NextResponse.json(
     {
-      error: "Missing API key.",
+      error: "Missing partner token.",
     },
     {
       status: 401,
@@ -28,27 +31,36 @@ if (!authorization) {
 // REMOVE BEARER PREFIX
 // ==========================================
 
-const cleanApiKey =
+const partnerToken =
   authorization.startsWith("Bearer ")
     ? authorization.substring(7)
     : authorization;
 
 // ==========================================
-// VALIDATE LIVE API KEY FORMAT
+// VALIDATE MONGODB PARTNER ID
 // ==========================================
 
 if (
-  !cleanApiKey.startsWith("am_live_")
+  !/^[a-fA-F0-9]{24}$/.test(
+    partnerToken
+  )
 ) {
   return NextResponse.json(
     {
-      error: "Invalid live API key.",
+      error: "Invalid partner token.",
     },
     {
       status: 401,
     }
   );
 }
+
+// ==========================================
+// SELECT TEST OR LIVE MODE
+// ==========================================
+
+const isPreview =
+  process.env.VERCEL_ENV === "preview";
 
     // ==========================================
     // CONNECT TO DATABASE
@@ -64,9 +76,17 @@ if (
     const partner =
   await db
     .collection("partners")
-    .findOne({
-      apiKey: cleanApiKey,
-    });
+    .findOne(
+      isPreview
+        ? {
+            testApiKey:
+              partnerToken,
+          }
+        : {
+            apiKey:
+              partnerToken,
+          }
+    );
     if (!partner) {
       return NextResponse.json(
         {

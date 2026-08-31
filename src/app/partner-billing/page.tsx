@@ -33,9 +33,13 @@ declare global {
         email: string;
         plan?: string;
         currency?: string;
+        amount?: number;
+        reference?: string;
         metadata?: Record<string, unknown>;
         callback?: (response: {
           reference?: string;
+          status?: string;
+          message?: string;
         }) => void;
         onClose?: () => void;
       }) => {
@@ -44,7 +48,6 @@ declare global {
     };
   }
 }
-
 export default function PartnerBilling() {
   const router = useRouter();
 
@@ -113,7 +116,243 @@ export default function PartnerBilling() {
   useEffect(() => {
     loadBilling();
   }, [router]);
+  // ==========================================
+  // TEST EXTRA USAGE PAYMENT
+  //
+  // PREVIEW ONLY
+  // This creates a Paystack TEST transaction
+  // for the partner's current extra usage.
+  // It does NOT mark the usage as billed.
+  // ==========================================
 
+    const handleTestExtraUsagePayment = async () => {
+    try {
+      setPaymentLoading(true);
+
+      const token =
+        localStorage.getItem("partnerToken");
+
+      if (!token) {
+        router.push("/partner-login");
+        return;
+      }
+
+      if (!partner) {
+        throw new Error(
+          "Partner information is not available."
+        );
+      }
+
+      // ==========================================
+      // INITIALIZE TEST EXTRA-USAGE PAYMENT
+      // ==========================================
+
+      const response =
+        await fetch(
+          "/api/partner/payments/test-extra-usage",
+          {
+            method: "POST",
+
+            headers: {
+              Authorization: token,
+              "Content-Type":
+                "application/json",
+            },
+
+            body: JSON.stringify({
+              partnerId:
+                partner._id,
+            }),
+          }
+        );
+
+      const data =
+        await response.json();
+
+      console.log(
+        "PAYSTACK TEST EXTRA-USAGE RESPONSE:",
+        data
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          data.error ||
+            "Unable to initialize test payment."
+        );
+      }
+
+      if (!data.accessCode) {
+        throw new Error(
+          "Paystack did not return an access code."
+        );
+      }
+
+      // ==========================================
+      // CHECK PAYSTACK SCRIPT
+      // ==========================================
+
+      if (!window.PaystackPop) {
+        throw new Error(
+          "Paystack is still loading. Please try again."
+        );
+      }
+
+      const PaystackPop =
+        window.PaystackPop;
+
+      // ==========================================
+      // OPEN PAYSTACK TEST CHECKOUT
+      // ==========================================
+
+      const handler =
+        PaystackPop.setup({
+          key:
+            process.env
+              .NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || "",
+
+          email:
+            partner.email,
+
+          amount:
+            data.amount,
+
+          currency:
+            data.currency,
+
+          reference:
+            data.reference,
+
+          metadata: {
+            partnerId:
+              partner._id,
+
+            paymentType:
+              "partner_extra_usage_test",
+
+            extraMessages:
+              data.extraMessages,
+
+            extraUsageCharge:
+              data.extraUsageCharge,
+          },
+
+                           callback: function (
+            paymentResponse
+          ) {
+            console.log(
+              "PAYSTACK TEST PAYMENT RESPONSE:",
+              paymentResponse
+            );
+
+            const paymentReference =
+              paymentResponse.reference ||
+              data.reference;
+
+            // ==========================================
+            // VERIFY TEST PAYMENT
+            // ==========================================
+
+            fetch(
+              "/api/partner/payments/test-extra-usage/verify",
+              {
+                method: "POST",
+
+                headers: {
+                  Authorization: token,
+                  "Content-Type":
+                    "application/json",
+                },
+
+                body: JSON.stringify({
+                  reference:
+                    paymentReference,
+                }),
+              }
+            )
+              .then(
+                async (
+                  verifyResponse
+                ) => {
+                  const verifyData =
+                    await verifyResponse.json();
+
+                  console.log(
+                    "PAYSTACK TEST EXTRA-USAGE VERIFICATION:",
+                    verifyData
+                  );
+
+                  if (!verifyResponse.ok) {
+                    throw new Error(
+                      verifyData.error ||
+                        "Test payment could not be verified."
+                    );
+                  }
+
+                  // ==========================================
+                  // PAYMENT SUCCESSFULLY RECORDED
+                  // ==========================================
+
+                  alert(
+                    "Test payment successful and recorded. Your extra usage billing has been updated."
+                  );
+
+                  // ==========================================
+                  // REFRESH BILLING INFORMATION
+                  // ==========================================
+
+                  await loadBilling();
+                }
+              )
+              .catch(
+                (error) => {
+                  console.error(
+                    "TEST EXTRA-USAGE PAYMENT VERIFICATION FAILED:",
+                    error
+                  );
+
+                  alert(
+                    error instanceof Error
+                      ? error.message
+                      : "Payment was completed but could not be recorded."
+                  );
+                }
+              )
+              .finally(
+                () => {
+                  setPaymentLoading(false);
+                }
+              );
+          },
+
+          onClose: function () {
+            console.log(
+              "PAYSTACK TEST CHECKOUT CLOSED"
+            );
+
+            setPaymentLoading(false);
+          },
+
+          
+        });
+
+      handler.openIframe();
+
+    } catch (error) {
+      console.error(
+        "Paystack TEST extra usage payment failed:",
+        error
+      );
+
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Unable to start test payment."
+      );
+
+      setPaymentLoading(false);
+    }
+  };
+      
   // ==========================================
   // INITIAL PAYMENT
   // ==========================================
@@ -614,6 +853,18 @@ export default function PartnerBilling() {
             </div>
 
             <div className="mt-6 flex flex-wrap gap-3">
+
+                            <button
+                onClick={
+                  handleTestExtraUsagePayment
+                }
+                disabled={paymentLoading}
+                className="bg-yellow-500 text-white px-5 py-3 rounded hover:bg-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {paymentLoading
+                  ? "Processing Test..."
+                  : "TEST Extra Usage Payment"}
+              </button>
 
               <button
                 onClick={
