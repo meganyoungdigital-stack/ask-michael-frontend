@@ -254,6 +254,52 @@ const newExtraMessages =
       billedExtraMessages
   );
 
+  // ==========================================
+// CHARGE NEW EXTRA USAGE
+// ==========================================
+
+if (newExtraMessages > 0) {
+  try {
+    const chargeResponse =
+      await fetch(
+        new URL(
+          "/api/partner/payments/charge-extra-usage",
+          req.url
+        ),
+        {
+          method: "POST",
+
+          headers: {
+            Authorization:
+              `Bearer ${cleanApiKey}`,
+            "Content-Type":
+              "application/json",
+          },
+        }
+      );
+
+    const chargeData =
+      await chargeResponse.json();
+
+    console.log(
+      "PARTNER EXTRA USAGE CHARGE RESULT:",
+      chargeData
+    );
+
+    if (!chargeResponse.ok) {
+      console.error(
+        "PARTNER EXTRA USAGE CHARGE FAILED:",
+        chargeData
+      );
+    }
+  } catch (chargeError) {
+    console.error(
+      "PARTNER EXTRA USAGE CHARGE ERROR:",
+      chargeError
+    );
+  }
+}
+
     // ==========================================
     // SUCCESS
     // ==========================================

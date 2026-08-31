@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Script from "next/script";
 
 type PartnerBillingData = {
+   _id: string;
   companyName: string;
   email: string;
   plan: string | null;
@@ -26,18 +27,20 @@ type PartnerBillingData = {
 
 declare global {
   interface Window {
-    PaystackPop?: new () => {
-      resumeTransaction: (
-        accessCode: string,
-        callbacks?: {
-          onSuccess?: (response: {
-            reference?: string;
-          }) => void;
-          onCancel?: () => void;
-          onError?: (error: unknown) => void;
-          onClose?: () => void;
-        }
-      ) => void;
+    PaystackPop?: {
+      setup: (options: {
+        key: string;
+        email: string;
+        plan?: string;
+        currency?: string;
+        metadata?: Record<string, unknown>;
+        callback?: (response: {
+          reference?: string;
+        }) => void;
+        onClose?: () => void;
+      }) => {
+        openIframe: () => void;
+      };
     };
   }
 }
@@ -186,8 +189,6 @@ export default function PartnerBilling() {
       const PaystackPop =
         window.PaystackPop;
 
-      const paystack =
-        new PaystackPop();
 
       // ==========================================
       // VERIFY PAYMENT AFTER PAYSTACK SUCCESS
@@ -274,63 +275,59 @@ export default function PartnerBilling() {
         }
       };
 
-      // ==========================================
+            // ==========================================
       // OPEN PAYSTACK
       // ==========================================
 
-      paystack.resumeTransaction(
-  data.accessCode,
-  {
-    onSuccess: async (
-      transaction
-    ) => {
-      console.log(
-        "PAYSTACK PAYMENT SUCCESS:",
-        transaction
-      );
+      const paystackKey =
+        process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
 
-      const paymentReference =
-        transaction?.reference ||
-        data.reference;
+      if (!paystackKey) {
+        throw new Error(
+          "Payment system not configured correctly."
+        );
+      }
 
-      console.log(
-        "PAYSTACK REFERENCE USED FOR VERIFICATION:",
-        paymentReference
-      );
+           const handler =
+        PaystackPop.setup({
+          key: paystackKey,
 
-      await verifyPayment(
-        paymentReference
-      );
-    },
+          email: partner.email,
 
-          onCancel: () => {
-            console.log(
-              "PAYSTACK PAYMENT CANCELLED"
-            );
+          plan:
+            data.paystackPlanCode ||
+            undefined,
 
-            setPaymentLoading(false);
+          currency: data.currency,
+
+          metadata: {
+            partnerId:
+              partner._id,
+            plan:
+              data.plan,
+            paymentType:
+              "partner_subscription",
           },
 
-          onError: (error) => {
-            console.error(
-              "PAYSTACK PAYMENT ERROR:",
-              error
-            );
-
-            setPaymentLoading(false);
-
-            alert(
-              "Paystack reported a payment error. Please try again."
+          callback: function (
+            paymentResponse
+          ) {
+            verifyPayment(
+              paymentResponse.reference ||
+                data.reference
             );
           },
 
-          onClose: () => {
+          onClose: function () {
             console.log(
               "PAYSTACK CHECKOUT CLOSED"
             );
+
+            setPaymentLoading(false);
           },
-        }
-      );
+        });
+
+      handler.openIframe();
 
     } catch (error) {
       console.error(
@@ -387,9 +384,9 @@ export default function PartnerBilling() {
   return (
     <>
       <Script
-        src="https://js.paystack.co/v2/inline.js"
-        strategy="afterInteractive"
-      />
+  src="https://js.paystack.co/v1/inline.js"
+  strategy="afterInteractive"
+/>
 
       <main className="min-h-screen bg-gray-50 pt-40 px-10 pb-10">
 
