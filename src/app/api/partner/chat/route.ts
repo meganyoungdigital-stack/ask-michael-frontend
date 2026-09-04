@@ -46,16 +46,31 @@ export async function POST(req: Request) {
     const { db } =
       await connectToDatabase();
 
+        // ==========================================
+    // FIND PARTNER USING THE CORRECT API KEY
+    //
+    // Preview:
+    //   testApiKey
+    //
+    // Production:
+    //   apiKey
     // ==========================================
-    // FIND PARTNER USING LIVE API KEY
-    // ==========================================
+
+    const isPreview =
+      process.env.VERCEL_ENV === "preview";
 
     const partner =
       await db
         .collection("partners")
-        .findOne({
-          apiKey: cleanApiKey,
-        });
+        .findOne(
+          isPreview
+            ? {
+                testApiKey: cleanApiKey,
+              }
+            : {
+                apiKey: cleanApiKey,
+              }
+        );
 
     if (!partner) {
       return NextResponse.json(
@@ -67,7 +82,6 @@ export async function POST(req: Request) {
         }
       );
     }
-
     // ==========================================
     // CHECK PARTNER ACCOUNT STATUS
     // ==========================================

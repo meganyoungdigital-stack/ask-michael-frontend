@@ -36,24 +36,7 @@ const partnerToken =
     ? authorization.substring(7)
     : authorization;
 
-// ==========================================
-// VALIDATE MONGODB PARTNER ID
-// ==========================================
 
-if (
-  !/^[a-fA-F0-9]{24}$/.test(
-    partnerToken
-  )
-) {
-  return NextResponse.json(
-    {
-      error: "Invalid partner token.",
-    },
-    {
-      status: 401,
-    }
-  );
-}
 
 // ==========================================
 // SELECT TEST OR LIVE MODE
@@ -61,6 +44,40 @@ if (
 
 const isPreview =
   process.env.VERCEL_ENV === "preview";
+
+  // ==========================================
+// PAYSTACK SAFETY CHECK
+// ==========================================
+
+const paystackSecretKey =
+  process.env.PAYSTACK_SECRET_KEY;
+
+if (!paystackSecretKey) {
+  return NextResponse.json(
+    {
+      error:
+        "Paystack secret key is not configured.",
+    },
+    {
+      status: 500,
+    }
+  );
+}
+
+if (
+  isPreview &&
+  !paystackSecretKey.startsWith("sk_test_")
+) {
+  return NextResponse.json(
+    {
+      error:
+        "Preview extra-usage charging requires a Paystack TEST secret key.",
+    },
+    {
+      status: 403,
+    }
+  );
+}
 
     // ==========================================
     // CONNECT TO DATABASE
@@ -362,7 +379,7 @@ const isPreview =
         {
           headers: {
             Authorization:
-              `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+  `Bearer ${paystackSecretKey}`,
 
             "Content-Type":
               "application/json",
