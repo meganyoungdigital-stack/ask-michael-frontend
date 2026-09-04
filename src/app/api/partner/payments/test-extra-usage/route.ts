@@ -212,8 +212,62 @@ if (!ObjectId.isValid(partnerId)) {
     // checkout window.
     // ==========================================
 
+    // ==========================================
+    // CREATE PENDING PAYMENT RECORD
+    //
+    // IMPORTANT:
+    // Save the initialization reference in
+    // MongoDB before opening Paystack.
+    //
+    // The verification route uses this record
+    // to identify the extra-usage payment.
+    // ==========================================
+
+    await db
+      .collection("partner_payments")
+      .insertOne({
+        partnerId:
+          partner._id,
+
+        reference,
+
+        paymentType:
+          "partner_extra_usage_test",
+
+        status:
+          "pending",
+
+        amount,
+
+        currency:
+          "ZAR",
+
+        extraMessages:
+          billing.extraMessages,
+
+        extraUsageCharge,
+
+        createdAt:
+          new Date(),
+
+        updatedAt:
+          new Date(),
+      });
+
+    // ==========================================
+    // IMPORTANT:
+    //
+    // THIS ROUTE DOES NOT USE
+    // charge_authorization.
+    //
+    // It creates a Paystack TEST transaction
+    // that can be opened in the Paystack
+    // checkout window.
+    // ==========================================
+
     const paystackResponse =
       await axios.post(
+
         "https://api.paystack.co/transaction/initialize",
         {
           email:

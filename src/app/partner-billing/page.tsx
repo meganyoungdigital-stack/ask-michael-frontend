@@ -458,9 +458,12 @@ export default function PartnerBilling() {
                 },
 
                 body: JSON.stringify({
-                  reference:
-                    paymentReference,
-                }),
+  reference:
+    paymentReference,
+
+  initializationReference:
+    data.reference,
+}),
               }
             );
 

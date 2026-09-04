@@ -47,19 +47,35 @@ export async function POST(req: Request) {
     const body = await req.json();
 
     const reference =
-      body.reference;
+  body.reference;
 
-    if (!reference) {
-      return NextResponse.json(
-        {
-          error:
-            "Payment reference is required.",
-        },
-        {
-          status: 400,
-        }
-      );
+const initializationReference =
+  body.initializationReference;
+
+if (!reference) {
+  return NextResponse.json(
+    {
+      error:
+        "Payment reference is required.",
+    },
+    {
+      status: 400,
     }
+  );
+}
+
+if (!initializationReference) {
+  return NextResponse.json(
+    {
+      error:
+        "Initialization payment reference is required.",
+    },
+    {
+      status: 400,
+    }
+  );
+}
+      
 
     // ==========================================
     // CONNECT TO DATABASE
@@ -95,15 +111,18 @@ export async function POST(req: Request) {
     // ==========================================
 
     const payment =
-      await db
-        .collection("partner_payments")
-        .findOne({
-          partnerId:
-            partner._id,
+  await db
+    .collection("partner_payments")
+    .findOne({
+      partnerId:
+        partner._id,
 
-          reference,
-        });
+      reference:
+        initializationReference,
 
+      paymentType:
+        "partner_extra_usage_test",
+    });
     if (!payment) {
       return NextResponse.json(
         {
@@ -317,38 +336,20 @@ export async function POST(req: Request) {
     }
 
     // ==========================================
-    // VERIFY PARTNER ID
-    // ==========================================
+// GET PAYSTACK METADATA
+// ==========================================
 
-    const metadata =
-      paystackData.metadata;
+const metadata =
+  paystackData.metadata;
 
-    const metadataPartnerId =
-      metadata?.partnerId;
+// ==========================================
+// VERIFY PAYMENT TYPE
+// ==========================================
 
-    if (
-      metadataPartnerId !==
-      partner._id.toString()
-    ) {
-      return NextResponse.json(
-        {
-          error:
-            "Payment does not belong to this partner.",
-        },
-        {
-          status: 403,
-        }
-      );
-    }
-
-    // ==========================================
-    // VERIFY PAYMENT TYPE
-    // ==========================================
-
-    if (
-      metadata?.paymentType !==
-      "partner_extra_usage_test"
-    ) {
+if (
+  metadata?.paymentType !==
+  "partner_extra_usage_test"
+) {
       return NextResponse.json(
         {
           error:
@@ -419,55 +420,73 @@ export async function POST(req: Request) {
           )
         : new Date();
 
-    await db
-      .collection(
-        "partner_payments"
-      )
-      .updateOne(
-        {
-          _id:
-            payment._id,
+    const paymentUpdateResult =
+  await db
+    .collection("partner_payments")
+    .updateOne(
+      {
+        _id: payment._id,
+      },
+      {
+        $set: {
+          status: "paid",
+
+          paystackStatus:
+            paystackData.status,
+
+          paystackTransactionId:
+            paystackData.id,
+
+          paystackReference:
+            paystackData.reference,
+
+          gatewayResponse:
+            paystackData.gateway_response ||
+            null,
+
+          paidAt,
+
+          channel:
+            paystackData.channel ||
+            null,
+
+          customerCode:
+            paystackData.customer?.customer_code ||
+            null,
+
+          authorizationCode:
+            paystackData.authorization
+              ?.authorization_code ||
+            null,
+
+          extraMessages:
+            paidExtraMessages,
+
+          updatedAt:
+            new Date(),
         },
-        {
-          $set: {
-            status:
-              "paid",
+      }
+    );
 
-            paystackStatus:
-              paystackData.status,
+console.log(
+  "PAYSTACK EXTRA-USAGE PAYMENT UPDATE RESULT:",
+  {
+    matchedCount:
+      paymentUpdateResult.matchedCount,
 
-            paystackTransactionId:
-              paystackData.id,
+    modifiedCount:
+      paymentUpdateResult.modifiedCount,
 
-            paystackReference:
-              paystackData.reference,
+    paymentId:
+      payment._id.toString(),
 
-            gatewayResponse:
-              paystackData.gateway_response ||
-              null,
+    initializationReference:
+      payment.reference,
 
-            paidAt,
-
-            channel:
-              paystackData.channel ||
-              null,
-
-            customerCode:
-              paystackData.customer?.customer_code ||
-              null,
-
-            authorizationCode:
-              paystackData.authorization?.authorization_code ||
-              null,
-
-            extraMessages:
-              paidExtraMessages,
-
-            updatedAt:
-              new Date(),
-          },
-        }
-      );
+    paystackReference:
+      paystackData.reference,
+  }
+);
 
     // ==========================================
     // UPDATE PARTNER BILLING
