@@ -489,6 +489,38 @@ console.log(
 );
 
     // ==========================================
+    // MAKE SURE PAYMENT WAS SAVED
+    // ==========================================
+
+    if (
+      paymentUpdateResult.matchedCount !== 1
+    ) {
+      console.error(
+        "PAYSTACK EXTRA-USAGE PAYMENT WAS NOT FOUND FOR UPDATE:",
+        {
+          paymentId:
+            payment._id.toString(),
+
+          initializationReference:
+            payment.reference,
+
+          paystackReference:
+            paystackData.reference,
+        }
+      );
+
+      return NextResponse.json(
+        {
+          error:
+            "Payment was successful at Paystack, but the payment record could not be saved.",
+        },
+        {
+          status: 500,
+        }
+      );
+    }
+
+    // ==========================================
     // UPDATE PARTNER BILLING
     // ==========================================
 

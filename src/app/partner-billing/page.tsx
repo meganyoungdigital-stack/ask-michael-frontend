@@ -860,18 +860,17 @@ export default function PartnerBilling() {
 
             <div className="mt-6 flex flex-wrap gap-3">
 
-                            <button
-                onClick={
-                  handleTestExtraUsagePayment
-                }
-                disabled={paymentLoading}
-                className="bg-yellow-500 text-white px-5 py-3 rounded hover:bg-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {paymentLoading
-                  ? "Processing Test..."
-                  : "TEST Extra Usage Payment"}
-              </button>
-
+                {process.env.NEXT_PUBLIC_VERCEL_ENV === "preview" && (
+  <button
+    onClick={handleTestExtraUsagePayment}
+    disabled={paymentLoading}
+    className="bg-yellow-500 text-white px-5 py-3 rounded hover:bg-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed"
+  >
+    {paymentLoading
+      ? "Processing Test..."
+      : "TEST Extra Usage Payment"}
+  </button>
+)}
               <button
                 onClick={
                   handleInitialPayment
