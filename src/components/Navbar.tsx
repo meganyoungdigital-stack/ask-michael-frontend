@@ -79,12 +79,22 @@ export default function Navbar() {
         Pricing
       </Link>
 
-      <Link
+            <Link
         href="/contact"
         className="hover:text-white transition"
         onClick={() => setMobileMenuOpen(false)}
       >
         Contact
+      </Link>
+
+      <Link
+        href="/news"
+        className="hover:text-white transition flex items-center gap-1.5"
+        onClick={() => setMobileMenuOpen(false)}
+        aria-label="News and Updates"
+        title="News and Updates"
+      >
+        <span aria-hidden="true">🔊</span>
       </Link>
     </>
   );

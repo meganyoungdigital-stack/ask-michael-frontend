@@ -140,6 +140,15 @@ export default function Footer() {
               </Link>
             </li>
 
+<li>
+  <Link
+    href="/news"
+    className="hover:text-white"
+  >
+    News & Updates
+  </Link>
+</li>
+
           </ul>
 
         </div>
