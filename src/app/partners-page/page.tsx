@@ -4,12 +4,14 @@ import { useState } from "react";
 
 export default function PartnersPage() {
   const [formData, setFormData] = useState({
-    companyName: "",
-    contactName: "",
-    email: "",
-    website: "",
-    message: "",
-  });
+  companyName: "",
+  contactName: "",
+  email: "",
+  website: "",
+  partnershipType: "",
+  message: "",
+});
+
 
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -19,11 +21,12 @@ export default function PartnersPage() {
     setSubmitted(false);
 
     if (
-      !formData.companyName ||
-      !formData.contactName ||
-      !formData.email ||
-      !formData.message
-    ) {
+  !formData.companyName ||
+  !formData.contactName ||
+  !formData.email ||
+  !formData.partnershipType ||
+  !formData.message
+) {
       alert("Please complete all required fields.");
       return;
     }
@@ -36,7 +39,13 @@ export default function PartnersPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+  companyName: formData.companyName,
+  contactName: formData.contactName,
+  email: formData.email,
+  website: formData.website,
+  message: `Partnership Type: ${formData.partnershipType}\n\n${formData.message}`,
+}),
       });
 
       const result = await response.json();
@@ -48,12 +57,13 @@ export default function PartnersPage() {
       setSubmitted(true);
 
       setFormData({
-        companyName: "",
-        contactName: "",
-        email: "",
-        website: "",
-        message: "",
-      });
+  companyName: "",
+  contactName: "",
+  email: "",
+  website: "",
+  partnershipType: "",
+  message: "",
+});
     } catch (error) {
       console.error("Partner application error:", error);
 
@@ -331,6 +341,24 @@ export default function PartnersPage() {
               Explore a Partnership
             </h2>
 
+            <div className="mx-auto mt-6 flex max-w-2xl flex-wrap justify-center gap-3 text-sm text-gray-500">
+  <span className="rounded-full border border-gray-200 bg-gray-50 px-4 py-2">
+    Technology Integration
+  </span>
+
+  <span className="rounded-full border border-gray-200 bg-gray-50 px-4 py-2">
+    Engineering Services
+  </span>
+
+  <span className="rounded-full border border-gray-200 bg-gray-50 px-4 py-2">
+    OEM Partnerships
+  </span>
+
+  <span className="rounded-full border border-gray-200 bg-gray-50 px-4 py-2">
+    Commercial Partnerships
+  </span>
+</div>
+
             <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-gray-600">
               Tell us about your organisation, your technology and the
               opportunity you would like to explore with Ask Michael.
@@ -357,6 +385,14 @@ export default function PartnersPage() {
             className="mt-10 space-y-5"
           >
 
+<div className="border-b border-gray-200 pb-3">
+  <h3 className="text-lg font-semibold text-gray-900">
+    Organisation Details
+  </h3>
+  <p className="mt-1 text-sm text-gray-500">
+    Tell us who you are and how we can contact you.
+  </p>
+</div>
             <div>
               <label className="mb-2 block text-sm font-medium text-gray-700">
                 Company Name *
@@ -424,6 +460,40 @@ export default function PartnersPage() {
               <label className="mb-2 block text-sm font-medium text-gray-700">
                 Company Website
               </label>
+<div>
+  <label className="mb-2 block text-sm font-medium text-gray-700">
+    Partnership Type *
+  </label>
+
+  <select
+    required
+    className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-black outline-none transition focus:border-gray-900 focus:ring-2 focus:ring-gray-200"
+    value={formData.partnershipType}
+    onChange={(e) =>
+      setFormData({
+        ...formData,
+        partnershipType: e.target.value,
+      })
+    }
+  >
+    <option value="">Select partnership type</option>
+    <option value="Technology Integration">
+      Technology Integration
+    </option>
+    <option value="Engineering & Industrial Services">
+      Engineering &amp; Industrial Services
+    </option>
+    <option value="OEM & Technology Partnership">
+      OEM &amp; Technology Partnership
+    </option>
+    <option value="Channel & Commercial Partnership">
+      Channel &amp; Commercial Partnership
+    </option>
+    <option value="Other / Strategic Partnership">
+      Other / Strategic Partnership
+    </option>
+  </select>
+</div>
 
               <input
                 type="text"
@@ -438,18 +508,25 @@ export default function PartnersPage() {
                 }
               />
             </div>
-
+<div className="border-b border-gray-200 pb-3 pt-6">
+  <h3 className="text-lg font-semibold text-gray-900">
+    Partnership Opportunity
+  </h3>
+  <p className="mt-1 text-sm text-gray-500">
+    Help us understand the technology, market or business opportunity you would like to explore.
+  </p>
+</div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">
-                Partnership Opportunity *
-              </label>
+  <label className="mb-2 block text-sm font-medium text-gray-700">
+    Tell us about the opportunity *
+  </label>
 
               <textarea
                 required
                 rows={7}
                 className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-black outline-none transition focus:border-gray-900 focus:ring-2 focus:ring-gray-200"
-                placeholder="Tell us about your organisation, technology, customers, and the partnership opportunity you would like to explore."
+                placeholder="For example: your technology or service, the customers or industries you serve, how you see Ask Michael fitting into your offering, and what you would like to explore together."
                 value={formData.message}
                 onChange={(e) =>
                   setFormData({
@@ -464,12 +541,19 @@ export default function PartnersPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-xl bg-gray-900 px-6 py-4 font-semibold text-white transition hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full rounded-xl bg-gray-900 px-6 py-4 font-semibold text-white shadow-sm transition hover:bg-gray-800 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading
                 ? "Submitting Application..."
                 : "Submit Partnership Application"}
             </button>
+
+<p className="text-center text-xs leading-5 text-gray-500">
+  By submitting this application, you agree that Ask Michael may use the
+  information provided to evaluate and respond to your partnership enquiry.
+  Please do not include confidential, proprietary or sensitive technical
+  information in this form.
+</p>
 
           </form>
 
