@@ -275,7 +275,7 @@ const [mobileOpen, setMobileOpen] = useState(false);
     <button
       type="button"
       onClick={() => setMobileOpen(true)}
-      className={`md:hidden fixed top-3 left-3 z-40 p-2 rounded-lg bg-neutral-950 text-white shadow-lg ${
+      className={`md:hidden fixed top-[76px] left-3 z-40 p-2 rounded-lg bg-neutral-950 text-white shadow-lg ${
         mobileOpen ? "hidden" : "block"
       }`}
       aria-label="Open menu"
