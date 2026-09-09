@@ -80,7 +80,7 @@ export default function LandingPage() {
     <main className="relative w-full overflow-x-hidden bg-black text-white">
 
       {/* HERO */}
-      <section className="relative min-h-screen md:h-screen w-full overflow-hidden pt-20">
+      <section className="relative min-h-[100dvh] md:h-screen w-full overflow-hidden pt-20">
 
         <canvas
           ref={canvasRef}
@@ -103,7 +103,7 @@ export default function LandingPage() {
 
         <div className="absolute inset-0 bg-black/35" />
 
-        <div className="relative z-10 flex min-h-[calc(100vh-80px)] flex-col items-center justify-center text-center px-5 py-12 md:h-full md:min-h-0 md:px-6 md:py-0">
+        <div className="relative z-10 flex min-h-[calc(100dvh-80px)] flex-col items-center justify-center text-center px-5 py-12 md:h-full md:min-h-0 md:px-6 md:py-0">
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
