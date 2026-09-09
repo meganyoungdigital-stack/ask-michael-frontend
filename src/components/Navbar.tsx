@@ -277,7 +277,7 @@ export default function Navbar() {
 
   return (
     <div
-      className="fixed top-0 left-0 w-full z-50"
+      className="hidden md:block fixed top-0 left-0 w-full z-50"
       onMouseEnter={() => setVisible(true)}
       onMouseLeave={() => setVisible(false)}
     >
