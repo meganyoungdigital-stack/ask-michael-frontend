@@ -349,6 +349,135 @@ export default function LandingPage() {
 
           </div>
         </div>
+            </section>
+
+
+      {/* ENGINEERING INTELLIGENCE IN PRACTICE */}
+      <section className="relative py-28 bg-black">
+        <div className="max-w-6xl mx-auto px-6">
+
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="text-center"
+          >
+            <p className="text-sm uppercase tracking-[0.25em] text-blue-400 mb-5">
+              Engineering Intelligence in Practice
+            </p>
+
+            <h2 className="text-4xl md:text-6xl font-bold">
+              From Engineering Question to Insight
+            </h2>
+
+            <p className="mt-6 max-w-3xl mx-auto text-gray-400 text-lg leading-relaxed">
+              Ask Michael is designed to fit into the way engineering
+              professionals investigate problems, work with technical
+              information and evaluate possible next steps.
+            </p>
+          </motion.div>
+
+
+          <div className="relative mt-16">
+
+            <div className="hidden md:block absolute top-10 left-[12%] right-[12%] h-px bg-white/10" />
+
+            <div className="grid md:grid-cols-4 gap-8">
+
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1, duration: 0.7 }}
+                viewport={{ once: true }}
+                className="relative text-center"
+              >
+                <div className="relative z-10 mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-blue-400/30 bg-zinc-950 text-blue-400 text-lg font-semibold">
+                  01
+                </div>
+
+                <h3 className="mt-6 text-xl font-semibold">
+                  Ask
+                </h3>
+
+                <p className="mt-3 text-gray-400 leading-relaxed">
+                  An engineer presents a technical question, problem or
+                  investigation that requires further understanding.
+                </p>
+              </motion.div>
+
+
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 0.7 }}
+                viewport={{ once: true }}
+                className="relative text-center"
+              >
+                <div className="relative z-10 mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-blue-400/30 bg-zinc-950 text-blue-400 text-lg font-semibold">
+                  02
+                </div>
+
+                <h3 className="mt-6 text-xl font-semibold">
+                  Contextualise
+                </h3>
+
+                <p className="mt-3 text-gray-400 leading-relaxed">
+                  Relevant engineering information, documentation and
+                  operational context can be brought into the workflow.
+                </p>
+              </motion.div>
+
+
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.7 }}
+                viewport={{ once: true }}
+                className="relative text-center"
+              >
+                <div className="relative z-10 mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-blue-400/30 bg-zinc-950 text-blue-400 text-lg font-semibold">
+                  03
+                </div>
+
+                <h3 className="mt-6 text-xl font-semibold">
+                  Analyse
+                </h3>
+
+                <p className="mt-3 text-gray-400 leading-relaxed">
+                  Ask Michael uses AI to structure information, identify
+                  relevant considerations and support technical analysis.
+                </p>
+              </motion.div>
+
+
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4, duration: 0.7 }}
+                viewport={{ once: true }}
+                className="relative text-center"
+              >
+                <div className="relative z-10 mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-blue-400/30 bg-zinc-950 text-blue-400 text-lg font-semibold">
+                  04
+                </div>
+
+                <h3 className="mt-6 text-xl font-semibold">
+                  Verify &amp; Act
+                </h3>
+
+                <p className="mt-3 text-gray-400 leading-relaxed">
+                  Qualified professionals review the information and apply
+                  engineering judgement, procedures and applicable
+                  requirements.
+                </p>
+              </motion.div>
+
+            </div>
+
+          </div>
+
+        </div>
       </section>
 
 
