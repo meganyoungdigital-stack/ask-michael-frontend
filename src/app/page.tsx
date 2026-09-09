@@ -80,7 +80,7 @@ export default function LandingPage() {
     <main className="relative w-full overflow-x-hidden bg-black text-white">
 
       {/* HERO */}
-      <section className="relative h-screen w-full overflow-hidden pt-20">
+      <section className="relative min-h-screen md:h-screen w-full overflow-hidden pt-20">
 
         <canvas
           ref={canvasRef}
@@ -103,7 +103,7 @@ export default function LandingPage() {
 
         <div className="absolute inset-0 bg-black/35" />
 
-        <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-6">
+        <div className="relative z-10 flex min-h-[calc(100vh-80px)] flex-col items-center justify-center text-center px-5 py-12 md:h-full md:min-h-0 md:px-6 md:py-0">
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -118,7 +118,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1 }}
-            className="text-5xl md:text-8xl font-bold tracking-wider"
+            className="text-4xl sm:text-5xl md:text-8xl font-bold tracking-wider"
           >
             ASK MICHAEL
           </motion.h1>
@@ -127,7 +127,7 @@ export default function LandingPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
-            className="mt-6 text-xl md:text-2xl text-gray-200 max-w-3xl"
+            className="mt-5 text-lg sm:text-xl md:text-2xl text-gray-200 max-w-3xl"
           >
             AI-powered engineering intelligence for aluminium smelting
             and heavy industrial environments.
@@ -137,7 +137,7 @@ export default function LandingPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.9 }}
-            className="mt-5 text-base md:text-lg text-gray-400 max-w-2xl"
+            className="mt-4 text-sm sm:text-base md:text-lg text-gray-400 max-w-2xl"
           >
             Turn engineering knowledge, technical information and
             operational data into accessible intelligence for the people
@@ -148,16 +148,16 @@ export default function LandingPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.2 }}
-            className="mt-10 flex flex-col sm:flex-row gap-4"
+            className="mt-7 sm:mt-10 flex flex-col sm:flex-row gap-4"
           >
             <Link href="/portal">
-              <button className="px-8 py-4 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-lg font-semibold hover:scale-105 transition">
+              <button className="px-7 py-3.5 sm:px-8 sm:py-4 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-lg font-semibold hover:scale-105 transition">
                 Explore Ask Michael →
               </button>
             </Link>
 
             <Link href="/partners-page">
-              <button className="px-8 py-4 rounded-full border border-white/30 bg-black/30 backdrop-blur text-lg font-semibold hover:bg-white/10 transition">
+              <button className="px-7 py-3.5 sm:px-8 sm:py-4 rounded-full border border-white/30 bg-black/30 backdrop-blur text-lg font-semibold hover:bg-white/10 transition">
                 Partner With Us
               </button>
             </Link>
