@@ -275,18 +275,27 @@ const [mobileOpen, setMobileOpen] = useState(false);
     <button
       type="button"
       onClick={() => setMobileOpen(true)}
-      className={`md:hidden fixed top-[76px] left-3 z-40 p-2 rounded-lg bg-neutral-950 text-white shadow-lg ${
-        mobileOpen ? "hidden" : "block"
-      }`}
+      className={`md:hidden fixed top-[84px] left-3 z-40 p-2 rounded-lg bg-neutral-950 text-white shadow-lg ${
+  mobileOpen ? "hidden" : "block"
+}`}
       aria-label="Open menu"
     >
       <Menu size={22} />
     </button>
 
+{mobileOpen && (
+  <button
+    type="button"
+    onClick={() => setMobileOpen(false)}
+    className="md:hidden fixed inset-0 z-40 bg-black/50"
+    aria-label="Close menu"
+  />
+)}
+
     <aside
-      className={`fixed inset-y-0 left-0 z-50 w-72 bg-neutral-950 border-r border-neutral-800 flex flex-col text-white transform transition-transform duration-200 md:static md:translate-x-0 ${
-        mobileOpen ? "translate-x-0" : "-translate-x-full"
-      }`}
+      className={`fixed inset-y-0 left-0 z-50 w-[85vw] max-w-80 bg-neutral-950 border-r border-neutral-800 flex flex-col text-white transform transition-transform duration-200 md:static md:w-72 md:translate-x-0 ${
+  mobileOpen ? "translate-x-0" : "-translate-x-full"
+}`}
     >
       <div className="md:hidden flex justify-end p-3">
         <button

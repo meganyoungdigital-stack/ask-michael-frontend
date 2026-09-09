@@ -282,13 +282,13 @@ export default function Navbar() {
       onMouseLeave={() => setVisible(false)}
     >
 
-      <div className="h-4 w-full" />
+      <div className="hidden md:block h-4 w-full" />
 
       <nav
-        className={`transition-all duration-300 overflow-visible backdrop-blur-md bg-blue-950/90 border-b border-blue-900 ${
-          visible ? "h-auto min-h-[72px] opacity-100" : "h-0 opacity-0"
-        }`}
-      >
+  className={`transition-all duration-300 overflow-visible backdrop-blur-md bg-blue-950/90 border-b border-blue-900 h-auto min-h-[72px] opacity-100 md:${
+    visible ? "h-auto min-h-[72px] opacity-100" : "h-0 opacity-0"
+  }`}
+>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
 
@@ -363,7 +363,7 @@ export default function Navbar() {
             aria-label="Open navigation menu"
             aria-expanded={mobileMenuOpen}
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden flex items-center justify-center w-10 h-10 rounded-lg border border-white/20 text-white hover:bg-white/10 transition"
+            className="md:hidden flex items-center justify-center w-10 h-10 rounded-lg border border-white/20 text-white hover:bg-white/10 transition shrink-0"
           >
             <span className="text-xl">
               {mobileMenuOpen ? "✕" : "☰"}
