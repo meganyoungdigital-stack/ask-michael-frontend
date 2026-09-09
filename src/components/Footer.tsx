@@ -6,7 +6,7 @@ import Image from "next/image";
 
 export default function Footer() {
   return (
-    <footer className="w-full relative bg-black text-gray-300 overflow-hidden border-t border-gray-800 flex-shrink-0">
+    <footer className="w-full relative bg-black text-gray-300 overflow-hidden border-t border-gray-800">
 
       <div className="absolute inset-0 opacity-30 bg-gradient-to-t from-purple-900 via-blue-900 to-black blur-3xl"></div>
 
