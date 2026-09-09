@@ -293,7 +293,7 @@ try {
       </div>
 
       {/* ================= INPUT AREA ================= */}
-      <div className="border-t p-3 sm:p-4 flex flex-col gap-2 bg-white shrink-0 sticky bottom-0">
+      <div className="border-t px-3 py-2 sm:p-4 flex flex-col gap-2 bg-white shrink-0 sticky bottom-0">
 
         {selectedFiles.length > 0 && (
           <div className="text-xs text-gray-500">
