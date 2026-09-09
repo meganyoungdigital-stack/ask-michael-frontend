@@ -27,7 +27,7 @@ export default function RootLayout({
           <Navbar />
 
           {/* Page Content */}
-          <main className="min-h-screen px-6 pb-10 overflow-hidden md:overflow-visible">
+          <main className="min-h-screen px-6 pb-0 overflow-hidden md:pb-10 md:overflow-visible">
             {children}
           </main>
 
