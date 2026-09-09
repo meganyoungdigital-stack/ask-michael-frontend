@@ -8,6 +8,7 @@ export default function Footer() {
   return (
     <footer className="w-full relative bg-black text-gray-300 overflow-hidden border-t border-gray-800">
 
+      {/* Animated background */}
       <div className="absolute inset-0 opacity-30 bg-gradient-to-t from-purple-900 via-blue-900 to-black blur-3xl"></div>
 
       <motion.div
@@ -18,7 +19,7 @@ export default function Footer() {
 
       <div className="relative max-w-7xl mx-auto px-6 py-20 grid grid-cols-2 md:grid-cols-4 gap-10">
 
-        {/* Logo */}
+        {/* Ask Michael */}
 
         <div>
 
@@ -103,15 +104,51 @@ export default function Footer() {
 
         </div>
 
-        {/* Solutions */}
+        {/* Solutions & Company */}
 
         <div>
 
           <h3 className="text-white font-semibold mb-4">
-            Solutions
+            Solutions &amp; Company
           </h3>
 
           <ul className="space-y-2 text-sm">
+
+            <li>
+              <Link
+                href="/solutions"
+                className="hover:text-white"
+              >
+                Solutions
+              </Link>
+            </li>
+
+            <li>
+              <Link
+                href="/enterprise"
+                className="hover:text-white"
+              >
+                Enterprise
+              </Link>
+            </li>
+
+            <li>
+              <Link
+                href="/integrations"
+                className="hover:text-white"
+              >
+                Integrations
+              </Link>
+            </li>
+
+            <li>
+              <Link
+                href="/security"
+                className="hover:text-white"
+              >
+                Security
+              </Link>
+            </li>
 
             <li>
               <Link
@@ -124,15 +161,6 @@ export default function Footer() {
 
             <li>
               <Link
-                href="/contact"
-                className="hover:text-white"
-              >
-                Contact
-              </Link>
-            </li>
-
-            <li>
-              <Link
                 href="/partners-page"
                 className="hover:text-white"
               >
@@ -140,14 +168,23 @@ export default function Footer() {
               </Link>
             </li>
 
-<li>
-  <Link
-    href="/news"
-    className="hover:text-white"
-  >
-    News & Updates
-  </Link>
-</li>
+            <li>
+              <Link
+                href="/news"
+                className="hover:text-white"
+              >
+                News &amp; Updates
+              </Link>
+            </li>
+
+            <li>
+              <Link
+                href="/contact"
+                className="hover:text-white"
+              >
+                Contact
+              </Link>
+            </li>
 
           </ul>
 
@@ -195,6 +232,8 @@ export default function Footer() {
         </div>
 
       </div>
+
+      {/* Copyright */}
 
       <div className="relative border-t border-gray-800 text-center text-xs text-gray-500 py-6">
 
