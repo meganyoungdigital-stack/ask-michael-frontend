@@ -8,9 +8,11 @@ export default function PortalLayout({
   return (
     <div className="flex h-screen overflow-hidden">
 
-      <Sidebar />
+      <div className="hidden md:flex">
+        <Sidebar />
+      </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 min-w-0 overflow-y-auto">
         {children}
       </div>
 
