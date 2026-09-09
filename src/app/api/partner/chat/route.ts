@@ -272,6 +272,9 @@ const newExtraMessages =
 // CHARGE NEW EXTRA USAGE
 // ==========================================
 
+let finalBilledExtraMessages =
+  billedExtraMessages;
+
 if (newExtraMessages > 0) {
   try {
     const chargeResponse =
@@ -305,6 +308,14 @@ if (newExtraMessages > 0) {
         "PARTNER EXTRA USAGE CHARGE FAILED:",
         chargeData
       );
+    } else if (
+      chargeData?.success === true &&
+      chargeData?.message ===
+        "Extra usage charged successfully."
+    ) {
+      finalBilledExtraMessages =
+        billedExtraMessages +
+        newExtraMessages;
     }
   } catch (chargeError) {
     console.error(
@@ -337,7 +348,8 @@ if (newExtraMessages > 0) {
   includedMessages:
     partner.includedMessages,
 
-  billedExtraMessages,
+  billedExtraMessages:
+  finalBilledExtraMessages,
 
   extraMessages:
     totalExtraMessages,
