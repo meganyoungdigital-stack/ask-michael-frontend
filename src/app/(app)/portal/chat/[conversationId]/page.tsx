@@ -272,8 +272,7 @@ try {
   }
 
   return (
-   <div className="flex flex-col h-[calc(100dvh-72px)] md:h-full min-h-0 bg-white text-black">
-
+   <div className="flex flex-col h-full min-h-0 bg-white text-black">
       {/* ================= MESSAGES ================= */}
       <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-4 space-y-4">
         {messages.length === 0 && (
@@ -294,7 +293,7 @@ try {
       </div>
 
       {/* ================= INPUT AREA ================= */}
-      <div className="border-t p-3 sm:p-4 flex flex-col gap-2 bg-white shrink-0">
+      <div className="border-t p-3 sm:p-4 flex flex-col gap-2 bg-white shrink-0 sticky bottom-0">
 
         {selectedFiles.length > 0 && (
           <div className="text-xs text-gray-500">
