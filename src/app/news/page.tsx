@@ -31,7 +31,7 @@ export default function NewsPage() {
 
       </div>
 
-      {/* NEWS LIST */}
+            {/* NEWS LIST */}
       <div className="max-w-4xl mx-auto space-y-8">
 
         <motion.div
@@ -39,9 +39,17 @@ export default function NewsPage() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
         >
-          <Card className="p-6 rounded-2xl shadow">
+          <Card className="overflow-hidden rounded-2xl shadow">
 
-            <CardContent>
+            <div className="relative w-full aspect-video">
+              <img
+                src="/images/news/ask-michael-ai-heavy-industry.png"
+                alt="Ask Michael AI supporting engineering intelligence in a heavy industrial environment"
+                className="w-full h-full object-cover"
+              />
+            </div>
+
+            <CardContent className="p-6">
 
               <div className="flex items-center justify-between gap-4 mb-4">
 
@@ -50,19 +58,29 @@ export default function NewsPage() {
                 </span>
 
                 <span className="text-sm text-muted-foreground">
-                  Coming Soon
+                  September 2026
                 </span>
 
               </div>
 
-              <h2 className="text-2xl font-semibold mb-3">
-                Ask Michael News & Updates
+              <h2 className="text-2xl md:text-3xl font-semibold mb-4">
+                Introducing Ask Michael AI: Bringing Artificial Intelligence
+                to Heavy Metal Engineering
               </h2>
 
-              <p className="text-muted-foreground">
-                News, announcements, new features, platform improvements,
-                and other updates from Ask Michael will appear here.
+              <p className="text-muted-foreground mb-6">
+                We are proud to introduce Ask Michael AI, an industrial
+                artificial intelligence platform designed to bring engineering
+                knowledge, procedures, and operational decision support into
+                one intelligent environment.
               </p>
+
+              <Link
+                href="/news/introducing-ask-michael-ai"
+                className="inline-flex items-center justify-center px-6 py-3 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:scale-105 transition"
+              >
+                Read More
+              </Link>
 
             </CardContent>
 
