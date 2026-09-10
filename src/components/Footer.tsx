@@ -65,22 +65,13 @@ export default function Footer() {
           <ul className="space-y-2 text-sm">
 
             <li>
-              <Link
-                href="/portal"
-                className="hover:text-white"
-              >
-                Ask Michael
+              <Link href="/portal" className="hover:text-white">Ask Michael
               </Link>
             </li>
-
+            <li> 
+              <Link href="/practical-demo" className="hover:text-white">See Ask Michael in Practice</Link></li>
             <li>
-              <Link
-                href="/ai-knowledge-engineering"
-                className="hover:text-white"
-              >
-                AI Knowledge Engineering
-              </Link>
-            </li>
+              <Link href="/ai-knowledge-engineering" className="hover:text-white">AI Knowledge Engineering</Link></li>
 
             <li>
               <Link
