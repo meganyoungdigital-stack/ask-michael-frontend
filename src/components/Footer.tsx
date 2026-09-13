@@ -70,6 +70,7 @@ export default function Footer() {
             </li>
             <li> 
               <Link href="/practical-demo" className="hover:text-white">See Ask Michael in Practice</Link></li>
+            <li><Link href="/capabilities" className="hover:text-white">Capabilities</Link></li>
             <li>
               <Link href="/ai-knowledge-engineering" className="hover:text-white">AI Knowledge Engineering</Link></li>
 
