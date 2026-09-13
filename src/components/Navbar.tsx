@@ -53,7 +53,7 @@ export default function Navbar() {
   // SHARED NAVIGATION LINKS
   // =============================
 
-  const NavigationLinks = () => (
+    const NavigationLinks = () => (
     <>
       <Link
         href="/solutions"
@@ -64,11 +64,35 @@ export default function Navbar() {
       </Link>
 
       <Link
-        href="/portal"
+        href="/capabilities"
         className="hover:text-white transition"
         onClick={() => setMobileMenuOpen(false)}
       >
-        Platform
+        Capabilities
+      </Link>
+
+      <Link
+        href="/enterprise"
+        className="hover:text-white transition"
+        onClick={() => setMobileMenuOpen(false)}
+      >
+        Enterprise
+      </Link>
+
+      <Link
+        href="/integrations"
+        className="hover:text-white transition"
+        onClick={() => setMobileMenuOpen(false)}
+      >
+        Integrations
+      </Link>
+
+      <Link
+        href="/partners-page"
+        className="hover:text-white transition"
+        onClick={() => setMobileMenuOpen(false)}
+      >
+        Partners
       </Link>
 
       <Link
@@ -79,7 +103,7 @@ export default function Navbar() {
         Pricing
       </Link>
 
-            <Link
+      <Link
         href="/contact"
         className="hover:text-white transition"
         onClick={() => setMobileMenuOpen(false)}
@@ -89,12 +113,10 @@ export default function Navbar() {
 
       <Link
         href="/news"
-        className="hover:text-white transition flex items-center gap-1.5"
+        className="hover:text-white transition"
         onClick={() => setMobileMenuOpen(false)}
-        aria-label="News and Updates"
-        title="News and Updates"
       >
-        <span aria-hidden="true">🔊</span>
+        News
       </Link>
     </>
   );
