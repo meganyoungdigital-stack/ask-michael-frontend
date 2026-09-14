@@ -6,12 +6,12 @@ import { calculatePartnerBilling } from "@/lib/partnerBilling";
 
 export async function POST(req: Request) {
   try {
+       // ==========================================
+    // GET PARTNER API KEY
+    //
+    // Partner API requests authenticate using
+    // the API key supplied in the Authorization header.
     // ==========================================
-// GET PARTNER TOKEN
-//
-// The existing partner login system stores
-// partner._id in localStorage as partnerToken.
-// ==========================================
 
 const authorization =
   req.headers.get("Authorization");

@@ -14,10 +14,22 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    const checkPartnerLogin = () => {
-      const token = localStorage.getItem("partnerToken");
+    const checkPartnerLogin = async () => {
+      try {
+        const response = await fetch("/api/partner/session");
+        const data = await response.json();
 
-      setIsPartnerLoggedIn(!!token);
+        setIsPartnerLoggedIn(
+          response.ok && data.authenticated === true
+        );
+      } catch (error) {
+        console.error(
+          "Partner session check failed:",
+          error
+        );
+
+        setIsPartnerLoggedIn(false);
+      }
     };
 
     checkPartnerLogin();
@@ -35,8 +47,17 @@ export default function Navbar() {
     setMobileMenuOpen(false);
   }, [pathname]);
 
-  const partnerLogout = () => {
-    localStorage.removeItem("partnerToken");
+    const partnerLogout = async () => {
+    try {
+      await fetch("/api/partner/logout", {
+        method: "POST",
+      });
+    } catch (error) {
+      console.error(
+        "Partner logout failed:",
+        error
+      );
+    }
 
     window.dispatchEvent(new Event("partnerLogout"));
 

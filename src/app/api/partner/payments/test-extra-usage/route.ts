@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
 import axios from "axios";
 import { ObjectId } from "mongodb";
+import { cookies } from "next/headers";
 
 import { connectToDatabase } from "@/lib/mongodb";
 import { calculatePartnerBilling } from "@/lib/partnerBilling";
+import {
+  PARTNER_SESSION_COOKIE,
+  verifyPartnerSession,
+} from "@/lib/partnerAuth";
 
 export async function POST(req: Request) {
   try {
@@ -29,39 +34,41 @@ export async function POST(req: Request) {
       );
     }
 
+       // ==========================================
+    // GET PARTNER SESSION
     // ==========================================
-    // GET PARTNER ID
-    // ==========================================
 
-    const authorization =
-  req.headers.get("Authorization");
+    const cookieStore = await cookies();
 
-if (!authorization) {
-  return NextResponse.json(
-    {
-      error: "Missing partner token.",
-    },
-    {
-      status: 401,
+    const session =
+      cookieStore.get(
+        PARTNER_SESSION_COOKIE
+      )?.value;
+
+    const partnerId =
+      verifyPartnerSession(session);
+
+    if (!partnerId) {
+      return NextResponse.json(
+        {
+          error: "Unauthorized",
+        },
+        {
+          status: 401,
+        }
+      );
     }
-  );
-}
 
-const partnerId =
-  authorization.startsWith("Bearer ")
-    ? authorization.substring(7)
-    : authorization;
-
-if (!ObjectId.isValid(partnerId)) {
-  return NextResponse.json(
-    {
-      error: "Invalid partner token.",
-    },
-    {
-      status: 401,
+    if (!ObjectId.isValid(partnerId)) {
+      return NextResponse.json(
+        {
+          error: "Invalid partner session",
+        },
+        {
+          status: 401,
+        }
+      );
     }
-  );
-}
     // ==========================================
     // CONNECT TO DATABASE
     // ==========================================

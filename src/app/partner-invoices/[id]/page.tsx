@@ -43,25 +43,12 @@ export default function PartnerInvoicePage() {
   useEffect(() => {
     async function loadInvoice() {
       try {
-        const partnerToken =
-          localStorage.getItem("partnerToken");
-
-        if (!partnerToken) {
-          router.push("/partner-login");
-          return;
-        }
-
         const invoiceId =
-          params.id as string;
+  params.id as string;
 
-        const response = await fetch(
-          `/api/partner/invoices/${invoiceId}`,
-          {
-            headers: {
-              Authorization: partnerToken,
-            },
-          }
-        );
+const response = await fetch(
+  `/api/partner/invoices/${invoiceId}`
+);
 
         if (response.status === 401) {
           router.push("/partner-login");

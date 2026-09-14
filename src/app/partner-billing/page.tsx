@@ -66,23 +66,10 @@ export default function PartnerBilling() {
 
   const loadBilling = async () => {
     try {
-      const token =
-        localStorage.getItem("partnerToken");
-
-      if (!token) {
-        router.push("/partner-login");
-        return;
-      }
-
       const response =
-        await fetch(
-          "/api/partner/dashboard",
-          {
-            headers: {
-              Authorization: token,
-            },
-          }
-        );
+  await fetch(
+    "/api/partner/dashboard"
+  );
 
       const data =
         await response.json();
@@ -129,13 +116,7 @@ export default function PartnerBilling() {
     try {
       setPaymentLoading(true);
 
-      const token =
-        localStorage.getItem("partnerToken");
-
-      if (!token) {
-        router.push("/partner-login");
-        return;
-      }
+      
 
       if (!partner) {
         throw new Error(
@@ -154,10 +135,9 @@ export default function PartnerBilling() {
             method: "POST",
 
             headers: {
-              Authorization: token,
-              "Content-Type":
-                "application/json",
-            },
+  "Content-Type":
+    "application/json",
+},
 
             body: JSON.stringify({
               partnerId:
@@ -257,11 +237,10 @@ export default function PartnerBilling() {
               {
                 method: "POST",
 
-                headers: {
-                  Authorization: token,
-                  "Content-Type":
-                    "application/json",
-                },
+               headers: {
+  "Content-Type":
+    "application/json",
+},
 
                 body: JSON.stringify({
   reference:
@@ -364,13 +343,7 @@ export default function PartnerBilling() {
     try {
       setPaymentLoading(true);
 
-      const token =
-        localStorage.getItem("partnerToken");
-
-      if (!token) {
-        router.push("/partner-login");
-        return;
-      }
+      
 
       if (!partner) {
         throw new Error(
@@ -389,10 +362,9 @@ export default function PartnerBilling() {
             method: "POST",
 
             headers: {
-              Authorization: token,
-              "Content-Type":
-                "application/json",
-            },
+  "Content-Type":
+    "application/json",
+},
           }
         );
 
@@ -452,10 +424,9 @@ export default function PartnerBilling() {
                 method: "POST",
 
                 headers: {
-                  Authorization: token,
-                  "Content-Type":
-                    "application/json",
-                },
+  "Content-Type":
+    "application/json",
+},
 
                 body: JSON.stringify({
   reference:

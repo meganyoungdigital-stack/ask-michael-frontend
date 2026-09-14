@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
+import { createPartnerSession, PARTNER_SESSION_COOKIE } from "@/lib/partnerAuth";
 import bcrypt from "bcrypt";
-
+import { cookies } from "next/headers";
 
 export async function POST(req: Request) {
 
@@ -64,23 +65,32 @@ export async function POST(req: Request) {
 
 
 
-    return NextResponse.json(
-      {
+    const session = createPartnerSession(
+  partner._id.toString()
+);
 
-        success: true,
+const cookieStore = await cookies();
 
-        token: partner._id.toString(),
+cookieStore.set(
+  PARTNER_SESSION_COOKIE,
+  session,
+  {
+    httpOnly: true,
+    secure:
+      process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 60 * 8,
+  }
+);
 
-        partner: {
-
-          companyName: partner.companyName,
-
-          email: partner.email,
-
-        }
-
-      }
-    );
+return NextResponse.json({
+  success: true,
+  partner: {
+    companyName: partner.companyName,
+    email: partner.email,
+  }
+});
 
 
 

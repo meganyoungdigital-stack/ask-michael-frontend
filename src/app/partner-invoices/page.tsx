@@ -27,22 +27,9 @@ export default function PartnerInvoicesPage() {
   useEffect(() => {
     async function loadInvoices() {
       try {
-        const partnerToken =
-          localStorage.getItem("partnerToken");
-
-        if (!partnerToken) {
-          router.push("/partner-login");
-          return;
-        }
-
         const response = await fetch(
-          "/api/partner/invoices",
-          {
-            headers: {
-              Authorization: partnerToken,
-            },
-          }
-        );
+  "/api/partner/invoices"
+);
 
         if (response.status === 401) {
           router.push("/partner-login");

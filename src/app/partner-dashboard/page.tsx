@@ -18,25 +18,10 @@ useEffect(()=>{
 
 async function load(){
 
-
-const token =
-localStorage.getItem(
-"partnerToken"
-);
-
-
-
 const response =
 await fetch(
-"/api/partner/dashboard",
-{
-headers:{
-Authorization:
-token || ""
-}
-}
+"/api/partner/dashboard"
 );
-
 
 
 const data =

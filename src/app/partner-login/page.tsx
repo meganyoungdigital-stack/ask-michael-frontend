@@ -88,16 +88,6 @@ data.error || "Login failed"
 }
 
 
-
-
-
-localStorage.setItem(
-"partnerToken",
-data.token
-);
-
-
-
 window.dispatchEvent(
 new Event("partnerLogin")
 );

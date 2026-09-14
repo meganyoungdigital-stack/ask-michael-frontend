@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { connectToDatabase } from "@/lib/mongodb";
+import {
+  PARTNER_SESSION_COOKIE,
+  verifyPartnerSession,
+} from "@/lib/partnerAuth";
 import { ObjectId } from "mongodb";
 
 export async function GET(
@@ -9,48 +14,58 @@ export async function GET(
   }
 ) {
   try {
-    const token = req.headers.get("Authorization");
+   const cookieStore = await cookies();
 
-    if (!token) {
-      return NextResponse.json(
-        {
-          error: "Missing token",
-        },
-        {
-          status: 400,
-        }
-      );
+const session =
+  cookieStore.get(
+    PARTNER_SESSION_COOKIE
+  )?.value;
+
+const partnerId =
+  verifyPartnerSession(session);
+
+if (!partnerId) {
+  return NextResponse.json(
+    {
+      error: "Unauthorized",
+    },
+    {
+      status: 401,
     }
+  );
+}
 
-    if (!ObjectId.isValid(token)) {
-      return NextResponse.json(
-        {
-          error: "Invalid partner token",
-        },
-        {
-          status: 400,
-        }
-      );
+if (!ObjectId.isValid(partnerId)) {
+  return NextResponse.json(
+    {
+      error: "Invalid partner session",
+    },
+    {
+      status: 401,
     }
+  );
+}
 
-    const { id } = await context.params;
+const { id } = await context.params;
 
-    if (!ObjectId.isValid(id)) {
-      return NextResponse.json(
-        {
-          error: "Invalid invoice ID",
-        },
-        {
-          status: 400,
-        }
-      );
+if (!ObjectId.isValid(id)) {
+  return NextResponse.json(
+    {
+      error: "Invalid invoice ID",
+    },
+    {
+      status: 400,
     }
+  );
+}
 
-    const { db } = await connectToDatabase();
+const { db } =
+  await connectToDatabase();
 
-    const partner = await db.collection("partners").findOne({
-      _id: new ObjectId(token),
-    });
+const partner =
+  await db.collection("partners").findOne({
+    _id: new ObjectId(partnerId),
+  });
 
     if (!partner) {
       return NextResponse.json(
