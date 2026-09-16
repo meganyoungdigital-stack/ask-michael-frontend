@@ -27,10 +27,8 @@ type PartnerBillingData = {
 
 declare global {
   interface Window {
-    Paystack: {
-      new (options: {
-        key: string;
-      }): {
+    PaystackPop: {
+      new (): {
         resumeTransaction: (
           accessCode: string,
           options?: {
@@ -166,11 +164,11 @@ export default function PartnerBilling() {
         );
       }
 
-          // ==========================================
+      // ==========================================
       // CHECK PAYSTACK SCRIPT
       // ==========================================
 
-      if (!window.Paystack) {
+      if (!window.PaystackPop) {
         throw new Error(
           "Paystack is still loading. Please try again."
         );
@@ -191,9 +189,7 @@ export default function PartnerBilling() {
       // ==========================================
 
       const paystack =
-        new window.Paystack({
-          key: paystackKey,
-        });
+  new window.PaystackPop();
 
       paystack.resumeTransaction(
         data.accessCode,
@@ -455,23 +451,18 @@ export default function PartnerBilling() {
         }
       };
 
-      // ==========================================
+            // ==========================================
       // OPEN PAYSTACK
       // ==========================================
 
-      const paystackKey =
-        process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
-
-      if (!paystackKey) {
+      if (!window.PaystackPop) {
         throw new Error(
-          "Payment system not configured correctly."
+          "Paystack is still loading. Please try again."
         );
       }
 
       const paystack =
-        new window.Paystack({
-          key: paystackKey,
-        });
+        new window.PaystackPop();
 
       paystack.resumeTransaction(
         data.accessCode,
@@ -494,7 +485,6 @@ export default function PartnerBilling() {
           },
         }
       );
-
     } catch (error) {
       console.error(
         "Partner payment failed:",
