@@ -27,27 +27,26 @@ type PartnerBillingData = {
 
 declare global {
   interface Window {
-    PaystackPop?: {
-      setup: (options: {
+    Paystack: {
+      new (options: {
         key: string;
-        email: string;
-        plan?: string;
-        currency?: string;
-        amount?: number;
-        reference?: string;
-        metadata?: Record<string, unknown>;
-        callback?: (response: {
-          reference?: string;
-          status?: string;
-          message?: string;
-        }) => void;
-        onClose?: () => void;
-      }) => {
-        openIframe: () => void;
+      }): {
+        resumeTransaction: (
+          accessCode: string,
+          options?: {
+            onSuccess?: (response: {
+              reference?: string;
+              status?: string;
+              message?: string;
+            }) => void;
+            onCancel?: () => void;
+          }
+        ) => void;
       };
     };
   }
 }
+
 export default function PartnerBilling() {
   const router = useRouter();
 
@@ -167,56 +166,39 @@ export default function PartnerBilling() {
         );
       }
 
-      // ==========================================
+          // ==========================================
       // CHECK PAYSTACK SCRIPT
       // ==========================================
 
-      if (!window.PaystackPop) {
+      if (!window.Paystack) {
         throw new Error(
           "Paystack is still loading. Please try again."
         );
       }
 
-      const PaystackPop =
-        window.PaystackPop;
+      const paystackKey =
+        process.env
+          .NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || "";
+
+      if (!paystackKey) {
+        throw new Error(
+          "Payment system not configured correctly."
+        );
+      }
 
       // ==========================================
       // OPEN PAYSTACK TEST CHECKOUT
       // ==========================================
 
-      const handler =
-        PaystackPop.setup({
-          key:
-            process.env
-              .NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || "",
+      const paystack =
+        new window.Paystack({
+          key: paystackKey,
+        });
 
-          email:
-            partner.email,
-
-          amount:
-            data.amount,
-
-          currency:
-            data.currency,
-
-          reference:
-            data.reference,
-
-          metadata: {
-            partnerId:
-              partner._id,
-
-            paymentType:
-              "partner_extra_usage_test",
-
-            extraMessages:
-              data.extraMessages,
-
-            extraUsageCharge:
-              data.extraUsageCharge,
-          },
-
-                           callback: function (
+      paystack.resumeTransaction(
+        data.accessCode,
+        {
+          onSuccess: function (
             paymentResponse
           ) {
             console.log(
@@ -237,18 +219,18 @@ export default function PartnerBilling() {
               {
                 method: "POST",
 
-               headers: {
-  "Content-Type":
-    "application/json",
-},
+                headers: {
+                  "Content-Type":
+                    "application/json",
+                },
 
                 body: JSON.stringify({
-  reference:
-    paymentReference,
+                  reference:
+                    paymentReference,
 
-  initializationReference:
-    data.reference,
-}),
+                  initializationReference:
+                    data.reference,
+                }),
               }
             )
               .then(
@@ -306,19 +288,15 @@ export default function PartnerBilling() {
               );
           },
 
-          onClose: function () {
+          onCancel: function () {
             console.log(
               "PAYSTACK TEST CHECKOUT CLOSED"
             );
 
             setPaymentLoading(false);
           },
-
-          
-        });
-
-      handler.openIframe();
-
+        }
+      );
     } catch (error) {
       console.error(
         "Paystack TEST extra usage payment failed:",
@@ -389,20 +367,6 @@ export default function PartnerBilling() {
           "Paystack did not return a payment reference."
         );
       }
-
-      // ==========================================
-      // CHECK PAYSTACK SCRIPT
-      // ==========================================
-
-      if (!window.PaystackPop) {
-        throw new Error(
-          "Paystack is still loading. Please try again."
-        );
-      }
-
-      const PaystackPop =
-        window.PaystackPop;
-
 
       // ==========================================
       // VERIFY PAYMENT AFTER PAYSTACK SUCCESS
@@ -491,7 +455,7 @@ export default function PartnerBilling() {
         }
       };
 
-            // ==========================================
+      // ==========================================
       // OPEN PAYSTACK
       // ==========================================
 
@@ -504,28 +468,15 @@ export default function PartnerBilling() {
         );
       }
 
-           const handler =
-        PaystackPop.setup({
+      const paystack =
+        new window.Paystack({
           key: paystackKey,
+        });
 
-          email: partner.email,
-
-          plan:
-            data.paystackPlanCode ||
-            undefined,
-
-          currency: data.currency,
-
-          metadata: {
-            partnerId:
-              partner._id,
-            plan:
-              data.plan,
-            paymentType:
-              "partner_subscription",
-          },
-
-          callback: function (
+      paystack.resumeTransaction(
+        data.accessCode,
+        {
+          onSuccess: function (
             paymentResponse
           ) {
             verifyPayment(
@@ -534,16 +485,15 @@ export default function PartnerBilling() {
             );
           },
 
-          onClose: function () {
+          onCancel: function () {
             console.log(
               "PAYSTACK CHECKOUT CLOSED"
             );
 
             setPaymentLoading(false);
           },
-        });
-
-      handler.openIframe();
+        }
+      );
 
     } catch (error) {
       console.error(
@@ -599,8 +549,8 @@ export default function PartnerBilling() {
 
   return (
     <>
-      <Script
-  src="https://js.paystack.co/v1/inline.js"
+ <Script
+  src="https://js.paystack.co/v2/inline.js"
   strategy="afterInteractive"
 />
 
