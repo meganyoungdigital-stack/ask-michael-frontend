@@ -51,7 +51,7 @@ export const PARTNER_PLANS: Record<
     currency: "ZAR",
     customPricing: false,
 paystackPlanCode:
-  process.env.PAYSTACK_STARTER_PLAN_CODE ?? null,
+  process.env.PAYSTACK_BUSINESS_PLAN ?? null,
   },
 
   enterprise: {
