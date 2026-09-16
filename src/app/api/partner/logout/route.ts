@@ -3,11 +3,21 @@ import { cookies } from "next/headers";
 
 import {
   PARTNER_SESSION_COOKIE,
+  deletePartnerSession,
 } from "@/lib/partnerAuth";
 
 export async function POST() {
   try {
     const cookieStore = await cookies();
+
+    const session =
+      cookieStore.get(
+        PARTNER_SESSION_COOKIE
+      )?.value;
+
+    await deletePartnerSession(
+      session
+    );
 
     cookieStore.set(
       PARTNER_SESSION_COOKIE,

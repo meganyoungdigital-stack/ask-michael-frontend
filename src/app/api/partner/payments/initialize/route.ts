@@ -24,7 +24,7 @@ const session =
   )?.value;
 
 const partnerId =
-  verifyPartnerSession(session);
+  await verifyPartnerSession(session);
 
 if (!partnerId) {
   return NextResponse.json(

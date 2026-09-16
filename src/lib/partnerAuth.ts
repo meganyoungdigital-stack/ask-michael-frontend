@@ -1,4 +1,6 @@
 import crypto from "crypto";
+import { connectToDatabase } from "@/lib/mongodb";
+import { ObjectId } from "mongodb";
 
 export const PARTNER_SESSION_COOKIE =
   "partnerSession";
@@ -6,99 +8,105 @@ export const PARTNER_SESSION_COOKIE =
 const SESSION_MAX_AGE_SECONDS =
   60 * 60 * 8;
 
-function getSecret() {
-  const secret =
-    process.env.PARTNER_SESSION_SECRET;
+function generateSessionToken() {
+  return crypto.randomBytes(32).toString("hex");
+}
 
-  if (!secret) {
+export async function createPartnerSession(
+  partnerId: string
+) {
+  if (!ObjectId.isValid(partnerId)) {
     throw new Error(
-      "PARTNER_SESSION_SECRET is not configured"
+      "Invalid partner ID"
     );
   }
 
-  return secret;
+  const token =
+    generateSessionToken();
+
+  const now = new Date();
+
+  const expiresAt =
+    new Date(
+      now.getTime() +
+        SESSION_MAX_AGE_SECONDS *
+          1000
+    );
+
+  const { db } =
+    await connectToDatabase();
+
+  await db
+    .collection("partner_sessions")
+    .insertOne({
+      tokenHash:
+        crypto
+          .createHash("sha256")
+          .update(token)
+          .digest("hex"),
+
+      partnerId:
+        new ObjectId(partnerId),
+
+      createdAt: now,
+      expiresAt,
+    });
+
+  return token;
 }
 
-export function createPartnerSession(
-  partnerId: string
-) {
-  const timestamp =
-    Date.now().toString();
-
-  const signature =
-    crypto
-      .createHmac(
-        "sha256",
-        getSecret()
-      )
-      .update(
-        `${partnerId}:${timestamp}`
-      )
-      .digest("hex");
-
-  return `${partnerId}.${timestamp}.${signature}`;
-}
-
-export function verifyPartnerSession(
+export async function verifyPartnerSession(
   session: string | undefined
 ) {
   if (!session) {
     return null;
   }
 
-  const parts =
-    session.split(".");
-
-  if (parts.length !== 3) {
-    return null;
-  }
-
-  const [
-    partnerId,
-    timestamp,
-    signature,
-  ] = parts;
-
-  const expectedSignature =
+  const tokenHash =
     crypto
-      .createHmac(
-        "sha256",
-        getSecret()
-      )
-      .update(
-        `${partnerId}:${timestamp}`
-      )
+      .createHash("sha256")
+      .update(session)
       .digest("hex");
 
-  const signaturesMatch =
-    signature.length ===
-      expectedSignature.length &&
-    crypto.timingSafeEqual(
-      Buffer.from(signature),
-      Buffer.from(
-        expectedSignature
-      )
-    );
+  const { db } =
+    await connectToDatabase();
 
-  if (!signaturesMatch) {
+  const sessionRecord =
+    await db
+      .collection("partner_sessions")
+      .findOne({
+        tokenHash,
+        expiresAt: {
+          $gt: new Date(),
+        },
+      });
+
+  if (!sessionRecord) {
     return null;
   }
 
-  const sessionAge =
-    Date.now() -
-    Number(timestamp);
+  return sessionRecord.partnerId.toString();
+}
 
-  const maxAge =
-    SESSION_MAX_AGE_SECONDS *
-    1000;
-
-  if (
-    !Number.isFinite(sessionAge) ||
-    sessionAge < 0 ||
-    sessionAge > maxAge
-  ) {
-    return null;
+export async function deletePartnerSession(
+  session: string | undefined
+) {
+  if (!session) {
+    return;
   }
 
-  return partnerId;
+  const tokenHash =
+    crypto
+      .createHash("sha256")
+      .update(session)
+      .digest("hex");
+
+  const { db } =
+    await connectToDatabase();
+
+  await db
+    .collection("partner_sessions")
+    .deleteOne({
+      tokenHash,
+    });
 }

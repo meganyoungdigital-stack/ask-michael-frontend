@@ -16,7 +16,7 @@ export async function GET() {
       )?.value;
 
     const partnerId =
-      verifyPartnerSession(session);
+  await verifyPartnerSession(session);
 
     return NextResponse.json({
       authenticated: !!partnerId,

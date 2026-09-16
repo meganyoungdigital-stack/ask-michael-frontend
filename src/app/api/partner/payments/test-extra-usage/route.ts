@@ -46,7 +46,7 @@ export async function POST(req: Request) {
       )?.value;
 
     const partnerId =
-      verifyPartnerSession(session);
+  await verifyPartnerSession(session);
 
     if (!partnerId) {
       return NextResponse.json(

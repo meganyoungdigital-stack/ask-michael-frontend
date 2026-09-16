@@ -65,7 +65,7 @@ export async function POST(req: Request) {
 
 
 
-    const session = createPartnerSession(
+const session = await createPartnerSession(
   partner._id.toString()
 );
 

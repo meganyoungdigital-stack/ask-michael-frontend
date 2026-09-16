@@ -18,7 +18,7 @@ const session =
   )?.value;
 
 const partnerId =
-  verifyPartnerSession(session);
+  await verifyPartnerSession(session);
 
 if (!partnerId) {
   return NextResponse.json(
@@ -90,11 +90,11 @@ const partner =
       email:
         partner.email,
 
-      apiKey:
-        partner.apiKey,
+            hasApiKey:
+        Boolean(partner.apiKey),
 
-      testApiKey:
-        partner.testApiKey || null,
+      hasTestApiKey:
+        Boolean(partner.testApiKey),
 
       messages:
         partner.messages || 0,
