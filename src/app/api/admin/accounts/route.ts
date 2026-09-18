@@ -55,6 +55,11 @@ const partners =
       {
         projection: {
           passwordHash: 0,
+          apiKey: 0,
+          testApiKey: 0,
+          apiKeyHash: 0,
+          testApiKeyHash: 0,
+          paystackAuthorizationCode: 0,
         },
       }
     )

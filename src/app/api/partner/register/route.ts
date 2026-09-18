@@ -4,7 +4,10 @@ import { connectToDatabase } from "@/lib/mongodb";
 
 import bcrypt from "bcrypt";
 
-import crypto from "crypto";
+import {
+  generatePartnerApiKey,
+  hashPartnerApiKey,
+} from "@/lib/partnerApiKeys";
 
 
 
@@ -130,22 +133,20 @@ if (acceptedTerms !== true) {
 
 
     // =====================================================
-    // GENERATE API KEYS
-    // =====================================================
+// GENERATE API KEYS
+// =====================================================
 
-    const apiKey =
-      "am_live_" +
-      crypto
-        .randomBytes(24)
-        .toString("hex");
+const apiKey =
+  generatePartnerApiKey("am_live_");
 
+const testApiKey =
+  generatePartnerApiKey("am_test_");
 
-    const testApiKey =
-      "am_test_" +
-      crypto
-        .randomBytes(24)
-        .toString("hex");
+const apiKeyHash =
+  hashPartnerApiKey(apiKey);
 
+const testApiKeyHash =
+  hashPartnerApiKey(testApiKey);
 
 
     // =====================================================
@@ -189,9 +190,9 @@ if (acceptedTerms !== true) {
 
         passwordHash,
 
-        apiKey,
+        apiKeyHash,
 
-        testApiKey,
+        testApiKeyHash,
 
         status:
   "active",

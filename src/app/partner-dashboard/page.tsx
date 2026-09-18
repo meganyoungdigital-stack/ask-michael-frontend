@@ -183,19 +183,14 @@ Messages Used
     </p>
 
     <div className="mt-2 bg-gray-100 p-4 rounded text-black break-all">
-      {partner.apiKey}
+      {partner.hasApiKey
+  ? "Live API key configured"
+  : "Live API key not configured"}
     </div>
 
-    <button
-      className="mt-4 bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700"
-      onClick={() =>
-        navigator.clipboard.writeText(
-          partner.apiKey
-        )
-      }
-    >
-      Copy Live API Key
-    </button>
+    <p className="mt-4 text-sm text-gray-500">
+  API keys are securely stored and are not displayed after creation.
+</p>
 
   </div>
 
@@ -206,37 +201,14 @@ Messages Used
   </p>
 
   <div className="mt-2 bg-gray-100 p-4 rounded text-black break-all">
-    {partner.testApiKey || "Test API key not available"}
+    {partner.hasTestApiKey
+  ? "Test API key configured"
+  : "Test API key not configured"}
   </div>
 
-  <button
-    type="button"
-    className="mt-4 bg-gray-600 text-white px-5 py-2 rounded hover:bg-gray-700"
-    onClick={async () => {
-      if (!partner.testApiKey) {
-        return;
-      }
-
-      try {
-        await navigator.clipboard.writeText(
-          partner.testApiKey
-        );
-
-        alert("Test API Key copied!");
-      } catch (error) {
-        console.error(
-          "Failed copying test API key:",
-          error
-        );
-
-        alert(
-          "Unable to copy the Test API Key."
-        );
-      }
-    }}
-  >
-    Copy Test API Key
-  </button>
+  <p className="mt-4 text-sm text-gray-500">
+  API keys are securely stored and are not displayed after creation.
+</p>
 
 </div>
 

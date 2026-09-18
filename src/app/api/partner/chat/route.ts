@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import OpenAI from "openai";
 
 import { connectToDatabase } from "@/lib/mongodb";
+import { hashPartnerApiKey } from "@/lib/partnerApiKeys";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -38,6 +39,8 @@ export async function POST(req: Request) {
       authorization.startsWith("Bearer ")
         ? authorization.substring(7)
         : authorization;
+        const apiKeyHash =
+  hashPartnerApiKey(cleanApiKey);
 
     // ==========================================
     // CONNECT TO DATABASE
@@ -59,19 +62,14 @@ export async function POST(req: Request) {
     const isPreview =
       process.env.VERCEL_ENV === "preview";
 
-    const partner =
-      await db
-        .collection("partners")
-        .findOne(
-          isPreview
-            ? {
-                testApiKey: cleanApiKey,
-              }
-            : {
-                apiKey: cleanApiKey,
-              }
-        );
-
+   const partner =
+  await db
+    .collection("partners")
+    .findOne(
+      isPreview
+        ? { testApiKeyHash: apiKeyHash }
+        : { apiKeyHash: apiKeyHash }
+    );
     if (!partner) {
       return NextResponse.json(
         {

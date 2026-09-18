@@ -3,6 +3,7 @@ import axios from "axios";
 
 import { connectToDatabase } from "@/lib/mongodb";
 import { calculatePartnerBilling } from "@/lib/partnerBilling";
+import { hashPartnerApiKey } from "@/lib/partnerApiKeys";
 
 export async function POST(req: Request) {
   try {
@@ -35,7 +36,8 @@ const partnerToken =
   authorization.startsWith("Bearer ")
     ? authorization.substring(7)
     : authorization;
-
+const apiKeyHash =
+  hashPartnerApiKey(partnerToken);
 
 
 // ==========================================
@@ -90,18 +92,18 @@ if (
     // FIND PARTNER
     // ==========================================
 
-    const partner =
+  const partner =
   await db
     .collection("partners")
     .findOne(
       isPreview
         ? {
-            testApiKey:
-              partnerToken,
+            testApiKeyHash:
+              apiKeyHash,
           }
         : {
-            apiKey:
-              partnerToken,
+            apiKeyHash:
+              apiKeyHash,
           }
     );
     if (!partner) {

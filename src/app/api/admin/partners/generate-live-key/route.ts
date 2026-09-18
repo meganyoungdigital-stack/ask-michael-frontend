@@ -64,11 +64,11 @@ export async function POST(
     const { db } =
       await connectToDatabase();
 
-    const testApiKey =
-  generatePartnerApiKey("am_test_");
+    const apiKey =
+      generatePartnerApiKey("am_live_");
 
-const testApiKeyHash =
-  hashPartnerApiKey(testApiKey);
+    const apiKeyHash =
+      hashPartnerApiKey(apiKey);
 
     const result =
       await db
@@ -78,12 +78,12 @@ const testApiKeyHash =
             _id: new ObjectId(partnerId),
           },
           {
-           $set: {
-  testApiKeyHash,
-},
-$unset: {
-  testApiKey: "",
-},
+            $set: {
+              apiKeyHash,
+            },
+            $unset: {
+              apiKey: "",
+            },
           }
         );
 
@@ -100,20 +100,20 @@ $unset: {
 
     return NextResponse.json({
       success: true,
-      testApiKey,
+      apiKey,
     });
 
   } catch (error) {
 
     console.error(
-      "Generate test API key error:",
+      "Generate live API key error:",
       error
     );
 
     return NextResponse.json(
       {
         error:
-          "Failed generating test API key",
+          "Failed generating live API key",
       },
       {
         status: 500,

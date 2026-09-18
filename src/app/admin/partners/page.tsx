@@ -16,9 +16,9 @@ type PartnerAccount = {
 
   email: string;
 
-  apiKey: string;
+  hasApiKey: boolean;
 
-  testApiKey: string;
+  hasTestApiKey: boolean;
 
   messages: number;
 
@@ -62,6 +62,18 @@ export default function PartnersAdminPage() {
 
  const [applications, setApplications] = useState<PartnerAccount[]>([]);
   const [updating, setUpdating] = useState("");
+
+const [generatedLiveApiKey, setGeneratedLiveApiKey] =
+  useState<{
+    partnerId: string;
+    apiKey: string;
+  } | null>(null);
+
+const [generatedTestApiKey, setGeneratedTestApiKey] =
+  useState<{
+    partnerId: string;
+    apiKey: string;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
 const [generatingInvoice, setGeneratingInvoice] = useState("");
 
@@ -289,7 +301,68 @@ console.log(
     setUpdating("");
   }
 }
+async function generateLiveApiKey(
+  partnerId: string
+) {
 
+  try {
+
+    setUpdating(partnerId);
+
+    const response =
+      await fetch(
+        "/api/admin/partners/generate-live-key",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+
+          body: JSON.stringify({
+            partnerId,
+          }),
+
+        }
+      );
+
+    const data =
+      await response.json();
+
+    if (!response.ok) {
+
+      throw new Error(
+        data.error ||
+        "Failed to generate live API key"
+      );
+
+    }
+
+    setGeneratedLiveApiKey({
+  partnerId,
+  apiKey: data.apiKey,
+});
+
+
+  } catch (error) {
+
+    console.error(
+      "Live API key generation failed:",
+      error
+    );
+
+    alert(
+      "Failed to generate live API key."
+    );
+
+  } finally {
+
+    setUpdating("");
+
+  }
+
+}
 
 
 async function updatePartnerStatus(
@@ -735,19 +808,21 @@ async function generateTestApiKey(
 
     }
 
+setGeneratedTestApiKey({
+  partnerId,
+  apiKey: data.testApiKey,
+});
 
     setApplications((current) =>
-      current.map((partner) =>
-        partner._id === partnerId
-          ? {
-              ...partner,
-              testApiKey:
-                data.testApiKey,
-            }
-          : partner
-      )
-    );
-
+  current.map((partner) =>
+    partner._id === partnerId
+      ? {
+          ...partner,
+          hasTestApiKey: true,
+        }
+      : partner
+  )
+);
 
   } catch (error) {
 
@@ -768,7 +843,7 @@ async function generateTestApiKey(
   }
 
 }
- 
+
     return (
     <main className="min-h-screen bg-gray-50 pt-32 px-10 pb-10">
 
@@ -1389,7 +1464,7 @@ async function generateTestApiKey(
 
               </div>
 
-              
+
               {/* API KEYS */}
 
               <div className="mb-6">
@@ -1398,25 +1473,114 @@ async function generateTestApiKey(
                   API Keys
                 </h3>
 
+{generatedLiveApiKey?.partnerId === partner._id && (
+  <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
+
+    <p className="text-sm font-semibold text-blue-900">
+      New Live API Key
+    </p>
+
+    <p className="mt-2 break-all rounded bg-white p-3 font-mono text-sm text-gray-900">
+      {generatedLiveApiKey.apiKey}
+    </p>
+
+    <button
+      type="button"
+      onClick={async () => {
+        try {
+          await
+         navigator.clipboard.writeText(
+          generatedLiveApiKey.apiKey
+         )
+
+          alert("Live API Key copied!");
+        } catch (error) {
+          console.error(
+            "Failed copying live API key:",
+            error
+          );
+
+          alert(
+            "Unable to copy the Live API Key."
+          );
+        }
+      }}
+      className="mt-3 rounded bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
+    >
+      Copy Live API Key
+    </button>
+
+    <p className="mt-3 text-xs text-blue-800">
+      Save this key now. It will not be displayed again after this page is refreshed.
+    </p>
+
+  </div>
+)}
+
+{generatedTestApiKey?.partnerId === partner._id && (
+  <div className="mb-4 rounded-lg border border-green-200 bg-green-50 p-4">
+
+    <p className="text-sm font-semibold text-green-900">
+      New Test API Key
+    </p>
+
+    <p className="mt-2 break-all rounded bg-white p-3 font-mono text-sm text-gray-900">
+      {generatedTestApiKey.apiKey}
+    </p>
+
+    <button
+      type="button"
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(
+            generatedTestApiKey.apiKey
+          );
+
+          alert("Test API Key copied!");
+        } catch (error) {
+          console.error(
+            "Failed copying test API key:",
+            error
+          );
+
+          alert(
+            "Unable to copy the Test API Key."
+          );
+        }
+      }}
+      className="mt-3 rounded bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700"
+    >
+      Copy Test API Key
+    </button>
+
+    <p className="mt-3 text-xs text-green-800">
+      Save this key now. It will not be displayed again after this page is refreshed.
+    </p>
+
+  </div>
+)}
                 <div className="bg-white rounded-lg border p-4">
 
                   <p className="text-sm text-gray-500">
                     Live API Key
                   </p>
 
-                  <p className="text-sm font-mono break-all text-gray-900 mt-1">
-                    {partner.apiKey}
-                  </p>
+                  <p className="text-sm font-mono text-gray-900 mt-1">
+  {partner.hasApiKey
+    ? "Live API key configured"
+    : "Live API key not configured"}
+</p>
 
 
-                  <p className="text-sm text-gray-500 mt-5">
-                    Test API Key
-                  </p>
+<p className="text-sm text-gray-500 mt-5">
+  Test API Key
+</p>
 
-                  <p className="text-sm font-mono break-all text-gray-900 mt-1">
-                    {partner.testApiKey ||
-                      "Test API key not generated"}
-                  </p>
+<p className="text-sm font-mono text-gray-900 mt-1">
+  {partner.hasTestApiKey
+    ? "Test API key configured"
+    : "Test API key not generated"}
+</p>
 
                 </div>
 
@@ -1534,23 +1698,37 @@ async function generateTestApiKey(
                     View Latest Invoice
                   </button>
 
+<button
+  onClick={() =>
+    generateTestApiKey(
+      partner._id
+    )
+  }
+  disabled={
+    updating === partner._id
+  }
+  className="rounded bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 disabled:opacity-50"
+>
+  {updating === partner._id
+    ? "Generating..."
+    : "Generate Test API Key"}
+ </button>
 
-                  <button
-                    onClick={() =>
-                      generateTestApiKey(
-                        partner._id
-                      )
-                    }
-                    disabled={
-                      !!partner.testApiKey
-                    }
-                    className="rounded bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 disabled:opacity-50"
-                  >
-                    {partner.testApiKey
-                      ? "Test API Key Generated"
-                      : "Generate Test API Key"}
-                  </button>
-
+  <button
+  onClick={() =>
+    generateLiveApiKey(
+      partner._id
+    )
+  }
+  disabled={
+    updating === partner._id
+  }
+  className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
+>
+  {updating === partner._id
+    ? "Generating..."
+    : "Generate Live API Key"}
+</button>
                 </div>
 
               </div>

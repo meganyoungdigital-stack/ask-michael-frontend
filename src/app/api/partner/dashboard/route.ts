@@ -90,11 +90,11 @@ const partner =
       email:
         partner.email,
 
-            hasApiKey:
-        Boolean(partner.apiKey),
+          hasApiKey:
+  Boolean(partner.apiKeyHash),
 
-      hasTestApiKey:
-        Boolean(partner.testApiKey),
+hasTestApiKey:
+  Boolean(partner.testApiKeyHash),
 
       messages:
         partner.messages || 0,

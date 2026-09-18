@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { connectToDatabase } from "@/lib/mongodb";
+import { hashPartnerApiKey } from "@/lib/partnerApiKeys";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -38,6 +39,9 @@ export async function POST(req: Request) {
         ? apiKey.substring(7)
         : apiKey;
 
+        const apiKeyHash =
+  hashPartnerApiKey(cleanApiKey);
+
     /*
      * Find partner
      */
@@ -49,7 +53,7 @@ export async function POST(req: Request) {
   await db
     .collection("partners")
     .findOne({
-      testApiKey: cleanApiKey,
+      testApiKeyHash: apiKeyHash,
     });
 
     if (!partner) {
