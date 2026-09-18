@@ -7,6 +7,7 @@ import { Redis } from "@upstash/redis";
 
 let redis: Redis | null = null;
 let ratelimitInstance: Ratelimit | null = null;
+let partnerRatelimitInstance: Ratelimit | null = null;
 
 const hasRedisEnv =
   !!process.env.UPSTASH_REDIS_REST_URL &&
@@ -16,12 +17,20 @@ if (hasRedisEnv) {
   try {
     redis = Redis.fromEnv();
 
-    ratelimitInstance = new Ratelimit({
-      redis,
-      limiter: Ratelimit.slidingWindow(20, "1 m"), // 20 requests per minute
-      analytics: true,
-      prefix: "ask-michael",
-    });
+  ratelimitInstance = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(20, "1 m"), // 20 requests per minute
+  analytics: true,
+  prefix: "ask-michael",
+});
+
+partnerRatelimitInstance = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(20, "1 m"), // 20 partner requests per minute
+  analytics: true,
+  prefix: "ask-michael-partner",
+});
+
   } catch (err) {
     console.warn("⚠️ Redis init failed, disabling rate limit:", err);
     redis = null;
@@ -34,6 +43,33 @@ if (hasRedisEnv) {
 /* ============================
    SAFE RATE LIMIT EXPORT
 ============================ */
+
+export const partnerRatelimit = {
+  async limit(identifier: string) {
+    if (!partnerRatelimitInstance) {
+      return {
+        success: true,
+        limit: 0,
+        remaining: 9999,
+        reset: Date.now() + 60 * 1000,
+      };
+    }
+
+    try {
+      return await partnerRatelimitInstance.limit(identifier);
+    } catch (err) {
+      console.error("Partner rate limit error:", err);
+
+      return {
+        success: true,
+        limit: 0,
+        remaining: 9999,
+        reset: Date.now() + 60 * 1000,
+      };
+    }
+  },
+};
+
 
 export const ratelimit = {
   async limit(identifier: string) {

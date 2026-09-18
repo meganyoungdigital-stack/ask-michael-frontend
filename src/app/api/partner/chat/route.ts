@@ -3,6 +3,7 @@ import OpenAI from "openai";
 
 import { connectToDatabase } from "@/lib/mongodb";
 import { hashPartnerApiKey } from "@/lib/partnerApiKeys";
+import { partnerRatelimit } from "@/lib/ratelimit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -80,6 +81,28 @@ export async function POST(req: Request) {
         }
       );
     }
+
+        // ==========================================
+    // PARTNER API RATE LIMIT
+    // ==========================================
+
+    const { success: rateLimitSuccess } =
+      await partnerRatelimit.limit(
+        partner._id.toString()
+      );
+
+    if (!rateLimitSuccess) {
+      return NextResponse.json(
+        {
+          error:
+            "Too many requests. Please slow down and try again shortly.",
+        },
+        {
+          status: 429,
+        }
+      );
+    }
+
     // ==========================================
     // CHECK PARTNER ACCOUNT STATUS
     // ==========================================
