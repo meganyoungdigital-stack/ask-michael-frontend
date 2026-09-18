@@ -17,6 +17,92 @@ const openai = new OpenAI({
 const CHUNK_SIZE = 900;
 const CHUNK_OVERLAP = 200;
 
+/* =========================
+   SSRF URL VALIDATION
+========================= */
+
+function isPrivateOrLocalHostname(hostname: string) {
+  const host = hostname.toLowerCase();
+
+  if (
+    host === "localhost" ||
+    host === "localhost.localdomain" ||
+    host.endsWith(".localhost") ||
+    host === "::1" ||
+    host === "[::1]"
+  ) {
+    return true;
+  }
+
+  const ipv4 = host.match(
+    /^(?:\d{1,3}\.){3}\d{1,3}$/
+  );
+
+  if (!ipv4) {
+    return false;
+  }
+
+  const parts = host.split(".").map(Number);
+
+  if (parts.some((part) => part < 0 || part > 255)) {
+    return true;
+  }
+
+  const [a, b] = parts;
+
+  return (
+    a === 10 ||
+    a === 127 ||
+    (a === 169 && b === 254) ||
+    (a === 172 && b >= 16 && b <= 31) ||
+    (a === 192 && b === 168)
+  );
+}
+
+function validateDocumentUrl(value: unknown) {
+  if (typeof value !== "string" || !value.trim()) {
+    return false;
+  }
+
+  let url: URL;
+
+  try {
+    url = new URL(value);
+  } catch {
+    return false;
+  }
+
+  if (url.protocol !== "http:" && url.protocol !== "https:") {
+    return false;
+  }
+
+  if (url.username || url.password) {
+    return false;
+  }
+
+  if (url.port && url.port !== "80" && url.port !== "443") {
+    return false;
+  }
+
+  if (isPrivateOrLocalHostname(url.hostname)) {
+    return false;
+  }
+
+  const hostname = url.hostname.toLowerCase();
+
+  if (
+    hostname === "0.0.0.0" ||
+    hostname === "::" ||
+    hostname.startsWith("fc") ||
+    hostname.startsWith("fd") ||
+    hostname.startsWith("fe80:")
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
 function chunkText(text: string) {
   const chunks: string[] = [];
   let start = 0;
@@ -142,6 +228,13 @@ export async function POST(req: NextRequest) {
     if (!body.url || !body.name) {
       return NextResponse.json(
         { error: "Missing file information" },
+        { status: 400 }
+      );
+    }
+
+    if (!validateDocumentUrl(body.url)) {
+      return NextResponse.json(
+        { error: "Invalid document URL" },
         { status: 400 }
       );
     }
