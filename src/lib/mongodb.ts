@@ -61,6 +61,14 @@ async function ensureIndexes(db: Db) {
       { unique: true }
     );
 
+    await db.collection("partner_payments").createIndex(
+  { billingAllocationKey: 1 },
+  {
+    unique: true,
+    sparse: true,
+  }
+);
+
     await db.collection("conversations").createIndex({ userId: 1 });
 
     const indexes = await db.collection("conversations").indexes();

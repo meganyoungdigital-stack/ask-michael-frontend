@@ -271,54 +271,101 @@ if (
     // CREATE UNIQUE REFERENCE
     // ==========================================
 
-    const reference =
-      `partner_extra_${partner._id.toString()}_${Date.now()}`;
-
     // ==========================================
-    // CREATE EXTRA-USAGE PAYMENT RECORD
-    // ==========================================
+// CREATE BILLING ALLOCATION KEY
+// ==========================================
+//
+// This identifies the exact extra-usage allocation
+// currently being charged for this partner.
+// The billed counter determines the starting point,
+// while the calculated extraMessages determines the
+// size of this allocation.
+// ==========================================
 
-    const paymentResult =
-      await db
-        .collection(
-          "partner_payments"
-        )
-        .insertOne({
-          partnerId:
-            partner._id,
+const billingAllocationKey =
+  `${partner._id.toString()}_${billing.billedExtraMessages}_${billing.extraMessages}`;
 
-          reference,
+// ==========================================
+// CREATE UNIQUE REFERENCE
+// ==========================================
 
-          amount,
+const reference =
+  `partner_extra_${partner._id.toString()}_${Date.now()}`;
 
-          currency:
-            "ZAR",
+// ==========================================
+// CREATE EXTRA-USAGE PAYMENT RECORD
+// ==========================================
 
-          plan:
-            partner.plan ||
-            null,
+      let paymentResult;
 
-          monthlyFee:
-            partner.monthlyFee ??
-            null,
+    try {
+      paymentResult =
+        await db
+          .collection(
+            "partner_payments"
+          )
+          .insertOne({
+            partnerId:
+              partner._id,
 
-          paymentType:
-            "partner_extra_usage",
+            reference,
+
+            amount,
+
+            currency:
+              "ZAR",
+
+            plan:
+              partner.plan ||
+              null,
+
+            monthlyFee:
+              partner.monthlyFee ??
+              null,
+
+            paymentType:
+              "partner_extra_usage",
+
+            billingAllocationKey,
+
+            extraMessages:
+              billing.extraMessages,
+
+            extraUsageCharge,
+
+            status:
+              "pending",
+
+            createdAt:
+              new Date(),
+
+            updatedAt:
+              new Date(),
+          });
+    } catch (error: unknown) {
+      if (
+        error &&
+        typeof error === "object" &&
+        "code" in error &&
+        error.code === 11000
+      ) {
+        return NextResponse.json({
+          success: true,
+
+          message:
+            "This extra-usage allocation has already been claimed.",
 
           extraMessages:
             billing.extraMessages,
 
           extraUsageCharge,
 
-          status:
-            "pending",
-
-          createdAt:
-            new Date(),
-
-          updatedAt:
-            new Date(),
+          alreadyClaimed: true,
         });
+      }
+
+      throw error;
+    }
 
     // ==========================================
     // CHARGE PAYSTACK AUTHORIZATION
@@ -366,13 +413,15 @@ if (
             partnerId:
               partner._id.toString(),
 
-            paymentType:
-              "partner_extra_usage",
+                      paymentType:
+            "partner_extra_usage",
 
-            extraMessages:
-              billing.extraMessages,
+          billingAllocationKey,
 
-            extraUsageCharge,
+          extraMessages:
+            billing.extraMessages,
+
+          extraUsageCharge,
 
             paymentRecordId:
               paymentResult.insertedId.toString(),
@@ -463,23 +512,56 @@ if (
 // MARK EXTRA MESSAGES AS BILLED
 // ==========================================
 
-await db
-  .collection("partners")
-  .updateOne(
-    {
-      _id: partner._id,
-    },
-    {
-      $inc: {
+const billedUsageResult =
+  await db
+    .collection("partners")
+    .updateOne(
+      {
+        _id: partner._id,
         billedExtraMessages:
-          billing.extraMessages,
+          billing.billedExtraMessages,
       },
-      $set: {
-        updatedAt: new Date(),
-      },
+      {
+        $inc: {
+          billedExtraMessages:
+            billing.extraMessages,
+        },
+        $set: {
+          updatedAt: new Date(),
+        },
+      }
+    );
+
+if (
+  billedUsageResult.modifiedCount !==
+  1
+) {
+  console.error(
+    "EXTRA USAGE BILLING COUNTER UPDATE FAILED:",
+    {
+      partnerId:
+        partner._id.toString(),
+
+      billingAllocationKey,
+
+      expectedBilledExtraMessages:
+        billing.billedExtraMessages,
+
+      extraMessages:
+        billing.extraMessages,
     }
   );
 
+  return NextResponse.json(
+    {
+      error:
+        "Extra usage was charged, but the billing counter could not be updated safely.",
+    },
+    {
+      status: 500,
+    }
+  );
+}
       await db
         .collection(
           "partner_payments"
