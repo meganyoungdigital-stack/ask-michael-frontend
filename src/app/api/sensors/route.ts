@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import { connectToDatabase } from "@/lib/mongodb";
 
 /* ============================
@@ -7,11 +8,20 @@ import { connectToDatabase } from "@/lib/mongodb";
 
 export async function GET() {
   try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
     const { db } = await connectToDatabase();
 
     const data = await db
       .collection("sensor_data")
-      .find({})
+      .find({ userId })
       .sort({ timestamp: -1 })
       .limit(100)
       .toArray();
@@ -33,9 +43,19 @@ export async function GET() {
 
 export async function POST() {
   try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
     const { db } = await connectToDatabase();
 
     const newData = {
+      userId,
       sensorId: "sensor-1",
       timestamp: new Date(),
       temperature: 80 + Math.random() * 50,
@@ -46,7 +66,10 @@ export async function POST() {
 
     await db.collection("sensor_data").insertOne(newData);
 
-    return NextResponse.json({ success: true, data: newData });
+    return NextResponse.json({
+      success: true,
+      data: newData,
+    });
   } catch (err) {
     console.error("Sensor insert error:", err);
 

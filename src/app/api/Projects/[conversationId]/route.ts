@@ -1,25 +1,27 @@
-import { NextRequest, NextResponse } from "next/server";
-import { connectToDatabase } from "@/lib/mongodb";
+import { NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
+import { getUserConversations } from "@/lib/mongodb";
 
-export async function PATCH(
-  req: NextRequest,
-  context: { params: Promise<{ conversationId: string }> }
-) {
-  const { conversationId } = await context.params;
+export async function GET() {
+  try {
+    const { userId } = await auth();
 
-  const { db } = await connectToDatabase();
-  const collection = db.collection("conversations");
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
 
-  const conversation = await collection.findOne({ conversationId });
+    const conversations = await getUserConversations(userId);
 
-  if (!conversation) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json(conversations);
+  } catch (err) {
+    console.error("Project conversations fetch error:", err);
+
+    return NextResponse.json(
+      { error: "Failed to fetch projects" },
+      { status: 500 }
+    );
   }
-
-  await collection.updateOne(
-    { conversationId },
-    { $set: { starred: !conversation.starred } }
-  );
-
-  return NextResponse.json({ success: true });
 }
