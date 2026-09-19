@@ -12,6 +12,138 @@ export default function PartnerDashboard(){
 const [partner,setPartner]=useState<any>(null);
 
 
+const [keyActionLoading, setKeyActionLoading] =
+  useState<string | null>(null);
+
+const [newApiKey, setNewApiKey] =
+  useState<string | null>(null);
+
+const [newApiKeyType, setNewApiKeyType] =
+  useState<"live" | "test" | null>(null);
+
+const [keyMessage, setKeyMessage] =
+  useState<string | null>(null);
+
+async function generateApiKey(
+  type: "live" | "test"
+) {
+  setKeyActionLoading(`generate-${type}`);
+  setKeyMessage(null);
+  setNewApiKey(null);
+  setNewApiKeyType(null);
+
+  try {
+    const response = await fetch(
+      `/api/partner/api-keys/${type}`,
+      {
+        method: "POST",
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data.error ||
+          `Failed generating ${type} API key`
+      );
+    }
+
+    setNewApiKey(data.apiKey);
+    setNewApiKeyType(type);
+    setKeyMessage(
+      `New ${type === "live" ? "Live" : "Test"} API key generated. Save it now — it will not be shown again.`
+    );
+
+    const dashboardResponse =
+      await fetch("/api/partner/dashboard");
+
+    if (dashboardResponse.ok) {
+      const dashboardData =
+        await dashboardResponse.json();
+
+      setPartner(dashboardData);
+    }
+  } catch (error) {
+    setKeyMessage(
+      error instanceof Error
+        ? error.message
+        : "Failed generating API key"
+    );
+  } finally {
+    setKeyActionLoading(null);
+  }
+}
+
+async function revokeApiKey(
+  type: "live" | "test"
+) {
+  setKeyActionLoading(`revoke-${type}`);
+  setKeyMessage(null);
+  setNewApiKey(null);
+  setNewApiKeyType(null);
+
+  try {
+    const response = await fetch(
+      `/api/partner/api-keys/${type}/revoke`,
+      {
+        method: "POST",
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data.error ||
+          `Failed revoking ${type} API key`
+      );
+    }
+
+    setKeyMessage(
+      `${type === "live" ? "Live" : "Test"} API key revoked.`
+    );
+
+    const dashboardResponse =
+      await fetch("/api/partner/dashboard");
+
+    if (dashboardResponse.ok) {
+      const dashboardData =
+        await dashboardResponse.json();
+
+      setPartner(dashboardData);
+    }
+  } catch (error) {
+    setKeyMessage(
+      error instanceof Error
+        ? error.message
+        : "Failed revoking API key"
+    );
+  } finally {
+    setKeyActionLoading(null);
+  }
+}
+
+async function copyNewApiKey() {
+  if (!newApiKey) {
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(
+      newApiKey
+    );
+
+    setKeyMessage(
+      "API key copied to clipboard."
+    );
+  } catch {
+    setKeyMessage(
+      "Unable to copy automatically. Please copy the key manually."
+    );
+  }
+}
+
 
 useEffect(()=>{
 
@@ -176,41 +308,133 @@ Messages Used
     API Access
   </h2>
 
-  <div className="mt-6">
-
-    <p className="text-gray-600">
-      Live API Key
-    </p>
-
-    <div className="mt-2 bg-gray-100 p-4 rounded text-black break-all">
-      {partner.hasApiKey
-  ? "Live API key configured"
-  : "Live API key not configured"}
-    </div>
-
-    <p className="mt-4 text-sm text-gray-500">
-  API keys are securely stored and are not displayed after creation.
-</p>
-
-  </div>
-
-  <div className="mt-8 border-t pt-6">
-
-  <p className="text-gray-600">
-    Test API Key
+  <p className="mt-2 text-sm text-gray-500">
+    Manage the API keys used to connect your systems to Ask Michael.
+    New keys are shown once only and replace the previous key.
   </p>
 
-  <div className="mt-2 bg-gray-100 p-4 rounded text-black break-all">
-    {partner.hasTestApiKey
-  ? "Test API key configured"
-  : "Test API key not configured"}
+  {keyMessage && (
+    <div className="mt-6 bg-gray-100 border border-gray-200 rounded-lg p-4 text-sm text-gray-700">
+      {keyMessage}
+    </div>
+  )}
+
+  {newApiKey && (
+    <div className="mt-6 border border-gray-300 rounded-lg p-5 bg-gray-50">
+
+      <p className="text-sm font-semibold text-gray-700">
+        New {newApiKeyType === "live" ? "Live" : "Test"} API Key
+      </p>
+
+      <p className="mt-1 text-xs text-gray-500">
+        Copy this key now. It will not be displayed again.
+      </p>
+
+      <div className="mt-4 bg-white border rounded-lg p-4 break-all font-mono text-sm text-black">
+        {newApiKey}
+      </div>
+
+      <button
+        onClick={copyNewApiKey}
+        className="mt-4 bg-black text-white px-5 py-2 rounded-lg hover:bg-gray-800"
+      >
+        Copy API Key
+      </button>
+
+    </div>
+  )}
+
+  <div className="mt-8">
+
+    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+
+      <div>
+        <p className="font-semibold text-black">
+          Live API Key
+        </p>
+
+        <p className="mt-1 text-sm text-gray-500">
+          {partner.hasApiKey
+            ? "Live API key configured"
+            : "Live API key not configured"}
+        </p>
+      </div>
+
+      <div className="flex flex-wrap gap-3">
+
+        <button
+          onClick={() => generateApiKey("live")}
+          disabled={keyActionLoading !== null}
+          className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 disabled:opacity-50"
+        >
+          {keyActionLoading === "generate-live"
+            ? "Generating..."
+            : "Generate New Live Key"}
+        </button>
+
+        {partner.hasApiKey && (
+          <button
+            onClick={() => revokeApiKey("live")}
+            disabled={keyActionLoading !== null}
+            className="border border-red-300 text-red-600 px-4 py-2 rounded-lg hover:bg-red-50 disabled:opacity-50"
+          >
+            {keyActionLoading === "revoke-live"
+              ? "Revoking..."
+              : "Revoke Live Key"}
+          </button>
+        )}
+
+      </div>
+
+    </div>
+
   </div>
 
-  <p className="mt-4 text-sm text-gray-500">
-  API keys are securely stored and are not displayed after creation.
-</p>
+  <div className="mt-8 border-t pt-8">
 
-</div>
+    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+
+      <div>
+        <p className="font-semibold text-black">
+          Test API Key
+        </p>
+
+        <p className="mt-1 text-sm text-gray-500">
+          {partner.hasTestApiKey
+            ? "Test API key configured"
+            : "Test API key not configured"}
+        </p>
+      </div>
+
+      <div className="flex flex-wrap gap-3">
+
+        <button
+          onClick={() => generateApiKey("test")}
+          disabled={keyActionLoading !== null}
+          className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 disabled:opacity-50"
+        >
+          {keyActionLoading === "generate-test"
+            ? "Generating..."
+            : "Generate New Test Key"}
+        </button>
+
+        {partner.hasTestApiKey && (
+          <button
+            onClick={() => revokeApiKey("test")}
+            disabled={keyActionLoading !== null}
+            className="border border-red-300 text-red-600 px-4 py-2 rounded-lg hover:bg-red-50 disabled:opacity-50"
+          >
+            {keyActionLoading === "revoke-test"
+              ? "Revoking..."
+              : "Revoke Test Key"}
+          </button>
+        )}
+
+      </div>
+
+    </div>
+
+  </div>
 
 </div>
 
