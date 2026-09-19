@@ -100,9 +100,46 @@ export async function POST(req: Request) {
       });
     }
 
-    if (
-      !partner.paystackSubscriptionCode
-    ) {
+        // ==========================================
+    // GET PAYSTACK SUBSCRIPTION CODE
+    // ==========================================
+
+    let paystackSubscriptionCode =
+      partner.paystackSubscriptionCode || null;
+
+    // Older partner accounts may have the subscription
+    // code stored only on the original payment record.
+    if (!paystackSubscriptionCode) {
+      const subscriptionPayment =
+        await db
+          .collection("partner_payments")
+          .findOne(
+            {
+              partnerId: partner._id,
+              paymentType:
+                "partner_subscription",
+              status: "paid",
+              subscriptionCode: {
+                $exists: true,
+                $nin: [null, ""],
+              },
+            },
+            {
+              projection: {
+                subscriptionCode: 1,
+              },
+              sort: {
+                createdAt: -1,
+              },
+            }
+          );
+
+      paystackSubscriptionCode =
+        subscriptionPayment?.subscriptionCode ||
+        null;
+    }
+
+    if (!paystackSubscriptionCode) {
       return NextResponse.json(
         {
           error:
@@ -136,7 +173,7 @@ export async function POST(req: Request) {
     const paystackResponse =
       await fetch(
         `https://api.paystack.co/subscription/${encodeURIComponent(
-          partner.paystackSubscriptionCode
+          paystackSubscriptionCode
         )}/manage/link`,
         {
           method: "GET",
