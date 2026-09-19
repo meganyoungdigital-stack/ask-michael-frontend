@@ -48,7 +48,7 @@ export async function POST(req: Request) {
       );
     }
 
-    if (!ObjectId.isValid(session.partnerId)) {
+        if (!ObjectId.isValid(session)) {
       return NextResponse.json(
         {
           error: "Invalid partner account.",
@@ -63,7 +63,7 @@ export async function POST(req: Request) {
       await connectToDatabase();
 
     const partnerId =
-      new ObjectId(session.partnerId);
+      new ObjectId(session);
 
     const partner =
       await db.collection("partners").findOne(
