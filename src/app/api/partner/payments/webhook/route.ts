@@ -563,9 +563,14 @@ export async function POST(req: Request) {
             ?.authorization_code ||
           null,
 
-        paystackCustomerCode:
+                paystackCustomerCode:
           transaction.customer
             ?.customer_code ||
+          null,
+
+        paystackSubscriptionCode:
+          transaction.subscription
+            ?.subscription_code ||
           null,
 
         updatedAt:
