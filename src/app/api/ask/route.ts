@@ -120,12 +120,17 @@ async function getVectorContext(
       .aggregate([
         {
           $vectorSearch: {
-            index: "vector_index",
-            path: "embedding",
-            queryVector,
-            numCandidates: 30,
-            limit: 8,
-          },
+  index: "vector_index",
+  path: "embedding",
+  queryVector,
+  numCandidates: 30,
+  limit: 8,
+  filter: {
+    userId: {
+      $eq: userId,
+    },
+  },
+},
         },
         {
           $match: { userId },

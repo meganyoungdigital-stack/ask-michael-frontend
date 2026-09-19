@@ -182,12 +182,17 @@ export async function searchDocumentChunks(
         .aggregate([
           {
             $vectorSearch: {
-              index: "vector_index",
-              path: "embedding",
-              queryVector: queryEmbedding,
-              numCandidates: 80,
-              limit: limit * 2, // 🔥 pull more for ranking
-            },
+           index: "vector_index",
+           path: "embedding",
+           queryVector: queryEmbedding,
+           numCandidates: 80,
+           limit: limit * 2, // 🔥 pull more for ranking
+           filter: {
+           userId: {
+           $eq: userId,
+         },
+      },
+    },
           },
           {
             $match: { userId },
