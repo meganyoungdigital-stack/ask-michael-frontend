@@ -49,7 +49,11 @@ async function generateApiKey(
       );
     }
 
-    setNewApiKey(data.apiKey);
+    setNewApiKey(
+  type === "live"
+    ? data.apiKey
+    : data.testApiKey
+);
     setNewApiKeyType(type);
     setKeyMessage(
       `New ${type === "live" ? "Live" : "Test"} API key generated. Save it now — it will not be shown again.`
