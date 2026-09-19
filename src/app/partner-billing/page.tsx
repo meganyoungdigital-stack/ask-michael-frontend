@@ -501,10 +501,74 @@ export default function PartnerBilling() {
     }
   };
 
+
+  
+    // ==========================================
+  // CANCEL PARTNER SUBSCRIPTION
+  // ==========================================
+
+  const handleCancelSubscription = async () => {
+    if (!partner) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "Are you sure you want to cancel your partner subscription? Your subscription will stop renewing."
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setPaymentLoading(true);
+
+      const response = await fetch(
+        "/api/partner/subscription/cancel",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error ||
+            "Unable to cancel your subscription."
+        );
+      }
+
+            if (!data.managementUrl) {
+        throw new Error(
+          "Paystack did not return a subscription management link."
+        );
+      }
+
+      window.location.href =
+        data.managementUrl;
+    } catch (error) {
+      console.error(
+        "Partner subscription cancellation failed:",
+        error
+      );
+
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Unable to cancel your subscription."
+      );
+    } finally {
+      setPaymentLoading(false);
+    }
+  };
+
   // ==========================================
   // LOADING
   // ==========================================
-
   if (loading) {
     return (
       <main className="min-h-screen bg-gray-50 pt-40 px-10">
@@ -799,10 +863,14 @@ export default function PartnerBilling() {
     : `Pay ${currencySymbol}${partner.monthlyFee ?? 0}`}
               </button>
 
-              <button
-                className="bg-red-600 text-white px-5 py-3 rounded hover:bg-red-700"
+                            <button
+                onClick={handleCancelSubscription}
+                disabled={paymentLoading}
+                className="bg-red-600 text-white px-5 py-3 rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Cancel Subscription
+                {paymentLoading
+                  ? "Processing..."
+                  : "Cancel Subscription"}
               </button>
 
               <button

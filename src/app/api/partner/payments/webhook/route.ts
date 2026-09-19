@@ -96,6 +96,106 @@ export async function POST(req: Request) {
     );
 
     // ==========================================
+    // HANDLE SUBSCRIPTION CANCELLATION EVENTS
+    // ==========================================
+
+    if (
+      event.event ===
+        "subscription.not_renew" ||
+      event.event ===
+        "subscription.disable"
+    ) {
+      const subscriptionCode =
+        event.data?.subscription_code ||
+        event.data?.subscription?.subscription_code ||
+        null;
+
+      if (!subscriptionCode) {
+        console.error(
+          "Paystack subscription event is missing subscription code:",
+          event.event
+        );
+
+        return NextResponse.json(
+          {
+            error:
+              "Subscription code is missing.",
+          },
+          {
+            status: 400,
+          }
+        );
+      }
+
+      const { db } =
+        await connectToDatabase();
+
+      const update =
+        event.event ===
+        "subscription.not_renew"
+          ? {
+              $set: {
+                subscriptionRenewalStatus:
+                  "non_renewing",
+                subscriptionCancellationRequestedAt:
+                  new Date(),
+                updatedAt:
+                  new Date(),
+              },
+            }
+          : {
+              $set: {
+                subscriptionStatus:
+                  "cancelled",
+                subscriptionRenewalStatus:
+                  "cancelled",
+                subscriptionCancelledAt:
+                  new Date(),
+                updatedAt:
+                  new Date(),
+              },
+            };
+
+      const result =
+        await db
+          .collection("partners")
+          .updateOne(
+            {
+              paystackSubscriptionCode:
+                subscriptionCode,
+            },
+            update
+          );
+
+      if (
+        result.matchedCount ===
+        0
+      ) {
+        console.error(
+          "Partner not found for Paystack subscription:",
+          subscriptionCode
+        );
+
+        return NextResponse.json({
+          success: true,
+          message:
+            "Subscription event received, but no matching partner was found.",
+        });
+      }
+
+      console.log(
+        `Partner subscription event processed: ${event.event}`,
+        subscriptionCode
+      );
+
+      return NextResponse.json({
+        success: true,
+        message:
+          "Subscription event processed successfully.",
+      });
+    }
+
+    // ==========================================
     // ONLY PROCESS SUCCESSFUL CHARGES
     // ==========================================
 
