@@ -140,16 +140,53 @@ export async function POST(req: Request) {
     }
 
     if (!paystackSubscriptionCode) {
-      return NextResponse.json(
+  const subscriptionPayments =
+    await db
+      .collection("partner_payments")
+      .find(
         {
-          error:
-            "No Paystack subscription is linked to this partner account.",
+          partnerId: partner._id,
         },
         {
-          status: 400,
+          projection: {
+            paymentType: 1,
+            status: 1,
+            subscriptionCode: 1,
+            createdAt: 1,
+          },
         }
-      );
+      )
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .toArray();
+
+  console.error(
+    "Partner cancellation: no subscription code found.",
+    {
+      partnerId: partner._id.toString(),
+      partnerSubscriptionCode:
+        partner.paystackSubscriptionCode || null,
+      recentSubscriptionPayments:
+        subscriptionPayments.map((payment) => ({
+          paymentType: payment.paymentType || null,
+          status: payment.status || null,
+          hasSubscriptionCode:
+            Boolean(payment.subscriptionCode),
+          createdAt: payment.createdAt || null,
+        })),
     }
+  );
+
+  return NextResponse.json(
+    {
+      error:
+        "No Paystack subscription is linked to this partner account.",
+    },
+    {
+      status: 400,
+    }
+  );
+}
 
     const secretKey =
       process.env.PAYSTACK_SECRET_KEY;
