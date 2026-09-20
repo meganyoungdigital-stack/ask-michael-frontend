@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 
 import bcrypt from "bcrypt";
+import { partnerRegistrationRatelimit } from "@/lib/ratelimit";
+
 
 import {
   generatePartnerApiKey,
@@ -21,6 +23,22 @@ export async function POST(req: Request) {
   acceptedTerms,
 } = await req.json();
 
+const rateLimitResult =
+  await partnerRegistrationRatelimit.limit(
+    token?.toString() || "unknown"
+  );
+
+if (!rateLimitResult.success) {
+  return NextResponse.json(
+    {
+      error:
+        "Too many registration attempts. Please try again later.",
+    },
+    {
+      status: 429,
+    }
+  );
+}
 
     // =====================================================
     // VALIDATE REGISTRATION DETAILS
