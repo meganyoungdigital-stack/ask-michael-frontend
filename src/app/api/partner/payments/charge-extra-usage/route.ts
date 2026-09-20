@@ -4,6 +4,7 @@ import axios from "axios";
 import { connectToDatabase } from "@/lib/mongodb";
 import { calculatePartnerBilling } from "@/lib/partnerBilling";
 import { hashPartnerApiKey } from "@/lib/partnerApiKeys";
+import { partnerPaymentRatelimit } from "@/lib/ratelimit";
 
 export async function POST(req: Request) {
   try {
@@ -38,6 +39,23 @@ const partnerToken =
     : authorization;
 const apiKeyHash =
   hashPartnerApiKey(partnerToken);
+
+  const rateLimitResult =
+  await partnerPaymentRatelimit.limit(
+    apiKeyHash
+  );
+
+if (!rateLimitResult.success) {
+  return NextResponse.json(
+    {
+      error:
+        "Too many payment attempts. Please try again later.",
+    },
+    {
+      status: 429,
+    }
+  );
+}
 
 
 // ==========================================
