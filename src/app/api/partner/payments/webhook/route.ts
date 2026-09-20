@@ -479,14 +479,18 @@ export async function POST(req: Request) {
     // UPDATE PAYMENT RECORD
     // ==========================================
 
+  const paymentUpdate =
     await db
       .collection(
         "partner_payments"
       )
       .updateOne(
         {
-          _id: payment._id,
-        },
+  _id: payment._id,
+  status: {
+    $ne: "paid",
+  },
+},
         {
           $set: {
             status:
@@ -528,6 +532,14 @@ export async function POST(req: Request) {
           },
         }
       );
+
+if (paymentUpdate.modifiedCount === 0) {
+  return NextResponse.json({
+    success: true,
+    message:
+      "Payment has already been processed.",
+  });
+}
 
     // ==========================================
     // UPDATE PARTNER ACCOUNT
