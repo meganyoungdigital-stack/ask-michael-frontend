@@ -1,45 +1,53 @@
 import { NextResponse } from "next/server";
 import axios from "axios";
 import { ObjectId } from "mongodb";
+import { cookies } from "next/headers";
 
 import { connectToDatabase } from "@/lib/mongodb";
 import { calculatePartnerBilling } from "@/lib/partnerBilling";
+import {
+  PARTNER_SESSION_COOKIE,
+  verifyPartnerSession,
+} from "@/lib/partnerAuth";
 
 export async function POST(req: Request) {
   try {
-    // ==========================================
-    // GET PARTNER TOKEN
-    // ==========================================
+   // ==========================================
+// GET PARTNER SESSION
+// ==========================================
 
-    const token =
-      req.headers.get("Authorization");
+const cookieStore = await cookies();
 
-    if (!token) {
-      return NextResponse.json(
-        {
-          error: "Missing partner token.",
-        },
-        {
-          status: 401,
-        }
-      );
+const session =
+  cookieStore.get(
+    PARTNER_SESSION_COOKIE
+  )?.value;
+
+const partnerId =
+  await verifyPartnerSession(session);
+
+if (!partnerId) {
+  return NextResponse.json(
+    {
+      error: "Unauthorized",
+    },
+    {
+      status: 401,
     }
+  );
+}
 
-    // ==========================================
-    // VALIDATE PARTNER TOKEN
-    // ==========================================
-
-    if (!ObjectId.isValid(token)) {
-      return NextResponse.json(
-        {
-          error: "Invalid partner token.",
-        },
-        {
-          status: 401,
-        }
-      );
+if (!ObjectId.isValid(partnerId)) {
+  return NextResponse.json(
+    {
+      error: "Invalid partner session",
+    },
+    {
+      status: 401,
     }
-
+  );
+}
+    
     // ==========================================
     // GET PAYMENT REFERENCE
     // ==========================================
@@ -92,7 +100,7 @@ if (!initializationReference) {
       await db
         .collection("partners")
         .findOne({
-          _id: new ObjectId(token),
+          _id: new ObjectId(partnerId),
         });
 
     if (!partner) {
