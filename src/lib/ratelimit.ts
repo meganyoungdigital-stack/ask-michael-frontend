@@ -9,6 +9,7 @@ let redis: Redis | null = null;
 let ratelimitInstance: Ratelimit | null = null;
 let partnerRatelimitInstance: Ratelimit | null = null;
 let adminLoginRatelimitInstance: Ratelimit | null = null;
+let partnerLoginRatelimitInstance: Ratelimit | null = null;
 
 const hasRedisEnv =
   !!process.env.UPSTASH_REDIS_REST_URL &&
@@ -37,6 +38,13 @@ adminLoginRatelimitInstance = new Ratelimit({
   limiter: Ratelimit.slidingWindow(5, "15 m"), // 5 admin login attempts per 15 minutes
   analytics: true,
   prefix: "ask-michael-admin-login",
+});
+
+partnerLoginRatelimitInstance = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(5, "15 m"), // 5 partner login attempts per 15 minutes
+  analytics: true,
+  prefix: "ask-michael-partner-login",
 });
 
   } catch (err) {
@@ -93,6 +101,32 @@ export const adminLoginRatelimit = {
       return await adminLoginRatelimitInstance.limit(identifier);
     } catch (err) {
       console.error("Admin login rate limit error:", err);
+
+      return {
+        success: true,
+        limit: 0,
+        remaining: 9999,
+        reset: Date.now() + 15 * 60 * 1000,
+      };
+    }
+  },
+};
+
+export const partnerLoginRatelimit = {
+  async limit(identifier: string) {
+    if (!partnerLoginRatelimitInstance) {
+      return {
+        success: true,
+        limit: 0,
+        remaining: 9999,
+        reset: Date.now() + 15 * 60 * 1000,
+      };
+    }
+
+    try {
+      return await partnerLoginRatelimitInstance.limit(identifier);
+    } catch (err) {
+      console.error("Partner login rate limit error:", err);
 
       return {
         success: true,

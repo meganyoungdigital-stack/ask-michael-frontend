@@ -3,6 +3,7 @@ import { connectToDatabase } from "@/lib/mongodb";
 import { createPartnerSession, PARTNER_SESSION_COOKIE } from "@/lib/partnerAuth";
 import bcrypt from "bcrypt";
 import { cookies } from "next/headers";
+import { partnerLoginRatelimit } from "@/lib/ratelimit";
 
 export async function POST(req: Request) {
 
@@ -14,7 +15,21 @@ export async function POST(req: Request) {
       password
     } = await req.json();
 
+    const rateLimitResult = await partnerLoginRatelimit.limit(
+  email?.toLowerCase()?.trim() || "unknown"
+);
 
+if (!rateLimitResult.success) {
+  return NextResponse.json(
+    {
+      error:
+        "Too many login attempts. Please try again later.",
+    },
+    {
+      status: 429,
+    }
+  );
+}
 
     const { db } = await connectToDatabase();
 
