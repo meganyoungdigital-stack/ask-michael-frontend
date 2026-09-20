@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { connectToDatabase } from "@/lib/mongodb";
 import { hashPartnerApiKey } from "@/lib/partnerApiKeys";
+import { partnerRatelimit } from "@/lib/ratelimit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -66,6 +67,23 @@ export async function POST(req: Request) {
         }
       );
     }
+
+const rateLimitResult =
+  await partnerRatelimit.limit(
+    partner._id.toString()
+  );
+
+if (!rateLimitResult.success) {
+  return NextResponse.json(
+    {
+      error:
+        "Too many requests. Please try again later.",
+    },
+    {
+      status: 429,
+    }
+  );
+}
 
     /*
      * Test API request
