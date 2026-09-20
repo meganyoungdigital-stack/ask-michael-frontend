@@ -677,49 +677,30 @@ if (
     });
 
   } catch (error: unknown) {
-    console.error(
-      "PARTNER EXTRA USAGE CHARGE ERROR:",
-      error
-    );
-
-    if (
-      axios.isAxiosError(error)
-    ) {
+       if (axios.isAxiosError(error)) {
       console.error(
-        "PAYSTACK STATUS:",
-        error.response?.status
-      );
-
-      console.error(
-        "PAYSTACK RESPONSE:",
-        JSON.stringify(
-          error.response?.data,
-          null,
-          2
-        )
+        "PARTNER EXTRA USAGE CHARGE FAILED:",
+        {
+          paystackStatus:
+            error.response?.status ?? null,
+        }
       );
 
       return NextResponse.json(
         {
           error:
             "Unable to charge partner for extra usage.",
-
-          details:
-            error.message,
-
-          paystackStatus:
-            error.response?.status ??
-            null,
-
-          paystackResponse:
-            error.response?.data ??
-            null,
         },
         {
           status: 500,
         }
       );
     }
+
+        console.error(
+      "PARTNER EXTRA USAGE CHARGE FAILED"
+    );
+
 
     return NextResponse.json(
       {
