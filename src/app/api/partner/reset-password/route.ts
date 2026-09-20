@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import bcrypt from "bcrypt";
+import { partnerResetPasswordRatelimit } from "@/lib/ratelimit";
 
 
 
@@ -11,14 +12,26 @@ try{
 
 
 const {
-
 token,
-
 password
-
 } = await req.json();
 
+const rateLimitResult =
+  await partnerResetPasswordRatelimit.limit(
+    token?.toString() || "unknown"
+  );
 
+if (!rateLimitResult.success) {
+  return NextResponse.json(
+    {
+      error:
+        "Too many password reset attempts. Please try again later.",
+    },
+    {
+      status: 429,
+    }
+  );
+}
 
 if(!token || !password){
 
