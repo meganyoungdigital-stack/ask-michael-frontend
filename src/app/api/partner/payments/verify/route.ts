@@ -346,6 +346,65 @@ if (
     }
 
     // ==========================================
+    // GET PAYSTACK SUBSCRIPTION CODE
+    // ==========================================
+
+    let paystackSubscriptionCode =
+      paystackData.subscription?.subscription_code ||
+      null;
+
+    const paystackCustomerCode =
+      paystackData.customer?.customer_code ||
+      null;
+
+    if (
+      !paystackSubscriptionCode &&
+      paystackCustomerCode
+    ) {
+      try {
+        const customerResponse =
+          await axios.get(
+            `https://api.paystack.co/customer/${encodeURIComponent(
+              paystackCustomerCode
+            )}`,
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+              },
+            }
+          );
+
+        const subscriptions =
+          customerResponse.data?.data?.subscriptions ||
+          [];
+
+        const matchingSubscription =
+          subscriptions.find(
+            (subscription: {
+              status?: string;
+              plan?: {
+                plan_code?: string;
+              };
+              subscription_code?: string;
+            }) =>
+              subscription.status === "active" &&
+              subscription.plan?.plan_code ===
+                paystackData.plan?.plan_code
+          );
+
+        paystackSubscriptionCode =
+          matchingSubscription?.subscription_code ||
+          null;
+      } catch (subscriptionLookupError) {
+        console.error(
+          "Unable to retrieve Paystack subscription:",
+          subscriptionLookupError
+        );
+      }
+    }
+
+    // ==========================================
     // UPDATE PAYMENT RECORD
     // ==========================================
 
@@ -360,7 +419,7 @@ if (
         {
           $set: {
             status:
-             "paid",
+              "paid",
 
             paystackStatus:
               paystackData.status,
@@ -387,16 +446,14 @@ if (
               null,
 
             customerCode:
-              paystackData.customer?.customer_code ||
-              null,
+              paystackCustomerCode,
 
             authorizationCode:
               paystackData.authorization?.authorization_code ||
               null,
 
             subscriptionCode:
-              paystackData.subscription?.subscription_code ||
-              null,
+              paystackSubscriptionCode,
 
             updatedAt:
               new Date(),
@@ -420,15 +477,15 @@ if (
 
     nextBillingDate.setMonth(
       nextBillingDate.getMonth() + 1
-    );
+   );
 
-    // ==========================================
-// UPDATE PARTNER ACCOUNT
-// ==========================================
+      // ==========================================
+      // UPDATE PARTNER ACCOUNT
+      // ==========================================
 
-await db
-  .collection("partners")
-  .updateOne(
+    await db
+      .collection("partners")
+      .updateOne(
     {
       _id: partner._id,
     },
@@ -461,8 +518,7 @@ await db
           null,
 
         paystackSubscriptionCode:
-          paystackData.subscription?.subscription_code ||
-          null,
+          paystackSubscriptionCode,
 
         updatedAt:
           new Date(),
