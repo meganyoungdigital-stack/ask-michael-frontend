@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 
 import { connectToDatabase } from "@/lib/mongodb";
 import { calculatePartnerBilling } from "@/lib/partnerBilling";
+import { partnerPaymentRatelimit } from "@/lib/ratelimit";
 import {
   PARTNER_SESSION_COOKIE,
   verifyPartnerSession,
@@ -33,6 +34,23 @@ if (!partnerId) {
     },
     {
       status: 401,
+    }
+  );
+}
+
+const rateLimitResult =
+  await partnerPaymentRatelimit.limit(
+    partnerId
+  );
+
+if (!rateLimitResult.success) {
+  return NextResponse.json(
+    {
+      error:
+        "Too many payment attempts. Please try again later.",
+    },
+    {
+      status: 429,
     }
   );
 }
