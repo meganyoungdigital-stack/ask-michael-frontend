@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import axios from "axios";
+import { auth } from "@clerk/nextjs/server";
 import { connectToDatabase } from "@/lib/mongodb";
 
 /* ============================
@@ -8,12 +9,21 @@ VERIFY PAYSTACK PAYMENT
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { reference, userId, plan } = body;
+    const { userId } = await auth();
 
-    if (!reference || !userId || !plan) {
+    if (!userId) {
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    const body = await req.json();
+    const { reference } = body;
+
+    if (!reference || typeof reference !== "string") {
+      return NextResponse.json(
+        { error: "Invalid payment reference" },
         { status: 400 }
       );
     }
