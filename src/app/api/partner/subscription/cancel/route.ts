@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
+import { cookies } from "next/headers";
 
 import { connectToDatabase } from "@/lib/mongodb";
+import { partnerPaymentRatelimit } from "@/lib/ratelimit";
 import {
   PARTNER_SESSION_COOKIE,
   verifyPartnerSession,
@@ -9,44 +11,26 @@ import {
 
 export async function POST(req: Request) {
   try {
-    const cookieHeader = req.headers.get("cookie") || "";
+    const cookieStore = await cookies();
 
-    const sessionToken = cookieHeader
-      .split(";")
-      .map((cookie) => cookie.trim())
-      .find((cookie) =>
-        cookie.startsWith(
-          `${PARTNER_SESSION_COOKIE}=`
-        )
-      )
-      ?.split("=")
-      .slice(1)
-      .join("=");
+const sessionToken =
+  cookieStore.get(
+    PARTNER_SESSION_COOKIE
+  )?.value;
 
-    if (!sessionToken) {
-      return NextResponse.json(
-        {
-          error: "Unauthorized",
-        },
-        {
-          status: 401,
-        }
-      );
+const session =
+  await verifyPartnerSession(sessionToken);
+
+if (!session) {
+  return NextResponse.json(
+    {
+      error: "Unauthorized",
+    },
+    {
+      status: 401,
     }
-
-    const session =
-      await verifyPartnerSession(sessionToken);
-
-    if (!session) {
-      return NextResponse.json(
-        {
-          error: "Unauthorized",
-        },
-        {
-          status: 401,
-        }
-      );
-    }
+  );
+}
 
         if (!ObjectId.isValid(session)) {
       return NextResponse.json(
@@ -58,6 +42,23 @@ export async function POST(req: Request) {
         }
       );
     }
+
+const rateLimitResult =
+  await partnerPaymentRatelimit.limit(
+    session
+  );
+
+if (!rateLimitResult.success) {
+  return NextResponse.json(
+    {
+      error:
+        "Too many payment attempts. Please try again later.",
+    },
+    {
+      status: 429,
+    }
+  );
+}
 
     const { db } =
       await connectToDatabase();
