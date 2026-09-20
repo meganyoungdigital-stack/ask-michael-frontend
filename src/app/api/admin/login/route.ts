@@ -5,6 +5,7 @@ import {
   createAdminSession,
   SESSION_COOKIE,
 } from "@/lib/adminAuth";
+import { adminLoginRatelimit } from "@/lib/ratelimit";
 
 export async function POST(req:Request){
 
@@ -17,7 +18,20 @@ email,
 password
 }=await req.json();
 
+const rateLimitResult = await adminLoginRatelimit.limit(
+  email?.toLowerCase()?.trim() || "unknown"
+);
 
+if (!rateLimitResult.success) {
+  return NextResponse.json(
+    {
+      error: "Too many login attempts. Please try again later.",
+    },
+    {
+      status: 429,
+    }
+  );
+}
 
 const {db}=await connectToDatabase();
 

@@ -8,6 +8,7 @@ import { Redis } from "@upstash/redis";
 let redis: Redis | null = null;
 let ratelimitInstance: Ratelimit | null = null;
 let partnerRatelimitInstance: Ratelimit | null = null;
+let adminLoginRatelimitInstance: Ratelimit | null = null;
 
 const hasRedisEnv =
   !!process.env.UPSTASH_REDIS_REST_URL &&
@@ -29,6 +30,13 @@ partnerRatelimitInstance = new Ratelimit({
   limiter: Ratelimit.slidingWindow(20, "1 m"), // 20 partner requests per minute
   analytics: true,
   prefix: "ask-michael-partner",
+});
+
+adminLoginRatelimitInstance = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(5, "15 m"), // 5 admin login attempts per 15 minutes
+  analytics: true,
+  prefix: "ask-michael-admin-login",
 });
 
   } catch (err) {
@@ -70,6 +78,31 @@ export const partnerRatelimit = {
   },
 };
 
+export const adminLoginRatelimit = {
+  async limit(identifier: string) {
+    if (!adminLoginRatelimitInstance) {
+      return {
+        success: true,
+        limit: 0,
+        remaining: 9999,
+        reset: Date.now() + 15 * 60 * 1000,
+      };
+    }
+
+    try {
+      return await adminLoginRatelimitInstance.limit(identifier);
+    } catch (err) {
+      console.error("Admin login rate limit error:", err);
+
+      return {
+        success: true,
+        limit: 0,
+        remaining: 9999,
+        reset: Date.now() + 15 * 60 * 1000,
+      };
+    }
+  },
+};
 
 export const ratelimit = {
   async limit(identifier: string) {
@@ -113,3 +146,4 @@ export async function checkRateLimit(identifier: string) {
     reset: result.reset,
   };
 }
+
