@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import crypto from "crypto";
 import { Resend } from "resend";
+import { partnerForgotPasswordRatelimit } from "@/lib/ratelimit";
 
 
 const resend = new Resend(
@@ -18,9 +19,24 @@ export async function POST(req: Request) {
 
     const { email } = await req.json();
 
+const rateLimitResult =
+  await partnerForgotPasswordRatelimit.limit(
+    email?.toLowerCase()?.trim() || "unknown"
+  );
 
+if (!rateLimitResult.success) {
+  return NextResponse.json(
+    {
+      error:
+        "Too many password reset requests. Please try again later.",
+    },
+    {
+      status: 429,
+    }
+  );
+}
 
-    if (!email) {
+if (!email) {
 
       return NextResponse.json(
         {

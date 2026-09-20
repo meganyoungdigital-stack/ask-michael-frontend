@@ -10,6 +10,7 @@ let ratelimitInstance: Ratelimit | null = null;
 let partnerRatelimitInstance: Ratelimit | null = null;
 let adminLoginRatelimitInstance: Ratelimit | null = null;
 let partnerLoginRatelimitInstance: Ratelimit | null = null;
+let partnerForgotPasswordRatelimitInstance: Ratelimit | null = null;
 
 const hasRedisEnv =
   !!process.env.UPSTASH_REDIS_REST_URL &&
@@ -45,6 +46,13 @@ partnerLoginRatelimitInstance = new Ratelimit({
   limiter: Ratelimit.slidingWindow(5, "15 m"), // 5 partner login attempts per 15 minutes
   analytics: true,
   prefix: "ask-michael-partner-login",
+});
+
+partnerForgotPasswordRatelimitInstance = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(5, "15 m"), // 5 partner password reset requests per 15 minutes
+  analytics: true,
+  prefix: "ask-michael-partner-forgot-password",
 });
 
   } catch (err) {
@@ -127,6 +135,35 @@ export const partnerLoginRatelimit = {
       return await partnerLoginRatelimitInstance.limit(identifier);
     } catch (err) {
       console.error("Partner login rate limit error:", err);
+
+      return {
+        success: true,
+        limit: 0,
+        remaining: 9999,
+        reset: Date.now() + 15 * 60 * 1000,
+      };
+    }
+  },
+};
+
+export const partnerForgotPasswordRatelimit = {
+  async limit(identifier: string) {
+    if (!partnerForgotPasswordRatelimitInstance) {
+      return {
+        success: true,
+        limit: 0,
+        remaining: 9999,
+        reset: Date.now() + 15 * 60 * 1000,
+      };
+    }
+
+    try {
+      return await partnerForgotPasswordRatelimitInstance.limit(identifier);
+    } catch (err) {
+      console.error(
+        "Partner forgot password rate limit error:",
+        err
+      );
 
       return {
         success: true,
