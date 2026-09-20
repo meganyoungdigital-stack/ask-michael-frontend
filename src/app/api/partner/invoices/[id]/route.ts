@@ -6,6 +6,7 @@ import {
   verifyPartnerSession,
 } from "@/lib/partnerAuth";
 import { ObjectId } from "mongodb";
+import { partnerRatelimit } from "@/lib/ratelimit";
 
 export async function GET(
   req: Request,
@@ -42,6 +43,23 @@ if (!ObjectId.isValid(partnerId)) {
     },
     {
       status: 401,
+    }
+  );
+}
+
+const rateLimitResult =
+  await partnerRatelimit.limit(
+    partnerId
+  );
+
+if (!rateLimitResult.success) {
+  return NextResponse.json(
+    {
+      error:
+        "Too many requests. Please try again later.",
+    },
+    {
+      status: 429,
     }
   );
 }
