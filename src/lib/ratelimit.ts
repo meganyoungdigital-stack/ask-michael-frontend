@@ -13,6 +13,7 @@ let partnerLoginRatelimitInstance: Ratelimit | null = null;
 let partnerForgotPasswordRatelimitInstance: Ratelimit | null = null;
 let partnerResetPasswordRatelimitInstance: Ratelimit | null = null;
 let partnerRegistrationRatelimitInstance: Ratelimit | null = null;
+let partnerPaymentRatelimitInstance: Ratelimit | null = null;
 
 const hasRedisEnv =
   !!process.env.UPSTASH_REDIS_REST_URL &&
@@ -69,6 +70,13 @@ partnerRegistrationRatelimitInstance = new Ratelimit({
   limiter: Ratelimit.slidingWindow(5, "15 m"),
   analytics: true,
   prefix: "ask-michael-partner-registration",
+});
+
+partnerPaymentRatelimitInstance = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(5, "15 m"),
+  analytics: true,
+  prefix: "ask-michael-partner-payment",
 });
 
   } catch (err) {
@@ -236,6 +244,35 @@ export const partnerRegistrationRatelimit = {
     } catch (err) {
       console.error(
         "Partner registration rate limit error:",
+        err
+      );
+
+      return {
+        success: true,
+        limit: 0,
+        remaining: 9999,
+        reset: Date.now() + 15 * 60 * 1000,
+      };
+    }
+  },
+};
+
+export const partnerPaymentRatelimit = {
+  async limit(identifier: string) {
+    if (!partnerPaymentRatelimitInstance) {
+      return {
+        success: true,
+        limit: 0,
+        remaining: 9999,
+        reset: Date.now() + 15 * 60 * 1000,
+      };
+    }
+
+    try {
+      return await partnerPaymentRatelimitInstance.limit(identifier);
+    } catch (err) {
+      console.error(
+        "Partner payment rate limit error:",
         err
       );
 

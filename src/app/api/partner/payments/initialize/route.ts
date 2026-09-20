@@ -10,6 +10,8 @@ import {
   verifyPartnerSession,
 } from "@/lib/partnerAuth";
 
+import { partnerPaymentRatelimit } from "@/lib/ratelimit";
+
 export async function POST(req: Request) {
   try {
     // ==========================================
@@ -44,6 +46,23 @@ if (!ObjectId.isValid(partnerId)) {
     },
     {
       status: 401,
+    }
+  );
+}
+
+const rateLimitResult =
+  await partnerPaymentRatelimit.limit(
+    partnerId
+  );
+
+if (!rateLimitResult.success) {
+  return NextResponse.json(
+    {
+      error:
+        "Too many payment initialization attempts. Please try again later.",
+    },
+    {
+      status: 429,
     }
   );
 }
