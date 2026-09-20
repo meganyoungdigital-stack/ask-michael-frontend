@@ -4,6 +4,7 @@ import { ObjectId } from "mongodb";
 import { cookies } from "next/headers";
 
 import { connectToDatabase } from "@/lib/mongodb";
+import { partnerPaymentRatelimit } from "@/lib/ratelimit";
 import {
   PARTNER_SESSION_COOKIE,
   verifyPartnerSession,
@@ -46,21 +47,22 @@ if (!ObjectId.isValid(partnerId)) {
     }
   );
 }
-   // ==========================================
-    // VALIDATE PARTNER SESSION
-    // ==========================================
+   const rateLimitResult =
+  await partnerPaymentRatelimit.limit(
+    partnerId
+  );
 
-    if (!ObjectId.isValid(partnerId)) {
-      return NextResponse.json(
-        {
-          error: "Invalid partner session",
-        },
-        {
-          status: 401,
-        }
-      );
+if (!rateLimitResult.success) {
+  return NextResponse.json(
+    {
+      error:
+        "Too many payment attempts. Please try again later.",
+    },
+    {
+      status: 429,
     }
-
+  );
+}
     // ==========================================
     // GET PAYMENT REFERENCE
     // ==========================================
