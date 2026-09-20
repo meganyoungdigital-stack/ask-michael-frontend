@@ -9,6 +9,7 @@ import {
   PARTNER_SESSION_COOKIE,
   verifyPartnerSession,
 } from "@/lib/partnerAuth";
+import { partnerPaymentRatelimit } from "@/lib/ratelimit";
 
 export async function POST(req: Request) {
   try {
@@ -69,6 +70,24 @@ export async function POST(req: Request) {
         }
       );
     }
+
+const rateLimitResult =
+  await partnerPaymentRatelimit.limit(
+    partnerId
+  );
+
+if (!rateLimitResult.success) {
+  return NextResponse.json(
+    {
+      error:
+        "Too many payment attempts. Please try again later.",
+    },
+    {
+      status: 429,
+    }
+  );
+}
+
     // ==========================================
     // CONNECT TO DATABASE
     // ==========================================
