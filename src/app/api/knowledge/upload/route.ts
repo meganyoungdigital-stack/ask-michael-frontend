@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import { auth } from "@clerk/nextjs/server";
 import OpenAI from "openai";
+import { hasFeature } from "@/lib/tiers";
 
 export const runtime = "nodejs";
 
@@ -214,7 +215,27 @@ export async function POST(req: NextRequest) {
     /* 🔥 GET USER FOR COMPANY ISOLATION */
     const user = await db.collection("users").findOne({ userId });
 
-    const contentType = req.headers.get("content-type") || "";
+const tier = (user?.tier || "free") as
+  | "free"
+  | "pro"
+  | "pro_plus";
+
+if (!hasFeature(tier, "priority")) {
+  return new Response(
+    JSON.stringify({
+      error:
+        "Knowledge base uploads require a Pro or Pro+ plan.",
+    }),
+    {
+      status: 403,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+}
+
+const contentType = req.headers.get("content-type") || "";
 
     let processedItems: any[] = [];
 
