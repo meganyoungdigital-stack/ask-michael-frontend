@@ -137,17 +137,44 @@ status
 
 
 
-if(!id || !status){
-
-return NextResponse.json(
-{
-error:"Missing details"
-},
-{
-status:400
+if (!id || !status) {
+  return NextResponse.json(
+    {
+      error: "Missing details",
+    },
+    {
+      status: 400,
+    }
+  );
 }
-);
 
+if (!ObjectId.isValid(id)) {
+  return NextResponse.json(
+    {
+      error: "Invalid partner ID",
+    },
+    {
+      status: 400,
+    }
+  );
+}
+
+const allowedStatuses = [
+  "pending",
+  "active",
+  "suspended",
+  "rejected",
+];
+
+if (!allowedStatuses.includes(status)) {
+  return NextResponse.json(
+    {
+      error: "Invalid partner status",
+    },
+    {
+      status: 400,
+    }
+  );
 }
 
 
@@ -227,17 +254,26 @@ if (!adminId) {
     const { id } = await req.json();
 
     if (!id) {
-
-      return NextResponse.json(
-        {
-          error: "Missing partner id"
-        },
-        {
-          status: 400
-        }
-      );
-
+  return NextResponse.json(
+    {
+      error: "Missing partner id",
+    },
+    {
+      status: 400,
     }
+  );
+}
+
+if (!ObjectId.isValid(id)) {
+  return NextResponse.json(
+    {
+      error: "Invalid partner ID",
+    },
+    {
+      status: 400,
+    }
+  );
+}
 
     const { db } = await connectToDatabase();
 
