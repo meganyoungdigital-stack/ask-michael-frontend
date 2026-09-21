@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 import { partnerRegistrationRatelimit } from "@/lib/ratelimit";
 
 
@@ -76,6 +77,11 @@ if (acceptedTerms !== true) {
     const { db } =
       await connectToDatabase();
 
+const tokenHash =
+  crypto
+    .createHash("sha256")
+    .update(token.toString())
+    .digest("hex");
 
 
     // =====================================================
@@ -85,27 +91,27 @@ if (acceptedTerms !== true) {
     const invitation =
       await db
         .collection("partner_invitations")
-        .findOne({
-          token,
-          status: "pending",
-        });
+       .findOne({
+  tokenHash,
+  status: "pending",
+});
 
+   if (!invitation) {
+  return NextResponse.json(
+    { error: "Invalid or expired registration link" },
+    { status: 404 }
+  );
+}
 
-
-    if (!invitation) {
-
-      return NextResponse.json(
-        {
-          error:
-            "Invalid or expired registration link",
-        },
-        {
-          status: 404,
-        }
-      );
-
-    }
-
+if (
+  invitation.expiresAt &&
+  new Date(invitation.expiresAt).getTime() <= Date.now()
+) {
+  return NextResponse.json(
+    { error: "Invalid or expired registration link" },
+    { status: 404 }
+  );
+}
 
 
     // =====================================================
@@ -293,21 +299,20 @@ termsAcceptedAt: acceptedTerms
     // MARK INVITATION AS USED
     // =====================================================
 
-    await db
-      .collection("partner_invitations")
-      .updateOne(
-        {
-          token,
-        },
-        {
-          $set: {
-            status: "used",
-            usedAt: createdAt,
-          },
-        }
-      );
-
-
+   await db
+  .collection("partner_invitations")
+  .updateOne(
+    {
+      tokenHash,
+      status: "pending",
+    },
+    {
+      $set: {
+        status: "used",
+        usedAt: createdAt,
+      },
+    }
+  );
 
     // =====================================================
     // SUCCESS

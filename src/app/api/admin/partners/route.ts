@@ -327,7 +327,7 @@ if (!updatedApplication) {
       );
 let token = "";
 
-      // =================================================
+// =================================================
 // LOOK FOR EXISTING PENDING INVITATION
 // =================================================
 
@@ -350,6 +350,12 @@ if (!existingInvitation) {
 
   token = crypto.randomUUID();
 
+  const tokenHash =
+  crypto
+    .createHash("sha256")
+    .update(token)
+    .digest("hex");
+
   console.log(
     "Creating invitation..."
   );
@@ -367,7 +373,7 @@ if (!existingInvitation) {
       email:
         application.email,
 
-      token,
+      tokenHash,
 
       status:
         "pending",
@@ -394,8 +400,13 @@ maxMessages:
   updatedApplication.maxMessages,
 
       createdAt:
-        new Date(),
+  new Date(),
 
+expiresAt:
+  new Date(
+    Date.now() +
+      1000 * 60 * 60 * 24 * 7
+  ),
     });
 
   console.log(
@@ -409,56 +420,67 @@ maxMessages:
   // UPDATE IT WITH THE NEW APPROVED PLAN
   // =================================================
 
-  token =
-    existingInvitation.token;
+  token = crypto.randomUUID();
 
-  console.log(
-    "Existing pending invitation found. Updating plan..."
-  );
+const tokenHash =
+  crypto
+    .createHash("sha256")
+    .update(token)
+    .digest("hex");
+
+console.log(
+  "Existing pending invitation found. Updating plan..."
+);
 
   await db
-    .collection("partner_invitations")
-    .updateOne(
-      {
-        _id: existingInvitation._id,
+  .collection("partner_invitations")
+  .updateOne(
+    {
+      _id: existingInvitation._id,
+    },
+    {
+      $set: {
+        companyName:
+          application.companyName,
+
+        contactName:
+          application.contactName,
+
+        email:
+          application.email,
+
+        tokenHash,
+
+        plan:
+          updatedApplication.plan,
+
+        currency:
+          updatedApplication.currency,
+
+        monthlyFee:
+          updatedApplication.monthlyFee,
+
+        includedMessages:
+          updatedApplication.includedMessages,
+
+        pricePerMessage:
+          updatedApplication.pricePerMessage,
+
+        maxUsers:
+          updatedApplication.maxUsers,
+
+        maxMessages:
+          updatedApplication.maxMessages,
+
+        updatedAt:
+          new Date(),
       },
-      {
-        $set: {
-          companyName:
-            application.companyName,
 
-          contactName:
-            application.contactName,
-
-          email:
-            application.email,
-
-          plan:
-  updatedApplication.plan,
-
-currency:
-  updatedApplication.currency,
-
-monthlyFee:
-  updatedApplication.monthlyFee,
-
-includedMessages:
-  updatedApplication.includedMessages,
-
-pricePerMessage:
-  updatedApplication.pricePerMessage,
-
-maxUsers:
-  updatedApplication.maxUsers,
-
-maxMessages:
-  updatedApplication.maxMessages,
-
-          updatedAt:
-            new Date(),
-        },
-      }
-    );
+      $unset: {
+        token: "",
+      },
+    }
+  );
 
   console.log(
     "Existing invitation updated successfully."
