@@ -475,25 +475,8 @@ maxMessages:
 
 
       console.log(
-        "=============================="
-      );
-
-
-      console.log(
-        "PARTNER REGISTRATION LINK:"
-      );
-
-
-      console.log(
-        registrationLink
-      );
-
-
-      console.log(
-        "=============================="
-      );
-
-
+  "Partner registration invitation link generated successfully."
+);
 
       // =================================================
       // SEND EMAIL USING RESEND
