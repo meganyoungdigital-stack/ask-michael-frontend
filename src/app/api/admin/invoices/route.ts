@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { connectToDatabase } from "@/lib/mongodb";
+import { ObjectId } from "mongodb";
+import { calculatePartnerBilling } from "@/lib/partnerBilling";
 import {
   SESSION_COOKIE,
   verifyAdminSession,
@@ -112,91 +114,81 @@ export async function POST(req: Request) {
       await req.json();
 
     const {
-      partnerId,
-      companyName,
-      contactName,
-      email,
-      billingPeriod,
-      messages,
-      pricePerMessage,
-      monthlyFee,
-      usageAmount,
-      totalAmount,
-      dueDate,
-    } = body;
+  partnerId,
+  billingPeriod,
+  dueDate,
+} = body;
 
 
-    if (
-      !partnerId ||
-      !companyName ||
-      !email ||
-      !billingPeriod
-    ) {
-
-      return NextResponse.json(
-        {
-          error:
-            "Missing required invoice details",
-        },
-        {
-          status: 400,
-        }
-      );
-
+    if (!partnerId || !billingPeriod) {
+  return NextResponse.json(
+    {
+      error: "Missing required invoice details",
+    },
+    {
+      status: 400,
     }
-
+  );
+}
+    if (!ObjectId.isValid(partnerId)) {
+  return NextResponse.json(
+    {
+      error: "Invalid partner ID",
+    },
+    {
+      status: 400,
+    }
+  );
+}
 
     const { db } =
-      await connectToDatabase();
+  await connectToDatabase();
+
+const partner =
+  await db.collection("partners").findOne({
+    _id: new ObjectId(partnerId),
+  });
+
+if (!partner) {
+  return NextResponse.json(
+    {
+      error: "Partner not found",
+    },
+    {
+      status: 404,
+    }
+  );
+}
+
+const invoiceNumber =
+  `INV-${Date.now()}`;
 
 
-    const invoiceNumber =
-      `INV-${Date.now()}`;
+  const billing = calculatePartnerBilling({
+  messages: partner.messages,
+  includedMessages: partner.includedMessages,
+  billedExtraMessages: partner.billedExtraMessages,
+  pricePerMessage: partner.pricePerMessage,
+  monthlyFee: partner.monthlyFee,
+});
 
-
-    const invoice = {
-
-      invoiceNumber,
-
-      partnerId,
-
-      companyName,
-
-      contactName:
-        contactName || "",
-
-      email,
-
-      billingPeriod,
-
-      messages:
-        Number(messages) || 0,
-
-      pricePerMessage:
-        Number(pricePerMessage) || 0,
-
-      monthlyFee:
-        Number(monthlyFee) || 0,
-
-      usageAmount:
-        Number(usageAmount) || 0,
-
-      totalAmount:
-        Number(totalAmount) || 0,
-
-      paymentStatus:
-        "unpaid",
-
-      dueDate:
-        dueDate || null,
-
-      createdAt:
-        new Date(),
-
-      createdBy:
-        adminId,
-
-    };
+const invoice = {
+  invoiceNumber,
+  partnerId,
+  companyName: partner.companyName || "",
+  contactName: partner.contactName || "",
+  email: partner.email || "",
+  billingPeriod,
+  messages: billing.messagesUsed,
+  pricePerMessage: billing.pricePerMessage,
+  monthlyFee: billing.monthlyFee,
+  usageAmount: billing.extraUsageCharge,
+  totalAmount: billing.totalBill,
+  paymentStatus: "unpaid",
+  dueDate: dueDate || null,
+  createdAt: new Date(),
+  createdBy: adminId,
+};
 
 
     const result =

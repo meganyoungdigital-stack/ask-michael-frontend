@@ -564,17 +564,6 @@ async function generateInvoice(
       partner._id
     );
 
-
-    const usageAmount =
-      partner.messages *
-      partner.pricePerMessage;
-
-
-    const totalAmount =
-      usageAmount +
-      partner.monthlyFee;
-
-
     const now =
       new Date();
 
@@ -609,37 +598,10 @@ async function generateInvoice(
           },
 
           body: JSON.stringify({
-
-            partnerId:
-              partner._id,
-
-            companyName:
-              partner.companyName,
-
-            contactName:
-              partner.contactName,
-
-            email:
-              partner.email,
-
-            billingPeriod,
-
-            messages:
-              partner.messages,
-
-            pricePerMessage:
-              partner.pricePerMessage,
-
-            monthlyFee:
-              partner.monthlyFee,
-
-            usageAmount,
-
-            totalAmount,
-
-            dueDate,
-
-          }),
+  partnerId: partner._id,
+  billingPeriod,
+  dueDate,
+}),
 
         }
       );
