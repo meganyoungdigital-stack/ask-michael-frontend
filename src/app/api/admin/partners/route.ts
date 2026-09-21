@@ -61,12 +61,25 @@ export async function GET() {
 
     const applications = await db
       .collection("partner_applications")
-      .find({})
+      .find(
+        {},
+        {
+          projection: {
+            _id: 1,
+            companyName: 1,
+            contactName: 1,
+            email: 1,
+            website: 1,
+            message: 1,
+            status: 1,
+            createdAt: 1,
+          },
+        }
+      )
       .sort({
         createdAt: -1,
       })
       .toArray();
-
 
     return NextResponse.json(
       applications
