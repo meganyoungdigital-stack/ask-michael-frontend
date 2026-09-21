@@ -75,23 +75,14 @@ export async function GET() {
 
   } catch (error) {
 
-    console.error(
-      "Admin partners fetch error:",
-      error
-    );
-
-
     return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unknown error",
-      },
-      {
-        status: 500,
-      }
-    );
+  {
+    error: "An internal server error occurred",
+  },
+  {
+    status: 500,
+  }
+);
 
   }
 
