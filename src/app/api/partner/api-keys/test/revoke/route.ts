@@ -7,6 +7,7 @@ import {
   PARTNER_SESSION_COOKIE,
   verifyPartnerSession,
 } from "@/lib/partnerAuth";
+import { partnerRatelimit } from "@/lib/ratelimit";
 
 export async function POST() {
   try {
@@ -41,6 +42,23 @@ export async function POST() {
         }
       );
     }
+
+const rateLimitResult =
+  await partnerRatelimit.limit(
+    partnerId
+  );
+
+if (!rateLimitResult.success) {
+  return NextResponse.json(
+    {
+      error:
+        "Too many requests. Please try again later.",
+    },
+    {
+      status: 429,
+    }
+  );
+}
 
     const { db } =
       await connectToDatabase();

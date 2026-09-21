@@ -7,11 +7,13 @@ import {
   PARTNER_SESSION_COOKIE,
   verifyPartnerSession,
 } from "@/lib/partnerAuth";
+import { partnerRatelimit } from "@/lib/ratelimit";
+
 import {
   generatePartnerApiKey,
   hashPartnerApiKey,
 } from "@/lib/partnerApiKeys";
-import { partnerRatelimit } from "@/lib/ratelimit";
+
 
 export async function POST() {
   try {
@@ -47,6 +49,7 @@ export async function POST() {
       );
     }
 
+    
     const rateLimitResult =
   await partnerRatelimit.limit(
     partnerId
