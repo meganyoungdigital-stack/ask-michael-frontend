@@ -243,8 +243,48 @@ Upgrade to unlock more:
         mode = (formData.get("mode") as string) || "default";
       } else {
         const body = await req.json();
-        message = body.message?.trim();
-        mode = body.mode || "default";
+
+if (
+  !body ||
+  typeof body !== "object" ||
+  Array.isArray(body)
+) {
+  return new Response("Invalid request body", {
+    status: 400,
+  });
+}
+
+if (typeof body.message !== "string") {
+  return new Response("Invalid message", {
+    status: 400,
+  });
+}
+
+if (
+  body.mode !== undefined &&
+  typeof body.mode !== "string"
+) {
+  return new Response("Invalid mode", {
+    status: 400,
+  });
+}
+
+message = body.message.trim();
+mode = body.mode?.trim() || "default";
+
+if (message.length > 20000) {
+  return new Response(
+    "Message exceeds the maximum allowed length",
+    { status: 400 }
+  );
+}
+
+if (mode.length > 50) {
+  return new Response(
+    "Mode exceeds the maximum allowed length",
+    { status: 400 }
+  );
+}
       }
     } catch {
       return new Response("Invalid request format", { status: 400 });
