@@ -130,14 +130,34 @@ if (!adminId) {
 try{
 
 
-const {
-id,
-status
-}=await req.json();
+const body = await req.json();
 
+if (
+  !body ||
+  typeof body !== "object" ||
+  Array.isArray(body)
+) {
+  return NextResponse.json(
+    {
+      error: "Invalid request body",
+    },
+    {
+      status: 400,
+    }
+  );
+}
 
+const { id, status } = body as {
+  id?: unknown;
+  status?: unknown;
+};
 
-if (!id || !status) {
+if (
+  typeof id !== "string" ||
+  typeof status !== "string" ||
+  id.trim().length === 0 ||
+  status.trim().length === 0
+) {
   return NextResponse.json(
     {
       error: "Missing details",
