@@ -188,7 +188,7 @@ if (
   );
 }
 
-    if (!ObjectId.isValid(partnerId)) {
+    if (!ObjectId.isValid(cleanPartnerId)) {
   return NextResponse.json(
     {
       error: "Invalid partner ID",
@@ -204,7 +204,7 @@ if (
 
 const partner =
   await db.collection("partners").findOne({
-    _id: new ObjectId(partnerId),
+    _id: new ObjectId(cleanPartnerId),
   });
 
 if (!partner) {
@@ -232,18 +232,18 @@ const invoiceNumber =
 
 const invoice = {
   invoiceNumber,
-  partnerId,
-  companyName: partner.companyName || "",
-  contactName: partner.contactName || "",
-  email: partner.email || "",
-  billingPeriod,
+  partnerId: cleanPartnerId,
+companyName: partner.companyName || "",
+contactName: partner.contactName || "",
+email: partner.email || "",
+billingPeriod: cleanBillingPeriod,
   messages: billing.messagesUsed,
   pricePerMessage: billing.pricePerMessage,
   monthlyFee: billing.monthlyFee,
   usageAmount: billing.extraUsageCharge,
   totalAmount: billing.totalBill,
   paymentStatus: "unpaid",
-  dueDate: dueDate || null,
+  dueDate: cleanDueDate || null,
   createdAt: new Date(),
   createdBy: adminId,
 };
