@@ -29,22 +29,60 @@ export async function POST(req: Request) {
 
 
     if (
-      !companyName ||
-      !contactName ||
-      !email ||
-      !message
-    ) {
-
-      return NextResponse.json(
-        {
-          error: "Missing required fields",
-        },
-        {
-          status: 400,
-        }
-      );
-
+  typeof companyName !== "string" ||
+  typeof contactName !== "string" ||
+  typeof email !== "string" ||
+  typeof message !== "string" ||
+  (website !== undefined && typeof website !== "string")
+) {
+  return NextResponse.json(
+    {
+      error: "Invalid request fields",
+    },
+    {
+      status: 400,
     }
+  );
+}
+
+const cleanCompanyName = companyName.trim();
+const cleanContactName = contactName.trim();
+const cleanEmail = email.trim();
+const cleanWebsite = website?.trim() || "";
+const cleanMessage = message.trim();
+
+if (
+  cleanCompanyName.length === 0 ||
+  cleanContactName.length === 0 ||
+  cleanEmail.length === 0 ||
+  cleanMessage.length === 0
+) {
+  return NextResponse.json(
+    {
+      error: "Required fields cannot be empty",
+    },
+    {
+      status: 400,
+    }
+  );
+}
+
+if (
+  cleanCompanyName.length > 200 ||
+  cleanContactName.length > 200 ||
+  cleanEmail.length > 320 ||
+  cleanWebsite.length > 500 ||
+  cleanMessage.length > 5000
+) {
+  return NextResponse.json(
+    {
+      error: "One or more fields exceed the maximum allowed length",
+    },
+    {
+      status: 400,
+    }
+  );
+}
 
 
 
