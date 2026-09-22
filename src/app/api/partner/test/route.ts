@@ -89,37 +89,76 @@ if (!rateLimitResult.success) {
      * Test API request
      */
 
-    let body: {
-      message?: string;
-    };
+    let body: unknown;
 
-    try {
-      body = await req.json();
-    } catch {
-      return NextResponse.json(
-        {
-          error: "Invalid JSON body",
-        },
-        {
-          status: 400,
-        }
-      );
+try {
+  body = await req.json();
+} catch {
+  return NextResponse.json(
+    {
+      error: "Invalid JSON body",
+    },
+    {
+      status: 400,
     }
+  );
+}
 
-    const message =
-      body?.message?.trim();
-
-    if (!message) {
-      return NextResponse.json(
-        {
-          error:
-            "A message is required",
-        },
-        {
-          status: 400,
-        }
-      );
+if (
+  !body ||
+  typeof body !== "object" ||
+  Array.isArray(body)
+) {
+  return NextResponse.json(
+    {
+      error: "Invalid request body",
+    },
+    {
+      status: 400,
     }
+  );
+}
+
+const { message } = body as {
+  message?: unknown;
+};
+
+if (typeof message !== "string") {
+  return NextResponse.json(
+    {
+      error: "A valid message is required",
+    },
+    {
+      status: 400,
+    }
+  );
+}
+
+const cleanMessage =
+  message.trim();
+
+if (cleanMessage.length === 0) {
+  return NextResponse.json(
+    {
+      error: "A message is required",
+    },
+    {
+      status: 400,
+    }
+  );
+}
+
+if (cleanMessage.length > 20000) {
+  return NextResponse.json(
+    {
+      error:
+        "Message exceeds the maximum allowed length",
+    },
+    {
+      status: 400,
+    }
+  );
+}
 
     /*
      * Send request to OpenAI
@@ -144,7 +183,7 @@ if (!rateLimitResult.success) {
           },
           {
             role: "user",
-            content: message,
+            content: cleanMessage,
           },
         ],
 
