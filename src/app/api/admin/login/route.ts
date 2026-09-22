@@ -13,13 +13,77 @@ export async function POST(req:Request){
 try{
 
 
+const body = await req.json();
+
+if (
+  !body ||
+  typeof body !== "object" ||
+  Array.isArray(body)
+) {
+  return NextResponse.json(
+    {
+      error: "Invalid request body",
+    },
+    {
+      status: 400,
+    }
+  );
+}
+
 const {
-email,
-password
-}=await req.json();
+  email,
+  password,
+} = body as {
+  email?: unknown;
+  password?: unknown;
+};
+
+if (
+  typeof email !== "string" ||
+  typeof password !== "string"
+) {
+  return NextResponse.json(
+    {
+      error: "Email and password are required",
+    },
+    {
+      status: 400,
+    }
+  );
+}
+
+const cleanEmail = email.trim().toLowerCase();
+
+if (
+  cleanEmail.length === 0 ||
+  password.length === 0
+) {
+  return NextResponse.json(
+    {
+      error: "Email and password are required",
+    },
+    {
+      status: 400,
+    }
+  );
+}
+
+if (
+  cleanEmail.length > 320 ||
+  password.length > 200
+) {
+  return NextResponse.json(
+    {
+      error: "Login details exceed the maximum allowed length",
+    },
+    {
+      status: 400,
+    }
+  );
+}
 
 const rateLimitResult = await adminLoginRatelimit.limit(
-  email?.toLowerCase()?.trim() || "unknown"
+  cleanEmail || "unknown"
 );
 
 if (!rateLimitResult.success) {
