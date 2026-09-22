@@ -72,17 +72,14 @@ if (!ObjectId.isValid(partnerId)) {
 
     const body = await req.json();
 
-    const reference =
-  body.reference;
-
-const initializationReference =
-  body.initializationReference;
-
-if (!reference) {
+if (
+  !body ||
+  typeof body !== "object" ||
+  Array.isArray(body)
+) {
   return NextResponse.json(
     {
-      error:
-        "Payment reference is required.",
+      error: "Invalid request body",
     },
     {
       status: 400,
@@ -90,11 +87,55 @@ if (!reference) {
   );
 }
 
-if (!initializationReference) {
+const {
+  reference,
+  initializationReference,
+} = body as {
+  reference?: unknown;
+  initializationReference?: unknown;
+};
+
+if (
+  typeof reference !== "string" ||
+  typeof initializationReference !== "string"
+) {
   return NextResponse.json(
     {
-      error:
-        "Initialization payment reference is required.",
+      error: "Invalid payment references",
+    },
+    {
+      status: 400,
+    }
+  );
+}
+
+const cleanReference =
+  reference.trim();
+
+const cleanInitializationReference =
+  initializationReference.trim();
+
+if (
+  cleanReference.length === 0 ||
+  cleanInitializationReference.length === 0
+) {
+  return NextResponse.json(
+    {
+      error: "Payment references are required.",
+    },
+    {
+      status: 400,
+    }
+  );
+}
+
+if (
+  cleanReference.length > 200 ||
+  cleanInitializationReference.length > 200
+) {
+  return NextResponse.json(
+    {
+      error: "Payment references exceed the maximum allowed length.",
     },
     {
       status: 400,
@@ -144,7 +185,7 @@ if (!initializationReference) {
         partner._id,
 
       reference:
-        initializationReference,
+        cleanInitializationReference,
 
       paymentType:
         "partner_extra_usage_test",
@@ -197,7 +238,8 @@ if (!initializationReference) {
         message:
           "Extra-usage test payment has already been verified.",
 
-        reference,
+        reference:
+          cleanReference,
 
         billedExtraMessages:
           partner.billedExtraMessages ?? 0,
@@ -210,8 +252,9 @@ if (!initializationReference) {
 
     const paystackResponse =
       await axios.get(
-        `https://api.paystack.co/transaction/verify/${encodeURIComponent(
-          reference
+        `https://api.paystack.co/transaction/verify/${
+        encodeURIComponent(
+          cleanReference
         )}`,
         {
           headers: {
