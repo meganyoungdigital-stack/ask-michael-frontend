@@ -72,7 +72,27 @@ if (
   );
 }
 
-    const { db } = await connectToDatabase();
+    const { temperature, pressure, vibration } = data as {
+  temperature?: unknown;
+  pressure?: unknown;
+  vibration?: unknown;
+};
+
+if (
+  typeof temperature !== "number" ||
+  !Number.isFinite(temperature) ||
+  typeof pressure !== "number" ||
+  !Number.isFinite(pressure) ||
+  typeof vibration !== "number" ||
+  !Number.isFinite(vibration)
+) {
+  return NextResponse.json(
+    { error: "Invalid alert sensor values" },
+    { status: 400 }
+  );
+}
+
+const { db } = await connectToDatabase();
 
     /* ============================
        DETERMINE STATUS
@@ -80,9 +100,9 @@ if (
 
     let status = "NORMAL";
 
-    if (data.temperature > 120) {
+    if (temperature > 120) {
       status = "CRITICAL TEMP";
-    } else if (data.pressure > 300) {
+    } else if (pressure > 300) {
       status = "CRITICAL PRESSURE";
     }
 
@@ -112,9 +132,9 @@ if (
 
     const alertDoc = {
       userId,
-      temperature: data.temperature,
-      pressure: data.pressure,
-      vibration: data.vibration,
+      temperature,
+      pressure,
+      vibration,
       status,
       createdAt: new Date(),
     };
