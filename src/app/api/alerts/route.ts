@@ -61,12 +61,16 @@ export async function POST(req: Request) {
 
     const data = await req.json();
 
-    if (!data) {
-      return NextResponse.json(
-        { error: "Missing data" },
-        { status: 400 }
-      );
-    }
+if (
+  !data ||
+  typeof data !== "object" ||
+  Array.isArray(data)
+) {
+  return NextResponse.json(
+    { error: "Invalid alert data" },
+    { status: 400 }
+  );
+}
 
     const { db } = await connectToDatabase();
 
