@@ -186,7 +186,7 @@ console.log("ID:", cleanId);
 
 let selectedPlan: PartnerPlan | null = null;
 
-if (status === "approved") {
+if (cleanStatus === "approved") {
 
   if (
     plan !== "starter" &&
@@ -239,7 +239,7 @@ if (status === "approved") {
         .collection("partner_applications")
         .findOne({
           _id:
-            new ObjectId(id),
+          new ObjectId(cleanId),
         });
 
 
@@ -267,12 +267,12 @@ if (status === "approved") {
 
     // Update application status
 
-    const applicationUpdate: Record<string, unknown> = {
-  status,
+  const applicationUpdate: Record<string, unknown> = {
+  status: cleanStatus,
   updatedAt: new Date(),
 };
 
-if (status === "approved" && selectedPlan) {
+if (cleanStatus === "approved" && selectedPlan) {
 
   const planConfig =
     PARTNER_PLANS[selectedPlan];
@@ -313,7 +313,7 @@ await db
   .collection("partner_applications")
   .updateOne(
     {
-      _id: new ObjectId(id),
+      _id: new ObjectId(cleanId),
     },
     {
       $set: applicationUpdate,
@@ -328,7 +328,7 @@ const updatedApplication =
   await db
     .collection("partner_applications")
     .findOne({
-      _id: new ObjectId(id),
+      _id: new ObjectId(cleanId),
     });
 
 if (!updatedApplication) {
@@ -354,7 +354,7 @@ if (!updatedApplication) {
     );
 
 
-    if (status === "approved") {
+    if (cleanStatus === "approved") {
 
       console.log(
         "APPROVAL BLOCK ENTERED"
@@ -707,7 +707,7 @@ console.log(
     return NextResponse.json(
       {
         success: true,
-        status,
+        status: cleanStatus,
       }
     );
 
@@ -814,7 +814,7 @@ console.log(
         .deleteOne({
 
           _id:
-            new ObjectId(id),
+           new ObjectId(cleanId),
 
         });
 
