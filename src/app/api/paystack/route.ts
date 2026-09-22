@@ -1,6 +1,38 @@
 export async function POST(req: Request) {
-  const { plan } = await req.json();
+  const body = await req.json();
 
+if (
+  !body ||
+  typeof body !== "object" ||
+  Array.isArray(body)
+) {
+  return Response.json(
+    {
+      error: "Invalid request body",
+    },
+    {
+      status: 400,
+    }
+  );
+}
+
+const { plan } = body as {
+  plan?: unknown;
+};
+
+if (
+  typeof plan !== "string" ||
+  !["free", "pro", "pro_plus"].includes(plan)
+) {
+  return Response.json(
+    {
+      error: "Invalid plan",
+    },
+    {
+      status: 400,
+    }
+  );
+}
   const amountMap: Record<string, number> = {
     free: 0,
     pro: 89900,      // R899 in cents
