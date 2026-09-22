@@ -110,17 +110,59 @@ export async function POST(req: Request) {
 
   try {
 
-    const body =
-      await req.json();
+    const body = await req.json();
 
-    const {
+if (
+  !body ||
+  typeof body !== "object" ||
+  Array.isArray(body)
+) {
+  return NextResponse.json(
+    {
+      error: "Invalid request body",
+    },
+    {
+      status: 400,
+    }
+  );
+}
+
+const {
   partnerId,
   billingPeriod,
   dueDate,
-} = body;
+} = body as {
+  partnerId?: unknown;
+  billingPeriod?: unknown;
+  dueDate?: unknown;
+};
 
+if (
+  typeof partnerId !== "string" ||
+  typeof billingPeriod !== "string" ||
+  (dueDate !== undefined && dueDate !== null && typeof dueDate !== "string")
+) {
+  return NextResponse.json(
+    {
+      error: "Invalid invoice details",
+    },
+    {
+      status: 400,
+    }
+  );
+}
 
-    if (!partnerId || !billingPeriod) {
+const cleanPartnerId = partnerId.trim();
+const cleanBillingPeriod = billingPeriod.trim();
+const cleanDueDate =
+  typeof dueDate === "string"
+    ? dueDate.trim()
+    : "";
+
+if (
+  cleanPartnerId.length === 0 ||
+  cleanBillingPeriod.length === 0
+) {
   return NextResponse.json(
     {
       error: "Missing required invoice details",
@@ -130,6 +172,22 @@ export async function POST(req: Request) {
     }
   );
 }
+
+if (
+  cleanPartnerId.length > 100 ||
+  cleanBillingPeriod.length > 100 ||
+  cleanDueDate.length > 100
+) {
+  return NextResponse.json(
+    {
+      error: "Invoice details exceed the maximum allowed length",
+    },
+    {
+      status: 400,
+    }
+  );
+}
+
     if (!ObjectId.isValid(partnerId)) {
   return NextResponse.json(
     {
