@@ -10,14 +10,79 @@ export async function POST(req: Request) {
   try {
 
 
-    const {
-      email,
-      password
-    } = await req.json();
+    const body = await req.json();
 
-    const rateLimitResult = await partnerLoginRatelimit.limit(
-  email?.toLowerCase()?.trim() || "unknown"
-);
+if (
+  !body ||
+  typeof body !== "object" ||
+  Array.isArray(body)
+) {
+  return NextResponse.json(
+    {
+      error: "Invalid request body",
+    },
+    {
+      status: 400,
+    }
+  );
+}
+
+const {
+  email,
+  password,
+} = body as {
+  email?: unknown;
+  password?: unknown;
+};
+
+if (
+  typeof email !== "string" ||
+  typeof password !== "string"
+) {
+  return NextResponse.json(
+    {
+      error: "Email and password are required",
+    },
+    {
+      status: 400,
+    }
+  );
+}
+
+const cleanEmail = email.trim().toLowerCase();
+
+if (
+  cleanEmail.length === 0 ||
+  password.length === 0
+) {
+  return NextResponse.json(
+    {
+      error: "Email and password are required",
+    },
+    {
+      status: 400,
+    }
+  );
+}
+
+if (
+  cleanEmail.length > 320 ||
+  password.length > 200
+) {
+  return NextResponse.json(
+    {
+      error: "Login details exceed the maximum allowed length",
+    },
+    {
+      status: 400,
+    }
+  );
+}
+
+const rateLimitResult =
+  await partnerLoginRatelimit.limit(
+    cleanEmail
+  );
 
 if (!rateLimitResult.success) {
   return NextResponse.json(
@@ -38,7 +103,7 @@ if (!rateLimitResult.success) {
     const partner = await db
       .collection("partners")
       .findOne({
-        email
+        email: cleanEmail
       });
 
 
