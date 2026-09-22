@@ -12,12 +12,57 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    const {
-      temperature,
-      pressure,
-      vibration,
-      userId, // 👈 IMPORTANT for RAG
-    } = body;
+   
+
+if (
+  !body ||
+  typeof body !== "object" ||
+  Array.isArray(body)
+) {
+  return NextResponse.json(
+    { error: "Invalid request body" },
+    { status: 400 }
+  );
+}
+
+const {
+  temperature,
+  pressure,
+  vibration,
+  userId,
+} = body as {
+  temperature?: unknown;
+  pressure?: unknown;
+  vibration?: unknown;
+  userId?: unknown;
+};
+
+if (
+  typeof temperature !== "number" ||
+  !Number.isFinite(temperature) ||
+  typeof pressure !== "number" ||
+  !Number.isFinite(pressure) ||
+  typeof vibration !== "number" ||
+  !Number.isFinite(vibration)
+) {
+  return NextResponse.json(
+    { error: "Invalid sensor data" },
+    { status: 400 }
+  );
+}
+
+if (
+  typeof userId !== "string" ||
+  userId.trim().length === 0 ||
+  userId.length > 200
+) {
+  return NextResponse.json(
+    { error: "Invalid user ID" },
+    { status: 400 }
+  );
+}
+
+const cleanUserId = userId.trim();
 
     /* ============================
        📚 GET DOCUMENT CONTEXT (RAG)
@@ -38,7 +83,7 @@ Find relevant engineering procedures, manuals, or specifications.
 
         documentContext = await buildDocumentContext(
           query,
-          userId
+          cleanUserId
         );
       }
     } catch (err) {
