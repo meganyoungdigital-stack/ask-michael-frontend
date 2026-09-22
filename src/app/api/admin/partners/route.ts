@@ -757,34 +757,51 @@ export async function DELETE(req: Request) {
 
   try {
 
-    const { id } =
-      await req.json();
+    const body = await req.json();
 
-
-    console.log(
-      "DELETE CALLED"
-    );
-
-
-    console.log(
-      "ID:",
-      id
-    );
-
-
-    if (!id) {
-
-      return NextResponse.json(
-        {
-          error:
-            "Missing partner application id",
-        },
-        {
-          status: 400,
-        }
-      );
-
+if (
+  !body ||
+  typeof body !== "object" ||
+  Array.isArray(body)
+) {
+  return NextResponse.json(
+    {
+      error: "Invalid request body",
+    },
+    {
+      status: 400,
     }
+  );
+}
+
+const { id } = body as {
+  id?: unknown;
+};
+
+if (
+  typeof id !== "string" ||
+  id.trim().length === 0
+) {
+  return NextResponse.json(
+    {
+      error: "Missing partner application id",
+    },
+    {
+      status: 400,
+    }
+  );
+}
+
+const cleanId = id.trim();
+
+console.log(
+  "DELETE CALLED"
+);
+
+console.log(
+  "ID:",
+  cleanId
+);
 
 
     const { db } =
