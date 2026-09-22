@@ -278,7 +278,7 @@ if (
   );
 }
 
-    if (!validateDocumentUrl(body.url)) {
+    if (!validateDocumentUrl(cleanUrl)) {
       return NextResponse.json(
         { error: "Invalid document URL" },
         { status: 400 }
@@ -319,7 +319,7 @@ if (
        PARSE PDF
     ========================= */
 
-    if (body.type === "application/pdf") {
+    if (cleanType === "application/pdf") {
       const pdf = await getPdfParser();
       const pdfData = await pdf(buffer);
       text = pdfData.text;
