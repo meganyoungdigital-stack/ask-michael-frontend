@@ -134,7 +134,11 @@ Examples:
 
     /* ================= SAVE ================= */
 
-    await updateConversationTitle(conversationId, userId, title);
+    await updateConversationTitle(
+  cleanConversationId,
+  userId,
+  title
+);
 
     return NextResponse.json({ success: true });
 
