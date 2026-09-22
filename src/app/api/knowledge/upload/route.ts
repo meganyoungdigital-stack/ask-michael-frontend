@@ -242,9 +242,42 @@ const contentType = req.headers.get("content-type") || "";
     /* ================= MULTIPART ================= */
     if (contentType.includes("multipart/form-data")) {
       const formData = await req.formData();
-      const files = formData.getAll("files") as File[];
+const rawFiles = formData.getAll("files");
 
-      for (const file of files) {
+if (
+  !rawFiles.every(
+    (file) => file instanceof File
+  )
+) {
+  return new Response(
+    "Invalid file upload",
+    { status: 400 }
+  );
+}
+
+if (rawFiles.length > 5) {
+  return new Response(
+    "Too many files uploaded",
+    { status: 400 }
+  );
+}
+
+const MAX_FILE_SIZE = 16 * 1024 * 1024;
+
+if (
+  rawFiles.some(
+    (file) => file.size > MAX_FILE_SIZE
+  )
+) {
+  return new Response(
+    "One or more files exceed the maximum allowed size",
+    { status: 400 }
+  );
+}
+
+const files = rawFiles as File[];
+
+for (const file of files) {
         let rawContent = "";
 
         if (file.type.startsWith("image/")) {
