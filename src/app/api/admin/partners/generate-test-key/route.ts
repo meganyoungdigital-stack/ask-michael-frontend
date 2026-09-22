@@ -37,29 +37,63 @@ export async function POST(
 
     const body = await request.json();
 
-    const { partnerId } = body;
-
-    if (!partnerId) {
-      return NextResponse.json(
-        {
-          error: "Partner ID is required",
-        },
-        {
-          status: 400,
-        }
-      );
+if (
+  !body ||
+  typeof body !== "object" ||
+  Array.isArray(body)
+) {
+  return NextResponse.json(
+    {
+      error: "Invalid request body",
+    },
+    {
+      status: 400,
     }
+  );
+}
 
-    if (!ObjectId.isValid(partnerId)) {
-      return NextResponse.json(
-        {
-          error: "Invalid partner ID",
-        },
-        {
-          status: 400,
-        }
-      );
+const { partnerId } = body as {
+  partnerId?: unknown;
+};
+
+if (typeof partnerId !== "string") {
+  return NextResponse.json(
+    {
+      error: "Partner ID is required",
+    },
+    {
+      status: 400,
     }
+  );
+}
+
+const cleanPartnerId =
+  partnerId.trim();
+
+if (
+  cleanPartnerId.length === 0 ||
+  cleanPartnerId.length > 100
+) {
+  return NextResponse.json(
+    {
+      error: "Invalid partner ID",
+    },
+    {
+      status: 400,
+    }
+  );
+}
+
+if (!ObjectId.isValid(cleanPartnerId)) {
+  return NextResponse.json(
+    {
+      error: "Invalid partner ID",
+    },
+    {
+      status: 400,
+    }
+  );
+}
 
     const { db } =
       await connectToDatabase();
@@ -75,7 +109,7 @@ const testApiKeyHash =
         .collection("partners")
         .updateOne(
           {
-            _id: new ObjectId(partnerId),
+            _id: new ObjectId(cleanPartnerId),
           },
           {
            $set: {
