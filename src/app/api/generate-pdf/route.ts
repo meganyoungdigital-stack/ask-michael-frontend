@@ -13,9 +13,13 @@ export async function GET(req: NextRequest) {
     const url = new URL(req.url);
     const id = url.searchParams.get("id");
 
-    if (!id) {
-      return new Response("Missing PDF id", { status: 400 });
-    }
+if (
+  typeof id !== "string" ||
+  id.length === 0 ||
+  id.length > 200
+) {
+  return new Response("Invalid PDF id", { status: 400 });
+}
 
     const record = await db.collection("pdf_exports").findOne({
       pdfId: id,
