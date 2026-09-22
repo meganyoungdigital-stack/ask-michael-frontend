@@ -285,13 +285,43 @@ const contentType = req.headers.get("content-type") || "";
     } else {
       /* ================= JSON ================= */
       const body = await req.json();
-      const text = body.text;
 
-      if (!text) {
-        return new Response("No content provided", { status: 400 });
-      }
+if (
+  !body ||
+  typeof body !== "object" ||
+  Array.isArray(body)
+) {
+  return new Response("Invalid request body", {
+    status: 400,
+  });
+}
 
-      const processed = await processText(text);
+const { text } = body as {
+  text?: unknown;
+};
+
+if (typeof text !== "string") {
+  return new Response("Invalid content", {
+    status: 400,
+  });
+}
+
+const cleanText = text.trim();
+
+if (cleanText.length === 0) {
+  return new Response("No content provided", {
+    status: 400,
+  });
+}
+
+if (cleanText.length > 200000) {
+  return new Response(
+    "Content exceeds the maximum allowed length",
+    { status: 400 }
+  );
+}
+
+      const processed = await processText(cleanText);
       const sanitized = sanitizeContent(processed);
       const type = classifyContent(sanitized);
 
