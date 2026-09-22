@@ -260,17 +260,37 @@ Upgrade to unlock more:
     });
   }
 
-  if (
-    !rawFiles.every(
-      (file) => file instanceof File
-    )
-  ) {
-    return new Response("Invalid file upload", {
-      status: 400,
-    });
-  }
+ if (
+  !rawFiles.every(
+    (file) => file instanceof File
+  )
+) {
+  return new Response("Invalid file upload", {
+    status: 400,
+  });
+}
 
-  message = rawMessage?.trim() || "";
+if (rawFiles.length > 5) {
+  return new Response(
+    "Too many files uploaded",
+    { status: 400 }
+  );
+}
+
+const MAX_FILE_SIZE = 16 * 1024 * 1024;
+
+if (
+  rawFiles.some(
+    (file) => file.size > MAX_FILE_SIZE
+  )
+) {
+  return new Response(
+    "One or more files exceed the maximum allowed size",
+    { status: 400 }
+  );
+}
+
+message = rawMessage?.trim() || "";
   mode = rawMode?.trim() || "default";
   files = rawFiles as File[];
 
