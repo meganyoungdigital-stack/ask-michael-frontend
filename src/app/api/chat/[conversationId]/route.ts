@@ -134,7 +134,18 @@ export async function POST(
     const params = await context.params;
 const { conversationId } = params;
 
-    const { db } = await connectToDatabase();/* 🔥 FIX: REMOVE BROKEN INDEX */
+if (
+  typeof conversationId !== "string" ||
+  conversationId.length === 0 ||
+  conversationId.length > 200
+) {
+  return new Response(
+    "Invalid conversation ID",
+    { status: 400 }
+  );
+}
+
+const { db } = await connectToDatabase();/* 🔥 FIX: REMOVE BROKEN INDEX */
 /* ✅ ENSURE CORRECT USAGE INDEX */
 
     /* ================= GET USER ================= */
