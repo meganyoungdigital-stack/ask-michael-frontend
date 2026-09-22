@@ -122,7 +122,24 @@ export async function PATCH(req: Request) {
 
   try {
 
-    const {
+    const body = await req.json();
+
+if (
+  !body ||
+  typeof body !== "object" ||
+  Array.isArray(body)
+) {
+  return NextResponse.json(
+    {
+      error: "Invalid request body",
+    },
+    {
+      status: 400,
+    }
+  );
+}
+
+const {
   id,
   status,
   plan,
@@ -132,24 +149,40 @@ export async function PATCH(req: Request) {
   maxUsers,
   maxMessages,
   currency,
-} = await req.json();
+} = body as {
+  id?: unknown;
+  status?: unknown;
+  plan?: unknown;
+  monthlyFee?: unknown;
+  includedMessages?: unknown;
+  pricePerMessage?: unknown;
+  maxUsers?: unknown;
+  maxMessages?: unknown;
+  currency?: unknown;
+};
 
-
-    console.log("PATCH CALLED");
-    console.log("Status:", status);
-    console.log("ID:", id);
-
-
-    if (!id || !status) {
+if (
+  typeof id !== "string" ||
+  typeof status !== "string" ||
+  id.trim().length === 0 ||
+  status.trim().length === 0
+) {
   return NextResponse.json(
     {
-      error: "Missing id or status",
+      error: "Invalid partner application details",
     },
     {
       status: 400,
     }
   );
 }
+
+const cleanId = id.trim();
+const cleanStatus = status.trim();
+
+console.log("PATCH CALLED");
+console.log("Status:", cleanStatus);
+console.log("ID:", cleanId);
 
 let selectedPlan: PartnerPlan | null = null;
 
