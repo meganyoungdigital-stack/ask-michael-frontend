@@ -257,6 +257,26 @@ export async function POST(req: Request) {
 
     const trimmedMessages = messages.slice(-MAX_MESSAGES);
 
+    for (const message of trimmedMessages) {
+  if (
+    !message ||
+    typeof message !== "object" ||
+    typeof message.content !== "string"
+  ) {
+    return NextResponse.json(
+      { error: "Invalid message format" },
+      { status: 400 }
+    );
+  }
+
+  if (message.content.length > 20000) {
+    return NextResponse.json(
+      { error: "Message exceeds the maximum allowed length" },
+      { status: 400 }
+    );
+  }
+}
+
     const conversation = await getConversation(
       conversationId,
       userId
