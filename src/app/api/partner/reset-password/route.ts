@@ -11,14 +11,80 @@ export async function POST(req: Request){
 try{
 
 
+const body = await req.json();
+
+if (
+  !body ||
+  typeof body !== "object" ||
+  Array.isArray(body)
+) {
+  return NextResponse.json(
+    {
+      error: "Invalid request body",
+    },
+    {
+      status: 400,
+    }
+  );
+}
+
 const {
-token,
-password
-} = await req.json();
+  token,
+  password,
+} = body as {
+  token?: unknown;
+  password?: unknown;
+};
+
+if (
+  typeof token !== "string" ||
+  typeof password !== "string"
+) {
+  return NextResponse.json(
+    {
+      error: "Invalid reset information",
+    },
+    {
+      status: 400,
+    }
+  );
+}
+
+const cleanToken = token.trim();
+const cleanPassword = password;
+
+if (
+  cleanToken.length === 0 ||
+  cleanPassword.length === 0
+) {
+  return NextResponse.json(
+    {
+      error: "Reset information cannot be empty",
+    },
+    {
+      status: 400,
+    }
+  );
+}
+
+if (
+  cleanToken.length > 200 ||
+  cleanPassword.length > 200
+) {
+  return NextResponse.json(
+    {
+      error:
+        "Reset information exceeds the maximum allowed length",
+    },
+    {
+      status: 400,
+    }
+  );
+}
 
 const rateLimitResult =
   await partnerResetPasswordRatelimit.limit(
-    token?.toString() || "unknown"
+    cleanToken
   );
 
 if (!rateLimitResult.success) {
@@ -31,25 +97,6 @@ if (!rateLimitResult.success) {
       status: 429,
     }
   );
-}
-
-if(!token || !password){
-
-
-return NextResponse.json(
-
-{
-error:
-"Missing reset information"
-},
-
-{
-status:400
-}
-
-);
-
-
 }
 
 
@@ -66,7 +113,7 @@ await db
 .collection("partners")
 .findOne({
 
-resetToken: token,
+resetToken: cleanToken,
 
 });
 
@@ -129,11 +176,10 @@ status:400
 
 
 const passwordHash =
-await bcrypt.hash(
-password,
-10
-);
-
+  await bcrypt.hash(
+    cleanPassword,
+    10
+  );
 
 
 
