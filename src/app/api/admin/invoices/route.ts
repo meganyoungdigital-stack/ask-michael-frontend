@@ -188,6 +188,40 @@ if (
   );
 }
 
+if (
+  cleanDueDate &&
+  !/^\d{4}-\d{2}-\d{2}$/.test(cleanDueDate)
+) {
+  return NextResponse.json(
+    {
+      error: "Invalid due date",
+    },
+    {
+      status: 400,
+    }
+  );
+}
+
+if (cleanDueDate) {
+  const parsedDueDate = new Date(
+    `${cleanDueDate}T00:00:00Z`
+  );
+
+  if (
+    Number.isNaN(parsedDueDate.getTime()) ||
+    parsedDueDate.toISOString().slice(0, 10) !== cleanDueDate
+  ) {
+    return NextResponse.json(
+      {
+        error: "Invalid due date",
+      },
+      {
+        status: 400,
+      }
+    );
+  }
+}
+
     if (!ObjectId.isValid(cleanPartnerId)) {
   return NextResponse.json(
     {
