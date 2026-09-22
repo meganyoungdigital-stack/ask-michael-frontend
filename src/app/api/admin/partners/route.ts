@@ -207,25 +207,38 @@ if (cleanStatus === "approved") {
 
   if (plan === "enterprise") {
 
-  if (
-    typeof monthlyFee !== "number" ||
-    typeof includedMessages !== "number" ||
-    typeof pricePerMessage !== "number" ||
-    typeof maxUsers !== "number" ||
-    typeof maxMessages !== "number" ||
-    typeof currency !== "string" ||
-    !["ZAR", "USD", "EUR", "GBP"].includes(currency)
-  ) {
-    return NextResponse.json(
-      {
-        error:
-          "Valid Enterprise pricing details and currency are required.",
-      },
-      {
-        status: 400,
-      }
-    );
-  }
+  const validEnterprisePricing =
+  typeof monthlyFee === "number" &&
+  Number.isFinite(monthlyFee) &&
+  monthlyFee >= 0 &&
+  typeof includedMessages === "number" &&
+  Number.isFinite(includedMessages) &&
+  includedMessages >= 0 &&
+  typeof pricePerMessage === "number" &&
+  Number.isFinite(pricePerMessage) &&
+  pricePerMessage >= 0 &&
+  typeof maxUsers === "number" &&
+  Number.isFinite(maxUsers) &&
+  maxUsers >= 0 &&
+  typeof maxMessages === "number" &&
+  Number.isFinite(maxMessages) &&
+  maxMessages >= 0;
+
+const validEnterpriseCurrency =
+  typeof currency === "string" &&
+  ["ZAR", "USD", "EUR", "GBP"].includes(currency);
+
+if (!validEnterprisePricing || !validEnterpriseCurrency) {
+  return NextResponse.json(
+    {
+      error:
+        "Valid Enterprise pricing details and currency are required.",
+    },
+    {
+      status: 400,
+    }
+  );
+}
 }
 }
 
