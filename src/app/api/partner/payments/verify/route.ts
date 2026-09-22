@@ -69,20 +69,61 @@ if (!rateLimitResult.success) {
 
     const body = await req.json();
 
-    const reference =
-      body.reference;
-
-    if (!reference) {
-      return NextResponse.json(
-        {
-          error:
-            "Payment reference is required.",
-        },
-        {
-          status: 400,
-        }
-      );
+if (
+  !body ||
+  typeof body !== "object" ||
+  Array.isArray(body)
+) {
+  return NextResponse.json(
+    {
+      error: "Invalid request body",
+    },
+    {
+      status: 400,
     }
+  );
+}
+
+const { reference } = body as {
+  reference?: unknown;
+};
+
+if (typeof reference !== "string") {
+  return NextResponse.json(
+    {
+      error: "Invalid payment reference",
+    },
+    {
+      status: 400,
+    }
+  );
+}
+
+const cleanReference =
+  reference.trim();
+
+if (cleanReference.length === 0) {
+  return NextResponse.json(
+    {
+      error: "Payment reference is required.",
+    },
+    {
+      status: 400,
+    }
+  );
+}
+
+if (cleanReference.length > 200) {
+  return NextResponse.json(
+    {
+      error:
+        "Payment reference exceeds the maximum allowed length.",
+    },
+    {
+      status: 400,
+    }
+  );
+}
 
     // ==========================================
     // CONNECT TO DATABASE
@@ -124,7 +165,7 @@ if (!rateLimitResult.success) {
           partnerId:
             partner._id,
 
-          reference,
+          reference: cleanReference,
         });
 
     if (!payment) {
@@ -161,7 +202,7 @@ if (!rateLimitResult.success) {
     const paystackResponse =
       await axios.get(
         `https://api.paystack.co/transaction/verify/${encodeURIComponent(
-          reference
+          cleanReference
         )}`,
         {
           headers: {
@@ -264,7 +305,7 @@ if (
   console.error(
     "PAYSTACK AMOUNT MISMATCH:",
     {
-      reference,
+      reference: cleanReference,
       expectedAmount,
       paidAmount,
     }
