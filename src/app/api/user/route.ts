@@ -51,12 +51,109 @@ export async function POST(req: Request) {
 
     const body = await req.json();
 
-    const {
-      name,
-      company,
-      email,
-      occupation, // ✅ NEW
-    } = body;
+if (
+  !body ||
+  typeof body !== "object" ||
+  Array.isArray(body)
+) {
+  return NextResponse.json(
+    { error: "Invalid request body" },
+    { status: 400 }
+  );
+}
+
+const {
+  name,
+  company,
+  email,
+  occupation,
+} = body as {
+  name?: unknown;
+  company?: unknown;
+  email?: unknown;
+  occupation?: unknown;
+};
+
+if (
+  name !== undefined && typeof name !== "string"
+) {
+  return NextResponse.json(
+    { error: "Invalid name" },
+    { status: 400 }
+  );
+}
+
+if (
+  company !== undefined && typeof company !== "string"
+) {
+  return NextResponse.json(
+    { error: "Invalid company" },
+    { status: 400 }
+  );
+}
+
+if (
+  email !== undefined && typeof email !== "string"
+) {
+  return NextResponse.json(
+    { error: "Invalid email" },
+    { status: 400 }
+  );
+}
+
+if (
+  occupation !== undefined && typeof occupation !== "string"
+) {
+  return NextResponse.json(
+    { error: "Invalid occupation" },
+    { status: 400 }
+  );
+}
+
+const cleanName = name?.trim();
+const cleanCompany = company?.trim();
+const cleanEmail = email?.trim();
+const cleanOccupation = occupation?.trim();
+
+if (
+  cleanName !== undefined &&
+  cleanName.length > 200
+) {
+  return NextResponse.json(
+    { error: "Name exceeds the maximum allowed length" },
+    { status: 400 }
+  );
+}
+
+if (
+  cleanCompany !== undefined &&
+  cleanCompany.length > 200
+) {
+  return NextResponse.json(
+    { error: "Company exceeds the maximum allowed length" },
+    { status: 400 }
+  );
+}
+
+if (
+  cleanEmail !== undefined &&
+  cleanEmail.length > 320
+) {
+  return NextResponse.json(
+    { error: "Email exceeds the maximum allowed length" },
+    { status: 400 }
+  );
+}
+
+if (
+  cleanOccupation !== undefined &&
+  cleanOccupation.length > 200
+) {
+  return NextResponse.json(
+    { error: "Occupation exceeds the maximum allowed length" },
+    { status: 400 }
+  );
+}
 
     const { db } = await connectToDatabase();
 
@@ -68,10 +165,21 @@ export async function POST(req: Request) {
       updatedAt: new Date(),
     };
 
-    if (name !== undefined) updateData.name = name;
-    if (company !== undefined) updateData.company = company;
-    if (email !== undefined) updateData.email = email;
-    if (occupation !== undefined) updateData.occupation = occupation; // ✅ NEW
+    if (cleanName !== undefined) {
+  updateData.name = cleanName;
+}
+
+if (cleanCompany !== undefined) {
+  updateData.company = cleanCompany;
+}
+
+if (cleanEmail !== undefined) {
+  updateData.email = cleanEmail;
+}
+
+if (cleanOccupation !== undefined) {
+  updateData.occupation = cleanOccupation;
+}
 
     /* =========================
        UPSERT USER
