@@ -64,12 +64,17 @@ export async function DELETE(req: Request) {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
 
-    if (!id) {
-      return NextResponse.json(
-        { error: "Missing document id" },
-        { status: 400 }
-      );
-    }
+    if (
+  typeof id !== "string" ||
+  id.length === 0 ||
+  id.length > 200 ||
+  !mongoose.Types.ObjectId.isValid(id)
+) {
+  return NextResponse.json(
+    { error: "Invalid document id" },
+    { status: 400 }
+  );
+}
 
     await Document.deleteOne({
       _id: id,
