@@ -14,10 +14,23 @@ export async function GET(request: Request) {
     }
 
     const url = new URL(request.url);
-    const conversationId = url.searchParams.get("conversationId");
+const conversationId = url.searchParams.get("conversationId");
 
-    // ✅ If fetching a single conversation
-    if (conversationId) {
+if (
+  conversationId !== null &&
+  (
+    conversationId.length === 0 ||
+    conversationId.length > 200
+  )
+) {
+  return Response.json(
+    { error: "Invalid conversation ID" },
+    { status: 400 }
+  );
+}
+
+// âœ… If fetching a single conversation
+if (conversationId) {
       const conversation = await getConversation(conversationId, userId);
       const messages = conversation?.messages || [];
 
