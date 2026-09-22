@@ -18,7 +18,18 @@ export async function PATCH(
     // ✅ Next 16 requires awaiting params
     const { conversationId } = await params;
 
-    const { db } = await connectToDatabase();
+if (
+  typeof conversationId !== "string" ||
+  conversationId.length === 0 ||
+  conversationId.length > 200
+) {
+  return NextResponse.json(
+    { error: "Invalid conversation ID" },
+    { status: 400 }
+  );
+}
+
+const { db } = await connectToDatabase();
 
     const conversation = await db
       .collection("conversations")
