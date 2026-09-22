@@ -19,7 +19,18 @@ export async function POST(
 
     const { conversationId } = await context.params;
 
-    const { db } = await connectToDatabase();
+if (
+  typeof conversationId !== "string" ||
+  conversationId.length === 0 ||
+  conversationId.length > 200
+) {
+  return NextResponse.json(
+    { error: "Invalid conversation ID" },
+    { status: 400 }
+  );
+}
+
+const { db } = await connectToDatabase();
 
     const shareId = randomUUID();
 
