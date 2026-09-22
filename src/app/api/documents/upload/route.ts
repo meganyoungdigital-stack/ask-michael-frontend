@@ -225,12 +225,58 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
 
-    if (!body.url || !body.name) {
-      return NextResponse.json(
-        { error: "Missing file information" },
-        { status: 400 }
-      );
-    }
+if (
+  !body ||
+  typeof body !== "object" ||
+  Array.isArray(body)
+) {
+  return NextResponse.json(
+    { error: "Invalid request body" },
+    { status: 400 }
+  );
+}
+
+const { url, name, type } = body as {
+  url?: unknown;
+  name?: unknown;
+  type?: unknown;
+};
+
+if (
+  typeof url !== "string" ||
+  typeof name !== "string" ||
+  (type !== undefined && typeof type !== "string")
+) {
+  return NextResponse.json(
+    { error: "Invalid file information" },
+    { status: 400 }
+  );
+}
+
+const cleanName = name.trim();
+const cleanUrl = url.trim();
+const cleanType = type?.trim() || "file";
+
+if (
+  cleanName.length === 0 ||
+  cleanUrl.length === 0
+) {
+  return NextResponse.json(
+    { error: "File name and URL are required" },
+    { status: 400 }
+  );
+}
+
+if (
+  cleanName.length > 255 ||
+  cleanUrl.length > 2048 ||
+  cleanType.length > 100
+) {
+  return NextResponse.json(
+    { error: "File information exceeds the maximum allowed length" },
+    { status: 400 }
+  );
+}
 
     if (!validateDocumentUrl(body.url)) {
       return NextResponse.json(
@@ -245,13 +291,13 @@ export async function POST(req: NextRequest) {
        SAVE DOCUMENT RECORD
     ========================= */
 
-    const result = await db.collection("documents").insertOne({
-      userId,
-      name: body.name,
-      url: body.url,
-      type: body.type || "file",
-      createdAt: new Date(),
-    });
+   const result = await db.collection("documents").insertOne({
+  userId,
+  name: cleanName,
+  url: cleanUrl,
+  type: cleanType,
+  createdAt: new Date(),
+});
 
     const documentId = result.insertedId;
 
@@ -259,7 +305,7 @@ export async function POST(req: NextRequest) {
        DOWNLOAD FILE
     ========================= */
 
-    const res = await fetch(body.url);
+    const res = await fetch(cleanUrl);
 
     if (!res.ok) {
       throw new Error("Failed to download file");
