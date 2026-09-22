@@ -18,15 +18,83 @@ export async function POST(req: Request) {
 
   try {
 
-    const {
+   const body = await req.json();
+
+if (
+  !body ||
+  typeof body !== "object" ||
+  Array.isArray(body)
+) {
+  return NextResponse.json(
+    {
+      error: "Invalid request body",
+    },
+    {
+      status: 400,
+    }
+  );
+}
+
+const {
   token,
   password,
   acceptedTerms,
-} = await req.json();
+} = body as {
+  token?: unknown;
+  password?: unknown;
+  acceptedTerms?: unknown;
+};
+
+if (
+  typeof token !== "string" ||
+  typeof password !== "string" ||
+  typeof acceptedTerms !== "boolean"
+) {
+  return NextResponse.json(
+    {
+      error: "Invalid registration details",
+    },
+    {
+      status: 400,
+    }
+  );
+}
+
+const cleanToken = token.trim();
+const cleanPassword = password;
+
+if (
+  cleanToken.length === 0 ||
+  cleanPassword.length === 0
+) {
+  return NextResponse.json(
+    {
+      error: "Registration details cannot be empty",
+    },
+    {
+      status: 400,
+    }
+  );
+}
+
+if (
+  cleanToken.length > 200 ||
+  cleanPassword.length > 200
+) {
+  return NextResponse.json(
+    {
+      error:
+        "Registration details exceed the maximum allowed length",
+    },
+    {
+      status: 400,
+    }
+  );
+}
 
 const rateLimitResult =
   await partnerRegistrationRatelimit.limit(
-    token?.toString() || "unknown"
+    cleanToken
   );
 
 if (!rateLimitResult.success) {
@@ -41,25 +109,11 @@ if (!rateLimitResult.success) {
   );
 }
 
-    // =====================================================
-    // VALIDATE REGISTRATION DETAILS
-    // =====================================================
-
-    if (!token || !password) {
-
-  return NextResponse.json(
-    {
-      error: "Missing registration details",
-    },
-    {
-      status: 400,
-    }
-  );
-
-}
+// =====================================================
+// VALIDATE REGISTRATION DETAILS
+// =====================================================
 
 if (acceptedTerms !== true) {
-
   return NextResponse.json(
     {
       error:
@@ -69,10 +123,7 @@ if (acceptedTerms !== true) {
       status: 400,
     }
   );
-
 }
-
-
 
     const { db } =
       await connectToDatabase();
@@ -80,7 +131,7 @@ if (acceptedTerms !== true) {
 const tokenHash =
   crypto
     .createHash("sha256")
-    .update(token.toString())
+    .update(cleanToken)
     .digest("hex");
 
 
@@ -149,10 +200,10 @@ if (
     // =====================================================
 
     const passwordHash =
-      await bcrypt.hash(
-        password,
-        10
-      );
+  await bcrypt.hash(
+    cleanPassword,
+    10
+  );
 
 
 
