@@ -18,15 +18,45 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const body = await req.json();
-    const { reference } = body;
+   const body = await req.json();
 
-    if (!reference || typeof reference !== "string") {
-      return NextResponse.json(
-        { error: "Invalid payment reference" },
-        { status: 400 }
-      );
-    }
+if (
+  !body ||
+  typeof body !== "object" ||
+  Array.isArray(body)
+) {
+  return NextResponse.json(
+    { error: "Invalid request body" },
+    { status: 400 }
+  );
+}
+
+const { reference } = body as {
+  reference?: unknown;
+};
+
+if (typeof reference !== "string") {
+  return NextResponse.json(
+    { error: "Invalid payment reference" },
+    { status: 400 }
+  );
+}
+
+const cleanReference = reference.trim();
+
+if (cleanReference.length === 0) {
+  return NextResponse.json(
+    { error: "Payment reference is required" },
+    { status: 400 }
+  );
+}
+
+if (cleanReference.length > 200) {
+  return NextResponse.json(
+    { error: "Payment reference exceeds the maximum allowed length" },
+    { status: 400 }
+  );
+}
 
     /* ============================
     CONNECT DB EARLY
@@ -39,7 +69,7 @@ export async function POST(req: NextRequest) {
     ============================ */
 
     const existingTx = await db.collection("transactions").findOne({
-      reference,
+      reference: cleanReference,
     });
 
     if (existingTx) {
@@ -55,7 +85,7 @@ export async function POST(req: NextRequest) {
     ============================ */
 
     const verifyRes = await axios.get(
-      `https://api.paystack.co/transaction/verify/${reference}`,
+      `https://api.paystack.co/transaction/verify/${cleanReference}`,
       {
         headers: {
           Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
@@ -89,13 +119,15 @@ export async function POST(req: NextRequest) {
 
     const paidPlan = data.metadata?.plan;
 
-    if (!paidPlan) {
-      return NextResponse.json(
-        { error: "Missing plan metadata" },
-        { status: 400 }
-      );
-    }
-
+if (
+  typeof paidPlan !== "string" ||
+  !["free", "pro", "pro_plus"].includes(paidPlan)
+) {
+  return NextResponse.json(
+    { error: "Invalid plan metadata" },
+    { status: 400 }
+  );
+}
     /* ============================
     DETERMINE TIER
     ============================ */
@@ -129,7 +161,7 @@ export async function POST(req: NextRequest) {
     ============================ */
 
     await db.collection("transactions").insertOne({
-      reference,
+      reference: cleanReference,
       userId,
       tier,
       amount: data.amount,
