@@ -165,25 +165,55 @@ export async function PATCH(req: Request) {
     }
 
     const body = await req.json();
-    const { alertId, status } = body;
 
-    if (!alertId || !status) {
-      return NextResponse.json(
-        { error: "Missing fields" },
-        { status: 400 }
-      );
-    }
+if (
+  !body ||
+  typeof body !== "object" ||
+  Array.isArray(body)
+) {
+  return NextResponse.json(
+    { error: "Invalid request body" },
+    { status: 400 }
+  );
+}
+
+const { alertId, status } = body as {
+  alertId?: unknown;
+  status?: unknown;
+};
+
+if (
+  typeof alertId !== "string" ||
+  typeof status !== "string" ||
+  alertId.trim().length === 0 ||
+  status.trim().length === 0
+) {
+  return NextResponse.json(
+    { error: "Invalid alert details" },
+    { status: 400 }
+  );
+}
+
+const cleanAlertId = alertId.trim();
+const cleanStatus = status.trim();
+
+if (!ObjectId.isValid(cleanAlertId)) {
+  return NextResponse.json(
+    { error: "Invalid alert ID" },
+    { status: 400 }
+  );
+}
 
     const { db } = await connectToDatabase();
 
     await db.collection("alerts").updateOne(
       {
-        _id: new ObjectId(alertId),
+        _id: new ObjectId(cleanAlertId),
         userId,
       },
       {
         $set: {
-          status, // "ACKNOWLEDGED" or "RESOLVED"
+          status: cleanStatus, // "ACKNOWLEDGED" or "RESOLVED"
           updatedAt: new Date(),
         },
       }
