@@ -17,16 +17,70 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
 
-    const {
-      conversationId,
-      messageId,
-      rating, // +1 or -1
-      comment,
-    } = body;
+if (
+  !body ||
+  typeof body !== "object" ||
+  Array.isArray(body)
+) {
+  return new Response("Invalid request body", {
+    status: 400,
+  });
+}
 
-    if (!conversationId || !messageId || typeof rating !== "number") {
-      return new Response("Invalid payload", { status: 400 });
-    }
+const {
+  conversationId,
+  messageId,
+  rating,
+  comment,
+} = body as {
+  conversationId?: unknown;
+  messageId?: unknown;
+  rating?: unknown;
+  comment?: unknown;
+};
+
+if (
+  typeof conversationId !== "string" ||
+  typeof messageId !== "string" ||
+  typeof rating !== "number" ||
+  !Number.isFinite(rating) ||
+  (comment !== undefined && typeof comment !== "string")
+) {
+  return new Response("Invalid payload", {
+    status: 400,
+  });
+}
+
+const cleanConversationId = conversationId.trim();
+const cleanMessageId = messageId.trim();
+const cleanComment =
+  comment?.trim() || "";
+
+if (
+  cleanConversationId.length === 0 ||
+  cleanMessageId.length === 0
+) {
+  return new Response("Invalid payload", {
+    status: 400,
+  });
+}
+
+if (
+  cleanConversationId.length > 200 ||
+  cleanMessageId.length > 200 ||
+  cleanComment.length > 5000
+) {
+  return new Response(
+    "Feedback fields exceed the maximum allowed length",
+    { status: 400 }
+  );
+}
+
+if (rating !== 1 && rating !== -1) {
+  return new Response("Invalid rating", {
+    status: 400,
+  });
+}
 
     /* ================= GET MESSAGE ================= */
     const conversation = await db.collection("conversations").findOne({
