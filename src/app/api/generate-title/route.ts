@@ -9,23 +9,71 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { conversationId, message } = await req.json();
+    const body = await req.json();
 
-    if (!conversationId || !message) {
-      return NextResponse.json(
-        { error: "Missing data" },
-        { status: 400 }
-      );
-    }
+if (
+  !body ||
+  typeof body !== "object" ||
+  Array.isArray(body)
+) {
+  return NextResponse.json(
+    { error: "Invalid request body" },
+    { status: 400 }
+  );
+}
+
+const {
+  conversationId,
+  message,
+} = body as {
+  conversationId?: unknown;
+  message?: unknown;
+};
+
+if (
+  typeof conversationId !== "string" ||
+  typeof message !== "string"
+) {
+  return NextResponse.json(
+    { error: "Invalid conversation data" },
+    { status: 400 }
+  );
+}
+
+const cleanConversationId = conversationId.trim();
+const cleanMessage = message.trim();
+
+if (
+  cleanConversationId.length === 0 ||
+  cleanMessage.length === 0
+) {
+  return NextResponse.json(
+    { error: "Conversation ID and message are required" },
+    { status: 400 }
+  );
+}
+
+if (
+  cleanConversationId.length > 200 ||
+  cleanMessage.length > 20000
+) {
+  return NextResponse.json(
+    { error: "Conversation data exceeds the maximum allowed length" },
+    { status: 400 }
+  );
+}
 
     /* ================= GET PROJECT TYPE ================= */
 
     const { getConversation, updateConversationTitle } =
       await import("@/lib/mongodb");
 
-    const conversation = await getConversation(conversationId, userId);
+    const conversation = await getConversation(
+  cleanConversationId,
+  userId
+);
 
-    const projectType = conversation?.projectType || "General";
+const projectType = conversation?.projectType || "General";
 
     /* ================= ENGINEERING PROMPT ================= */
 
@@ -38,7 +86,7 @@ Context:
 Project Type: ${projectType}
 
 User Message:
-"${message}"
+"${cleanMessage}"
 
 Rules:
 - Use engineering terminology where appropriate
