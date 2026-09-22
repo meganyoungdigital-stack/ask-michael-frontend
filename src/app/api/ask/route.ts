@@ -290,15 +290,36 @@ export async function POST(req: Request) {
       );
     }
 
-    const latestUserMessage: Message =
-      messages[messages.length - 1];
+    const latestUserMessage = messages[messages.length - 1];
 
-    if (!latestUserMessage?.content) {
-      return NextResponse.json(
-        { error: "Empty message" },
-        { status: 400 }
-      );
-    }
+if (
+  !latestUserMessage ||
+  typeof latestUserMessage !== "object" ||
+  typeof latestUserMessage.content !== "string"
+) {
+  return NextResponse.json(
+    { error: "Invalid message" },
+    { status: 400 }
+  );
+}
+
+const cleanMessage = latestUserMessage.content.trim();
+
+if (cleanMessage.length === 0) {
+  return NextResponse.json(
+    { error: "Empty message" },
+    { status: 400 }
+  );
+}
+
+if (cleanMessage.length > 20000) {
+  return NextResponse.json(
+    { error: "Message exceeds the maximum allowed length" },
+    { status: 400 }
+  );
+}
+
+latestUserMessage.content = cleanMessage;
 
     /* ============================
     🧠 DOCUMENT CONTEXT
