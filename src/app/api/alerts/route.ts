@@ -224,6 +224,15 @@ if (!ObjectId.isValid(cleanAlertId)) {
   );
 }
 
+if (
+  !["ACKNOWLEDGED", "RESOLVED"].includes(cleanStatus)
+) {
+  return NextResponse.json(
+    { error: "Invalid alert status" },
+    { status: 400 }
+  );
+}
+
     const { db } = await connectToDatabase();
 
     await db.collection("alerts").updateOne(
