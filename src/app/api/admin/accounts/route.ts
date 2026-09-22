@@ -271,9 +271,31 @@ if (!adminId) {
 }
   try {
 
-    const { id } = await req.json();
+    const body = await req.json();
 
-    if (!id) {
+if (
+  !body ||
+  typeof body !== "object" ||
+  Array.isArray(body)
+) {
+  return NextResponse.json(
+    {
+      error: "Invalid request body",
+    },
+    {
+      status: 400,
+    }
+  );
+}
+
+const { id } = body as {
+  id?: unknown;
+};
+
+if (
+  typeof id !== "string" ||
+  id.trim().length === 0
+) {
   return NextResponse.json(
     {
       error: "Missing partner id",
