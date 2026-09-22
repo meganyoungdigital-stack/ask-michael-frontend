@@ -7,7 +7,14 @@ const resend = new Resend(
   process.env.RESEND_API_KEY
 );
 
-
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
 
 export async function POST(req: Request) {
 
@@ -51,6 +58,12 @@ const cleanEmail = email.trim();
 const cleanWebsite = website?.trim() || "";
 const cleanMessage = message.trim();
 
+const safeCompanyName = escapeHtml(cleanCompanyName);
+const safeContactName = escapeHtml(cleanContactName);
+const safeEmail = escapeHtml(cleanEmail);
+const safeWebsite = escapeHtml(cleanWebsite);
+const safeMessage = escapeHtml(cleanMessage);
+
 if (
   cleanCompanyName.length === 0 ||
   cleanContactName.length === 0 ||
@@ -93,15 +106,15 @@ if (
 
     await db.collection("partner_applications").insertOne({
 
-      companyName,
+      companyName: cleanCompanyName,
 
-      contactName,
+      contactName: cleanContactName,
 
-      email,
+      email: cleanEmail,
 
-      website: website || "",
+      website: cleanWebsite,
 
-      message,
+      message: cleanMessage,
 
       status: "pending",
 
@@ -133,25 +146,25 @@ if (
 
         <p>
           <strong>Company:</strong>
-          ${companyName}
+          ${safeCompanyName}
         </p>
 
 
         <p>
           <strong>Contact Name:</strong>
-          ${contactName}
+          ${safeContactName}
         </p>
 
 
         <p>
           <strong>Email:</strong>
-          ${email}
+          ${safeEmail}
         </p>
 
 
         <p>
           <strong>Website:</strong>
-          ${website || "Not provided"}
+          ${safeWebsite || "Not provided"}
         </p>
 
 
@@ -161,7 +174,7 @@ if (
 
 
         <p>
-          ${message}
+          ${safeMessage}
         </p>
 
 
