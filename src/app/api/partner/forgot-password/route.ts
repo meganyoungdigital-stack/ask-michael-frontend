@@ -17,11 +17,65 @@ export async function POST(req: Request) {
   try {
 
 
-    const { email } = await req.json();
+    const body = await req.json();
+
+if (
+  !body ||
+  typeof body !== "object" ||
+  Array.isArray(body)
+) {
+  return NextResponse.json(
+    {
+      error: "Invalid request body",
+    },
+    {
+      status: 400,
+    }
+  );
+}
+
+const { email } = body as {
+  email?: unknown;
+};
+
+if (typeof email !== "string") {
+  return NextResponse.json(
+    {
+      error: "Email is required",
+    },
+    {
+      status: 400,
+    }
+  );
+}
+
+const cleanEmail = email.trim().toLowerCase();
+
+if (cleanEmail.length === 0) {
+  return NextResponse.json(
+    {
+      error: "Email is required",
+    },
+    {
+      status: 400,
+    }
+  );
+}
+
+if (cleanEmail.length > 320) {
+  return NextResponse.json(
+    {
+      error: "Email address is too long",
+    },
+    {
+      status: 400,
+    }
+  );
+}
 
 const rateLimitResult =
   await partnerForgotPasswordRatelimit.limit(
-    email?.toLowerCase()?.trim() || "unknown"
+    cleanEmail
   );
 
 if (!rateLimitResult.success) {
@@ -36,21 +90,6 @@ if (!rateLimitResult.success) {
   );
 }
 
-if (!email) {
-
-      return NextResponse.json(
-        {
-          error: "Email is required",
-        },
-        {
-          status: 400,
-        }
-      );
-
-    }
-
-
-
     const { db } = await connectToDatabase();
 
 
@@ -58,7 +97,7 @@ if (!email) {
     const partner = await db
       .collection("partners")
       .findOne({
-        email,
+        email: cleanEmail,
       });
 
 
@@ -96,7 +135,7 @@ if (!email) {
       .updateOne(
 
         {
-          email,
+          email: cleanEmail,
         },
 
         {
@@ -126,7 +165,7 @@ if (!email) {
         "askmichael@askmichaelai.org",
 
       to:
-        email,
+       cleanEmail,
 
       subject:
         "Ask Michael AI Partner Password Reset",
