@@ -236,12 +236,58 @@ Upgrade to unlock more:
       const contentType = req.headers.get("content-type") || "";
 
       if (contentType.includes("multipart/form-data")) {
-        const formData = await req.formData();
+  const formData = await req.formData();
 
-        message = (formData.get("message") as string)?.trim() || "";
-        files = (formData.getAll("files") as File[]) || [];
-        mode = (formData.get("mode") as string) || "default";
-      } else {
+  const rawMessage = formData.get("message");
+  const rawMode = formData.get("mode");
+  const rawFiles = formData.getAll("files");
+
+  if (
+    rawMessage !== null &&
+    typeof rawMessage !== "string"
+  ) {
+    return new Response("Invalid message", {
+      status: 400,
+    });
+  }
+
+  if (
+    rawMode !== null &&
+    typeof rawMode !== "string"
+  ) {
+    return new Response("Invalid mode", {
+      status: 400,
+    });
+  }
+
+  if (
+    !rawFiles.every(
+      (file) => file instanceof File
+    )
+  ) {
+    return new Response("Invalid file upload", {
+      status: 400,
+    });
+  }
+
+  message = rawMessage?.trim() || "";
+  mode = rawMode?.trim() || "default";
+  files = rawFiles as File[];
+
+  if (message.length > 20000) {
+    return new Response(
+      "Message exceeds the maximum allowed length",
+      { status: 400 }
+    );
+  }
+
+  if (mode.length > 50) {
+    return new Response(
+      "Mode exceeds the maximum allowed length",
+      { status: 400 }
+    );
+  }
+}else {
         const body = await req.json();
 
 if (
