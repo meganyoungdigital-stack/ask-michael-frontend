@@ -534,9 +534,7 @@ const tokenHash =
       // SEND EMAIL USING RESEND
       // =================================================
 
-      console.log(
-        "Sending partner invitation email..."
-      );
+      // Sending partner invitation email.
 
 
       const emailResult =
