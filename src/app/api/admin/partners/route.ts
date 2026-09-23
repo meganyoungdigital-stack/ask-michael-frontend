@@ -681,9 +681,7 @@ const tokenHash =
       }
 
 
-      console.log(
-        "Partner invitation email sent successfully."
-      );
+      // Partner invitation email sent successfully.
 
     }
 
