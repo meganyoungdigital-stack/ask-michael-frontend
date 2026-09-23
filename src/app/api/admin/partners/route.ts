@@ -254,10 +254,7 @@ if (!validEnterprisePricing || !validEnterpriseCurrency) {
         });
 
 
-    console.log(
-      "Application found:",
-      application
-    );
+    // Partner application lookup completed.
 
 
     if (!application) {
