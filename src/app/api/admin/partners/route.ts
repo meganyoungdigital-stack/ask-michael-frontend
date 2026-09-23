@@ -528,9 +528,7 @@ const tokenHash =
         `https://askmichaelai.org/partner-register/${token}`;
 
 
-      console.log(
-  "Partner registration invitation link generated successfully."
-);
+      // Partner registration invitation link generated.
 
       // =================================================
       // SEND EMAIL USING RESEND
