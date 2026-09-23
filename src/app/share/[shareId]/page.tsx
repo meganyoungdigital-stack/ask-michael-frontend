@@ -7,9 +7,20 @@ export default async function SharePage({
 }: {
   params: { shareId: string };
 }) {
-  const { db } = await connectToDatabase();
+  const shareId = params.shareId;
 
-  const conversation = await db
+if (
+  typeof shareId !== "string" ||
+  !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    shareId
+  )
+) {
+  return <div className="p-10">Not found</div>;
+}
+
+const { db } = await connectToDatabase();
+
+const conversation = await db
     .collection("conversations")
     .findOne({
       shareId: params.shareId,
