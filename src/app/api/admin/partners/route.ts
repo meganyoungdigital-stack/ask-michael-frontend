@@ -458,9 +458,7 @@ const tokenHash =
     .update(token)
     .digest("hex");
 
-console.log(
-  "Existing pending invitation found. Updating plan..."
-);
+// Existing pending invitation found; updating plan.
 
   await db
   .collection("partner_invitations")
