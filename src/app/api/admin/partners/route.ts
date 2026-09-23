@@ -441,9 +441,7 @@ expiresAt:
   ),
     });
 
-  console.log(
-    "Invitation created successfully"
-  );
+  // Partner invitation created successfully.
 
 } else {
 
