@@ -356,18 +356,10 @@ if (!updatedApplication) {
     // Create registration invitation and send email
     // =====================================================
 
-    console.log(
-      "Checking approval status:",
-      status
-    );
-
-
+    
     if (cleanStatus === "approved") {
 
-      console.log(
-        "APPROVAL BLOCK ENTERED"
-      );
-let token = "";
+      let token = "";
 
 // =================================================
 // LOOK FOR EXISTING PENDING INVITATION
@@ -398,9 +390,7 @@ if (!existingInvitation) {
     .update(token)
     .digest("hex");
 
-  console.log(
-    "Creating invitation..."
-  );
+  // Creating partner invitation.
 
   await db
     .collection("partner_invitations")
