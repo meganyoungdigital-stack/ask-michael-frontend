@@ -180,9 +180,7 @@ if (
 const cleanId = id.trim();
 const cleanStatus = status.trim();
 
-console.log("PATCH CALLED");
-console.log("Status:", cleanStatus);
-console.log("ID:", cleanId);
+// Partner application update received.
 
 let selectedPlan: PartnerPlan | null = null;
 
