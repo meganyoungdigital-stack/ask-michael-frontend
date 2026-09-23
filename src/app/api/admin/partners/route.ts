@@ -702,9 +702,8 @@ const tokenHash =
   } catch (error) {
 
     console.error(
-      "Partner status update error:",
-      error
-    );
+  "Partner status update failed."
+);
 
 
     return NextResponse.json(
