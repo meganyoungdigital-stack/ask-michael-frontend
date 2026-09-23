@@ -781,10 +781,6 @@ if (
 const cleanId = id.trim();
 
 console.log(
-  "DELETE CALLED"
-);
-
-console.log(
   "ID:",
   cleanId
 );
