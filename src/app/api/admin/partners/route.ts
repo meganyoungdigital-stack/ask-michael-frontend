@@ -664,8 +664,7 @@ const tokenHash =
       if (emailResult.error) {
 
         console.error(
-          "Partner invitation email failed:",
-          emailResult.error
+             "Partner invitation email failed."
         );
 
 
