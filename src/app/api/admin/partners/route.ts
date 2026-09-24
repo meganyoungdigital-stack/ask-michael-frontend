@@ -827,9 +827,8 @@ const cleanId = id.trim();
   } catch (error) {
 
     console.error(
-      "Partner delete error:",
-      error
-    );
+  "Partner delete failed."
+);
 
 
     return NextResponse.json(
