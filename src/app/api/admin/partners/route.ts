@@ -780,12 +780,6 @@ if (
 
 const cleanId = id.trim();
 
-console.log(
-  "ID:",
-  cleanId
-);
-
-
     const { db } =
       await connectToDatabase();
 
