@@ -660,12 +660,7 @@ const tokenHash =
 
       if (emailResult.error) {
 
-        console.error(
-             "Partner invitation email failed."
-        );
-
-
-        return NextResponse.json(
+  return NextResponse.json(
           {
             error:
               "Partner approved, but invitation email could not be sent.",
@@ -696,14 +691,9 @@ const tokenHash =
     );
 
 
-  } catch (error) {
+  } catch {
 
-    console.error(
-  "Partner status update failed."
-);
-
-
-    return NextResponse.json(
+  return NextResponse.json(
       {
         error: "Failed to update partner status",
       },
@@ -818,14 +808,9 @@ const cleanId = id.trim();
     );
 
 
-  } catch (error) {
+  } catch {
 
-    console.error(
-  "Partner delete failed."
-);
-
-
-    return NextResponse.json(
+  return NextResponse.json(
       {
         error: "Failed to delete partner application",
       },
