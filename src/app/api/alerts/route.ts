@@ -34,8 +34,7 @@ export async function GET() {
       .toArray();
 
     return NextResponse.json({ alerts });
-  } catch (err) {
-    console.error("Alerts fetch error:", err);
+    } catch {
 
     return NextResponse.json(
       { error: "Failed to fetch alerts" },
@@ -159,8 +158,7 @@ Time: ${new Date().toLocaleString()}
     });
 
     return NextResponse.json({ success: true });
-  } catch (err) {
-    console.error("Alert creation error:", err);
+   } catch {
 
     return NextResponse.json(
       { error: "Failed to create alert" },
@@ -249,8 +247,7 @@ if (
     );
 
     return NextResponse.json({ success: true });
-  } catch (err) {
-    console.error("Alert update error:", err);
+    } catch {
 
     return NextResponse.json(
       { error: "Failed to update alert" },
