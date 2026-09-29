@@ -700,7 +700,7 @@ export async function POST(req: NextRequest) {
     return new NextResponse("OK", { status: 200 });
 
   } catch (error) {
-    console.error("🔥 WEBHOOK ERROR:", error);
+    console.error("Paystack webhook processing failed.");
     return new NextResponse("Webhook error", { status: 500 });
   }
 }
