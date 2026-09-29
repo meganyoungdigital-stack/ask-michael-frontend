@@ -86,9 +86,8 @@ Find relevant engineering procedures, manuals, or specifications.
           cleanUserId
         );
       }
-    } catch (err) {
-      console.error("RAG context error:", err);
-    }
+    } catch {
+}
 
     /* ============================
        🧠 BUILD AI PROMPT
@@ -137,8 +136,7 @@ ${documentContext || "No relevant documents found."}
       result,
       usedRAG: !!documentContext,
     });
-  } catch (err) {
-    console.error("AI explain error:", err);
+  } catch {
 
     return NextResponse.json(
       { error: "Failed to generate explanation" },
