@@ -57,10 +57,8 @@ const { db } = await connectToDatabase();
   conversation.messages || [],
   { status: 200 }
 );
-  } catch (error) {
-    console.error("[CONVERSATION_GET_ERROR]", error);
-
-    return NextResponse.json(
+  } catch {
+  return NextResponse.json(
       { error: "Fetch failed" },
       { status: 500 }
     );
@@ -101,10 +99,8 @@ export async function PATCH(
     }
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("[CONVERSATION_PATCH_ERROR]", error);
-
-    return NextResponse.json(
+  } catch {
+  return NextResponse.json(
       { error: "Update failed" },
       { status: 500 }
     );
@@ -143,10 +139,8 @@ export async function DELETE(
     }
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("[CONVERSATION_DELETE_ERROR]", error);
-
-    return NextResponse.json(
+  } catch {
+  return NextResponse.json(
       { error: "Delete failed" },
       { status: 500 }
     );
