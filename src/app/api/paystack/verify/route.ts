@@ -179,10 +179,7 @@ if (
     });
 
   } catch (error: any) {
-    console.error(
-      "🔥 PAYSTACK VERIFY ERROR:",
-      error?.response?.data || error
-    );
+    console.error("Paystack verification failed.");
 
     return NextResponse.json(
       { error: "Verification failed" },
@@ -190,3 +187,4 @@ if (
     );
   }
 }
+
