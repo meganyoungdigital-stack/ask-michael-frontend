@@ -705,10 +705,7 @@ const tokenHash =
 
     return NextResponse.json(
       {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unknown error",
+        error: "Failed to update partner status",
       },
       {
         status: 500,
@@ -830,10 +827,7 @@ const cleanId = id.trim();
 
     return NextResponse.json(
       {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unknown error",
+        error: "Failed to delete partner application",
       },
       {
         status: 500,
@@ -843,3 +837,6 @@ const cleanId = id.trim();
   }
 
 }
+
+
+
