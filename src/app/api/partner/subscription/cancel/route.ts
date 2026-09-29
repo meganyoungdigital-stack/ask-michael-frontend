@@ -249,10 +249,7 @@ if (!rateLimitResult.success) {
         paystackData.data.link,
     });
   } catch (error) {
-    console.error(
-      "Partner subscription cancellation failed:",
-      error
-    );
+    console.error("Partner subscription cancellation failed.");
 
     return NextResponse.json(
       {
@@ -265,4 +262,5 @@ if (!rateLimitResult.success) {
     );
   }
 }
+
 
