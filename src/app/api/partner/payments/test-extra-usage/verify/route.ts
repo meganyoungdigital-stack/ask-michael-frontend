@@ -659,28 +659,11 @@ console.log(
     });
 
   } catch (error: unknown) {
-    console.error(
-      "PAYSTACK EXTRA-USAGE VERIFICATION ERROR:",
-      error
-    );
+    console.error("Paystack extra-usage verification failed.");
 
     if (
       axios.isAxiosError(error)
     ) {
-      console.error(
-        "PAYSTACK EXTRA-USAGE VERIFY STATUS:",
-        error.response?.status
-      );
-
-      console.error(
-        "PAYSTACK EXTRA-USAGE VERIFY RESPONSE:",
-        JSON.stringify(
-          error.response?.data ??
-            null,
-          null,
-          2
-        )
-      );
 
       return NextResponse.json(
         {
@@ -703,5 +686,7 @@ console.log(
     );
   }
 }
+
+
 
 
