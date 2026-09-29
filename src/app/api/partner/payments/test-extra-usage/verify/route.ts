@@ -703,10 +703,7 @@ console.log(
 
     return NextResponse.json(
       {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unknown verification error.",
+        error: "Internal server error",
       },
       {
         status: 500,
