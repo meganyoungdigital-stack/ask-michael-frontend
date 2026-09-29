@@ -199,7 +199,6 @@ if (
 
         {
           error: "Application saved but email failed",
-          resendError: error,
         },
 
         {
