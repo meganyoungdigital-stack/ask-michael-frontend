@@ -47,7 +47,7 @@ if (conversationId) {
     console.error("🔥 FULL CONVERSATION ERROR:", error);
 
     return Response.json(
-      { error: error instanceof Error ? error.message : String(error) },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }
