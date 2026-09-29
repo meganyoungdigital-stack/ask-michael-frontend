@@ -31,12 +31,7 @@ export async function GET() {
       authenticated: true,
     });
 
-  } catch (error) {
-
-    console.error(
-      "Admin session check error:",
-      error
-    );
+    } catch {
 
     return NextResponse.json(
       {
