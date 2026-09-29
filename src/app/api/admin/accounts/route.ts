@@ -68,15 +68,7 @@ const partners =
     })
     .toArray();
 
-console.log(
-  "ADMIN PARTNER TERMS:",
-  partners.map((partner) => ({
-    companyName: partner.companyName,
-    termsAccepted: partner.termsAccepted,
-    termsVersion: partner.termsVersion,
-    termsAcceptedAt: partner.termsAcceptedAt,
-  }))
-);
+
 
 return NextResponse.json(
 partners
@@ -84,14 +76,7 @@ partners
 
 
 
-}catch(error){
-
-
-console.error(
-"Admin accounts error:",
-error
-);
-
+}catch{
 
 
 return NextResponse.json(
@@ -231,14 +216,7 @@ success:true
 
 
 
-}catch(error){
-
-
-console.error(
-"Admin account update error:",
-error
-);
-
+}catch{
 
 
 return NextResponse.json(
@@ -343,12 +321,7 @@ if (!ObjectId.isValid(id)) {
       message: "Partner account deleted"
     });
 
-  } catch (error) {
-
-    console.error(
-      "Admin partner delete error:",
-      error
-    );
+    } catch {
 
     return NextResponse.json(
       {
