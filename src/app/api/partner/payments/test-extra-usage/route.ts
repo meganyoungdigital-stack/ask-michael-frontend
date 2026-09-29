@@ -192,41 +192,7 @@ if (!rateLimitResult.success) {
     const reference =
       `test_extra_${partner._id.toString()}_${Date.now()}`;
 
-    // ==========================================
-    // LOG TEST INFORMATION
-    // ==========================================
-
-    console.log(
-      "PAYSTACK EXTRA USAGE TEST:",
-      {
-        partnerId:
-          partner._id.toString(),
-
-        reference,
-
-        messages:
-          partner.messages,
-
-        includedMessages:
-          partner.includedMessages,
-
-        billedExtraMessages:
-          partner.billedExtraMessages,
-
-        extraMessages:
-          billing.extraMessages,
-
-        extraUsageCharge,
-
-        amount,
-
-        currency: "ZAR",
-
-        paystackEnvironment:
-          "TEST",
-      }
-    );
-
+       
     // ==========================================
     // IMPORTANT:
     //
@@ -331,40 +297,24 @@ if (!rateLimitResult.success) {
         }
       );
 
-    // ==========================================
-    // PAYSTACK RESPONSE
-    // ==========================================
-
-    console.log(
-      "PAYSTACK EXTRA USAGE TEST RESPONSE:",
-      JSON.stringify(
-        paystackResponse.data,
-        null,
-        2
-      )
-    );
-
+    
     const paystackData =
       paystackResponse.data?.data;
 
     if (
-      !paystackResponse.data?.status ||
-      !paystackData?.access_code
-    ) {
-      return NextResponse.json(
-        {
-          error:
-            "Paystack test transaction could not be initialized.",
-
-          paystackResponse:
-            paystackResponse.data,
-        },
-        {
-          status: 500,
-        }
-      );
+  !paystackResponse.data?.status ||
+  !paystackData?.access_code
+) {
+  return NextResponse.json(
+    {
+      error:
+        "Paystack test transaction could not be initialized.",
+    },
+    {
+      status: 500,
     }
-
+  );
+}
     // ==========================================
     // RETURN TEST RESULT
     //
@@ -405,37 +355,12 @@ if (!rateLimitResult.success) {
         "This test route does not update billedExtraMessages and does not use charge_authorization.",
     });
 
-  } catch (error: unknown) {
-    console.error(
-      "PAYSTACK EXTRA USAGE TEST ERROR:",
-      error
-    );
-
+   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
-      console.error(
-        "PAYSTACK TEST STATUS:",
-        error.response?.status
-      );
-
-      console.error(
-        "PAYSTACK TEST RESPONSE:",
-        JSON.stringify(
-          error.response?.data ?? null,
-          null,
-          2
-        )
-      );
-
       return NextResponse.json(
         {
           error:
             "Paystack TEST request failed.",
-
-          paystackStatus:
-            error.response?.status ?? null,
-
-          paystackResponse:
-            error.response?.data ?? null,
         },
         {
           status: 500,
@@ -445,7 +370,8 @@ if (!rateLimitResult.success) {
 
     return NextResponse.json(
       {
-        error: "Internal server error",
+        error:
+          "Internal server error",
       },
       {
         status: 500,
@@ -453,3 +379,4 @@ if (!rateLimitResult.success) {
     );
   }
 }
+   
