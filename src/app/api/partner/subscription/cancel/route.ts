@@ -231,16 +231,11 @@ if (!rateLimitResult.success) {
       !paystackData.status ||
       !paystackData.data?.link
     ) {
-      console.error(
-        "Paystack subscription management link failed:",
-        paystackData
-      );
+      console.error("Paystack subscription management link request failed.");
 
       return NextResponse.json(
         {
-          error:
-            paystackData.message ||
-            "Unable to open Paystack subscription management.",
+          error: "Unable to open Paystack subscription management.",
         },
         {
           status: 502,
@@ -270,3 +265,4 @@ if (!rateLimitResult.success) {
     );
   }
 }
+
