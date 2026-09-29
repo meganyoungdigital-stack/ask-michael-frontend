@@ -120,12 +120,7 @@ if (typeof partnerId !== "string") {
       apiKey,
     });
 
-  } catch (error) {
-
-    console.error(
-      "Generate live API key error:",
-      error
-    );
+  } catch {
 
     return NextResponse.json(
       {
