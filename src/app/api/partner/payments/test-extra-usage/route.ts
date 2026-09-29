@@ -445,10 +445,7 @@ if (!rateLimitResult.success) {
 
     return NextResponse.json(
       {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unknown test error.",
+        error: "Internal server error",
       },
       {
         status: 500,
