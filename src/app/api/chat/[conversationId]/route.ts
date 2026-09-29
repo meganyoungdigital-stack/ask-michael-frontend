@@ -21,7 +21,7 @@ function getTodayString(): string {
 
   const date = `${year}-${month}-${day}`;
 
-  console.log("CHAT API DATE:", date);
+  
 
   return date;
 }
@@ -66,8 +66,7 @@ async function getRelevantKnowledge(
 
 try {
   queryEmbedding = await createEmbedding(message);
-} catch (err) {
-  console.error("🚨 EMBEDDING ERROR:", err);
+} catch {
   return { context: "", sources: [] }; // ✅ FAIL SAFE
 }
 
@@ -113,10 +112,9 @@ INSTRUCTIONS:
       sources: topResults.map((doc: any) => doc._id),
     };
 
-  } catch (err) {
-    console.error("Vector search error:", err);
-    return { context: "", sources: [] };
-  }
+  } catch {
+  return { context: "", sources: [] };
+}
 }
 
 /* ================= POST ================= */
@@ -386,11 +384,11 @@ if (mode.length > 50) {
     let sourcesUsed: any[] = [];
 
     if (cached) {
-      console.log("⚡ CACHE HIT");
+      
       finalKnowledgeContext = cached.context || "";
       cachedResponse = cached.response || "";
     } else {
-      console.log("🧠 CACHE MISS");
+      
 
       const knowledge = await getRelevantKnowledge(
         db,
@@ -456,9 +454,8 @@ imageInputs.push(`[IMAGE: ${file.name}]`);
             const text = await file.text();
             fileContext += `\n\n[FILE: ${file.name}]\n${text.slice(0, 2000)}`;
           }
-        } catch (err) {
-          console.error("File read error:", err);
-        }
+        } catch {
+}
       }
     }
 
@@ -634,9 +631,7 @@ try {
       },
     ],
   });
-} catch (err) {
-  console.error("🚨 OPENAI ERROR:", err);
-
+} catch {
   return new Response(
     JSON.stringify({
       error: "AI failed to respond",
@@ -680,9 +675,8 @@ let learningText = (learningRes as any)?.output_text || "";
       });
     }
 
-  } catch (err) {
-    console.error("AI learning error:", err);
-  }
+  } catch {
+}
 }, 0);
 const encoder = new TextEncoder();
 
@@ -727,9 +721,8 @@ isPdfRequest =
               $set: { updatedAt: new Date() },
             } as any
           );
-        } catch (err) {
-          console.error("DB conversations ERROR:", err);
-        }
+        } catch {
+}
 
         try {
           await db.collection("query_cache").updateOne(
@@ -742,8 +735,7 @@ isPdfRequest =
             },
             { upsert: true }
           );
-        } catch (err) {
-  console.error("DB cache ERROR:", err);
+       } catch {
 }
 
 /* ================= PDF GENERATION ================= */
@@ -780,18 +772,15 @@ controller.enqueue(
     ">📄 Download PDF</a>\n\n`
   )
 );
-  } catch (err) {
-    console.error("PDF generation failed:", err);
-  }
+  } catch {
+}
 }
 
 /* ✅ ALWAYS LAST */
 controller.close();
-      } catch (err) {
-        console.error("🚨 STREAM ERROR:", err);
-
-        controller.enqueue(
-          encoder.encode("⚠️ Streaming error occurred")
+      } catch {
+  controller.enqueue(
+    encoder.encode("⚠️ Streaming error occurred")
         );
 
         controller.close();
@@ -806,18 +795,8 @@ controller.close();
     },
   }
     );
-  } catch (error) {
-    console.error("=================================");
-    console.error("🚨 CHAT ERROR FULL TRACE");
-    console.error("=================================");
-    console.error(error);
-
-    if (error instanceof Error) {
-      console.error("MESSAGE:", error.message);
-      console.error("STACK:", error.stack);
-    }
-
-    return new Response(
+  } catch {
+  return new Response(
       JSON.stringify({
         error: "Chat failed",
       }),
@@ -861,10 +840,8 @@ export async function GET(
         headers: { "Content-Type": "application/json" },
       }
     );
-  } catch (err) {
-    console.error("GET conversation error:", err);
-
-    return new Response("Failed to fetch messages", {
+  } catch {
+  return new Response("Failed to fetch messages", {
       status: 500,
     });
   }
