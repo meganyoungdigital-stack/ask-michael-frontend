@@ -86,7 +86,7 @@ export async function GET() {
       pressureTrend,
     });
   } catch (err) {
-    console.error("Prediction error:", err);
+    // Prediction failure handled without exposing internal error details.
 
     return NextResponse.json(
       { error: "Prediction failed" },
