@@ -20,7 +20,7 @@ function getTodayString(): string {
 
   const date = `${year}-${month}-${day}`;
 
-  console.log("USAGE API DATE:", date);
+ // Usage date calculated without logging request details.
 
   return date;
 }
@@ -59,7 +59,7 @@ export async function GET() {
 
    let usageCount = 0;
 
-    console.log("RAW USAGE (helper):", usageCount);
+    // Initial usage count handled without logging internal state.
 
     /* ============================
     🔥 FIX: ENSURE DAILY USAGE (CRITICAL)
@@ -70,21 +70,21 @@ export async function GET() {
     /* ✅ USE SAME LOCAL DATE FUNCTION */
     const today = getTodayString();
 
-    console.log("FETCH USAGE:", userId, today);
+    // Usage lookup handled without logging user or date details.
 
     const usageDoc = await db.collection("usage").findOne({
       userId,
       date: today,
     });
 
-    console.log("USAGE DOC:", usageDoc);
+    // Usage document handled without logging database contents.
 
     /* ✅ HARD OVERRIDE — ONLY TRUST DATE-BASED VALUE */
     const dailyUsage = usageDoc?.count || 0;
 
     usageCount = dailyUsage;
 
-    console.log("FINAL USAGE COUNT (USED):", usageCount);
+    // Final usage count handled without logging internal state.
 
     /* ============================
     GET USER PLAN
@@ -114,7 +114,7 @@ const limit =
 });
 
   } catch (error) {
-    console.error("[USAGE_API_ERROR]", error);
+    // Usage API failure handled without exposing internal error details.
 
     return NextResponse.json(
       { error: "Internal server error" },
