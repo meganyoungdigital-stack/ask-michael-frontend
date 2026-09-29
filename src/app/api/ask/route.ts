@@ -469,7 +469,7 @@ simulationInsight
 
     return NextResponse.json(
       {
-        error: error?.message || "Internal server error",
+        error: "Internal server error",
       },
       { status: 500 }
     );
