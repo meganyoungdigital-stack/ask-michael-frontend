@@ -112,13 +112,7 @@ export async function GET(
     );
 
 
-  } catch (error) {
-
-    console.error(
-      "Admin invoice error:",
-      error
-    );
-
+    } catch {
 
     return NextResponse.json(
       {
