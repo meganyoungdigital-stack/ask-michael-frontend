@@ -302,14 +302,7 @@ if (
   !Number.isFinite(paidAmount) ||
   paidAmount !== expectedAmount
 ) {
-  console.error(
-    "PAYSTACK AMOUNT MISMATCH:",
-    {
-      reference: cleanReference,
-      expectedAmount,
-      paidAmount,
-    }
-  );
+  console.error("Paystack payment amount mismatch.");
 
   await db
     .collection(
@@ -601,3 +594,4 @@ if (
     );
   }
 }
+
