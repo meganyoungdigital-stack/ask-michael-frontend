@@ -28,7 +28,7 @@ export async function GET() {
 
     return NextResponse.json({ data });
   } catch (err) {
-    console.error("Sensor fetch error:", err);
+    // Sensor fetch failure handled without exposing internal error details.
 
     return NextResponse.json(
       { error: "Failed to fetch sensor data" },
@@ -71,7 +71,7 @@ export async function POST() {
       data: newData,
     });
   } catch (err) {
-    console.error("Sensor insert error:", err);
+    // Sensor insert failure handled without exposing internal error details.
 
     return NextResponse.json(
       { error: "Insert failed" },
