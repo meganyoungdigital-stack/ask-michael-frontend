@@ -26,7 +26,7 @@ export async function GET() {
       })),
     });
   } catch (error) {
-    console.error("[LIST_ERROR]", error);
+    // Conversation list failure handled without exposing internal error details.
 
     return NextResponse.json({ conversations: [] });
   }

@@ -23,7 +23,7 @@ export async function POST() {
     return NextResponse.json({ conversationId });
 
   } catch (error) {
-    console.error("NEW CONVERSATION ERROR:", error);
+    // New conversation failure handled without exposing internal error details.
 
     return NextResponse.json(
       { error: "Internal Server Error" },
