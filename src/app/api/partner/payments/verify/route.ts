@@ -588,10 +588,7 @@ if (
     });
 
   } catch (error: unknown) {
-    console.error(
-      "PARTNER PAYSTACK VERIFICATION ERROR:",
-      error
-    );
+    console.error("Partner Paystack verification failed.");
 
     return NextResponse.json(
       {
