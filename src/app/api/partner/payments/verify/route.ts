@@ -302,8 +302,7 @@ if (
   !Number.isFinite(paidAmount) ||
   paidAmount !== expectedAmount
 ) {
-  console.error("Paystack payment amount mismatch.");
-
+  
   await db
     .collection(
       "partner_payments"
@@ -432,11 +431,8 @@ if (
         paystackSubscriptionCode =
           matchingSubscription?.subscription_code ||
           null;
-      } catch (subscriptionLookupError) {
-        console.error(
-          "Unable to retrieve Paystack subscription:",
-          subscriptionLookupError
-        );
+            } catch {
+        // Subscription lookup is diagnostic only.
       }
     }
 
@@ -580,9 +576,7 @@ if (
       nextBillingDate,
     });
 
-  } catch (error: unknown) {
-    console.error("Partner Paystack verification failed.");
-
+    } catch {
     return NextResponse.json(
       {
         error:
