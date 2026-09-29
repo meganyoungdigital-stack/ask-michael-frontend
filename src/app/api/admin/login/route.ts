@@ -173,14 +173,7 @@ response.cookies.set({
 return response;
 
 
-}catch(error){
-
-
-console.error(
-"Admin login error",
-error
-);
-
+}catch{
 
 
 return NextResponse.json(
