@@ -40,10 +40,9 @@ export async function GET() {
       },
     });
 
-  } catch (error) {
-    console.error("Billing error:", error);
+  } catch {
 
-    return NextResponse.json(
+  return NextResponse.json(
       { error: "Failed to load billing" },
       { status: 500 }
     );
