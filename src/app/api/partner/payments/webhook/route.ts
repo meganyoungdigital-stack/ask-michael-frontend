@@ -608,10 +608,7 @@ if (paymentUpdate.modifiedCount === 0) {
     });
 
   } catch (error) {
-    console.error(
-      "PARTNER PAYSTACK WEBHOOK ERROR:",
-      error
-    );
+    console.error("Partner Paystack webhook processing failed.");
 
     return NextResponse.json(
       {
