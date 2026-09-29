@@ -26,7 +26,7 @@ export async function POST() {
     return NextResponse.json({ success: true });
 
   } catch (error) {
-    console.error("Cancel subscription error:", error);
+    // Subscription cancellation failure handled without exposing internal error details.
 
     return NextResponse.json(
       { error: "Failed to cancel subscription" },
