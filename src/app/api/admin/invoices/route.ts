@@ -69,13 +69,7 @@ export async function GET() {
     );
 
 
-  } catch (error) {
-
-    console.error(
-      "Admin invoices error:",
-      error
-    );
-
+    } catch {
 
     return NextResponse.json(
       {
@@ -302,13 +296,7 @@ billingPeriod: cleanBillingPeriod,
     );
 
 
-  } catch (error) {
-
-    console.error(
-      "Admin invoice creation error:",
-      error
-    );
-
+    } catch {
 
     return NextResponse.json(
       {
