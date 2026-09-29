@@ -28,7 +28,7 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error("User API error:", error);
+    // User API failure handled without exposing internal error details.
 
     return NextResponse.json(
       { error: "Failed to fetch user" },
@@ -204,7 +204,7 @@ if (cleanOccupation !== undefined) {
     });
 
   } catch (error) {
-    console.error("User UPDATE error:", error);
+    // User update failure handled without exposing internal error details.
 
     return NextResponse.json(
       { error: "Failed to update user" },
