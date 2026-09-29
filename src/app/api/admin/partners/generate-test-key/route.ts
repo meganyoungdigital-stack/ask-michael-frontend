@@ -137,12 +137,7 @@ $unset: {
       testApiKey,
     });
 
-  } catch (error) {
-
-    console.error(
-      "Generate test API key error:",
-      error
-    );
+  } catch {
 
     return NextResponse.json(
       {
