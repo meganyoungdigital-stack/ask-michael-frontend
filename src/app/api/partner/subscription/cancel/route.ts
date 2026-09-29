@@ -161,22 +161,7 @@ if (!rateLimitResult.success) {
       .limit(10)
       .toArray();
 
-  console.error(
-    "Partner cancellation: no subscription code found.",
-    {
-      partnerId: partner._id.toString(),
-      partnerSubscriptionCode:
-        partner.paystackSubscriptionCode || null,
-      recentSubscriptionPayments:
-        subscriptionPayments.map((payment) => ({
-          paymentType: payment.paymentType || null,
-          status: payment.status || null,
-          hasSubscriptionCode:
-            Boolean(payment.subscriptionCode),
-          createdAt: payment.createdAt || null,
-        })),
-    }
-  );
+  
 
   return NextResponse.json(
     {
@@ -193,9 +178,7 @@ if (!rateLimitResult.success) {
       process.env.PAYSTACK_SECRET_KEY;
 
     if (!secretKey) {
-      console.error(
-        "PAYSTACK_SECRET_KEY is not configured."
-      );
+      
 
       return NextResponse.json(
         {
@@ -231,7 +214,7 @@ if (!rateLimitResult.success) {
       !paystackData.status ||
       !paystackData.data?.link
     ) {
-      console.error("Paystack subscription management link request failed.");
+      
 
       return NextResponse.json(
         {
@@ -248,8 +231,7 @@ if (!rateLimitResult.success) {
       managementUrl:
         paystackData.data.link,
     });
-  } catch (error) {
-    console.error("Partner subscription cancellation failed.");
+  } catch {
 
     return NextResponse.json(
       {

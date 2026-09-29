@@ -377,12 +377,7 @@ termsAcceptedAt: acceptedTerms
 
 
 
-  } catch (error) {
-
-    console.error(
-      "Partner registration error:",
-      error
-    );
+  } catch {
 
 
     return NextResponse.json(

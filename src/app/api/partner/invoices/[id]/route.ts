@@ -115,11 +115,7 @@ const partner =
     }
 
     return NextResponse.json(invoice);
-  } catch (error) {
-    console.error(
-      "Partner single invoice error:",
-      error
-    );
+ } catch {
 
     return NextResponse.json(
       {

@@ -189,10 +189,7 @@ if (
 
     if (error) {
 
-      console.error(
-        "RESEND ERROR:",
-        error
-      );
+      // Resend failure handled without exposing provider details.
 
 
       return NextResponse.json(
@@ -213,10 +210,7 @@ if (
 
 
 
-    console.log(
-      "RESEND SUCCESS:",
-      data
-    );
+    // Resend success handled without logging provider response details.
 
 
 
@@ -247,10 +241,7 @@ if (
   } catch (error) {
 
 
-    console.error(
-      "Partner application error:",
-      error
-    );
+    // Application failure handled without exposing internal error details.
 
 
 

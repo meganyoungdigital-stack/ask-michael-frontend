@@ -92,11 +92,8 @@ if (!rateLimitResult.success) {
     return NextResponse.json({
       success: true,
     });
-  } catch (error) {
-    console.error(
-      "Partner live API key revoke error:",
-      error
-    );
+  } catch {
+    
 
     return NextResponse.json(
       {

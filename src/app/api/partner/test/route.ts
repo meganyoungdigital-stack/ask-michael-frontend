@@ -207,11 +207,7 @@ if (cleanMessage.length > 20000) {
 
       response,
     });
-  } catch (error) {
-    console.error(
-      "PARTNER_TEST_API_ERROR:",
-      error
-    );
+  } catch {
 
     return NextResponse.json(
       {

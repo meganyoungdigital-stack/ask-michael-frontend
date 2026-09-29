@@ -527,22 +527,7 @@ if (
   billedUsageResult.modifiedCount !==
   1
 ) {
-  console.error(
-    "EXTRA USAGE BILLING COUNTER UPDATE FAILED:",
-    {
-      partnerId:
-        partner._id.toString(),
-
-      billingAllocationKey,
-
-      expectedBilledExtraMessages:
-        billing.billedExtraMessages,
-
-      extraMessages:
-        billing.extraMessages,
-    }
-  );
-
+  
   return NextResponse.json(
     {
       error:
@@ -669,15 +654,7 @@ if (
 
   } catch (error: unknown) {
        if (axios.isAxiosError(error)) {
-      console.error(
-        "PARTNER EXTRA USAGE CHARGE FAILED:",
-        {
-          paystackStatus:
-            error.response?.status ?? null,
-        }
-      );
-
-      return NextResponse.json(
+  return NextResponse.json(
         {
           error:
             "Unable to charge partner for extra usage.",
@@ -688,10 +665,7 @@ if (
       );
     }
 
-        console.error(
-      "PARTNER EXTRA USAGE CHARGE FAILED"
-    );
-
+       
 
     return NextResponse.json(
       {

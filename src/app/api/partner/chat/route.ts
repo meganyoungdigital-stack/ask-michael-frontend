@@ -356,16 +356,10 @@ if (newExtraMessages > 0) {
     const chargeData =
       await chargeResponse.json();
 
-    console.log(
-      "PARTNER EXTRA USAGE CHARGE RESULT:",
-      chargeData
-    );
+    // Extra usage charge response is handled without logging provider details.
 
     if (!chargeResponse.ok) {
-      console.error(
-        "PARTNER EXTRA USAGE CHARGE FAILED:",
-        chargeData
-      );
+      // Extra usage charge failure is handled without logging provider details.
     } else if (
       chargeData?.success === true &&
       chargeData?.message ===
@@ -376,10 +370,7 @@ if (newExtraMessages > 0) {
         newExtraMessages;
     }
   } catch (chargeError) {
-    console.error(
-      "PARTNER EXTRA USAGE CHARGE ERROR:",
-      chargeError
-    );
+    // Extra usage charge error is handled without exposing internal details.
   }
 }
 
@@ -416,10 +407,7 @@ if (newExtraMessages > 0) {
 },
     });
   } catch (error) {
-    console.error(
-      "PARTNER LIVE API ERROR:",
-      error
-    );
+    // Partner live API failure is handled without exposing internal details.
 
     return NextResponse.json(
       {

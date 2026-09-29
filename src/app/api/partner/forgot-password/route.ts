@@ -209,13 +209,10 @@ if (!rateLimitResult.success) {
 
 
 
-  } catch(error) {
+  } catch {
 
 
-    console.error(
-      "Partner forgot password error:",
-      error
-    );
+    // Password recovery failure handled without exposing internal details.
 
 
     return NextResponse.json(

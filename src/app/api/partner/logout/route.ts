@@ -35,11 +35,7 @@ export async function POST() {
     return NextResponse.json({
       success: true,
     });
-  } catch (error) {
-    console.error(
-      "PARTNER LOGOUT ERROR:",
-      error
-    );
+  } catch {
 
     return NextResponse.json(
       {

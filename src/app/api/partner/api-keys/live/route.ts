@@ -106,11 +106,7 @@ if (!rateLimitResult.success) {
       success: true,
       apiKey,
     });
-  } catch (error) {
-    console.error(
-      "Partner live API key generation error:",
-      error
-    );
+  } catch {
 
     return NextResponse.json(
       {

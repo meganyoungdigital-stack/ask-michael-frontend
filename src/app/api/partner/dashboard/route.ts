@@ -168,12 +168,7 @@ paymentStatus:
 nextBillingDate:
   partner.nextBillingDate || null,
     });
-  } catch (error) {
-    console.error(
-      "Partner dashboard error:",
-      error
-    );
-
+ } catch {
     return NextResponse.json(
       {
         error: "Dashboard failed",

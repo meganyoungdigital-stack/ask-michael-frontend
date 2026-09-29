@@ -235,14 +235,7 @@ message:
 
 
 
-}catch(error){
-
-
-console.error(
-"Partner reset password error:",
-error
-);
-
+}catch{
 
 
 return NextResponse.json(

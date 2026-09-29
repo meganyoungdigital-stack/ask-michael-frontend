@@ -174,13 +174,7 @@ return NextResponse.json({
 
 
 
-  } catch (error) {
-
-
-    console.error(
-      "Partner login error:",
-      error
-    );
+  } catch {
 
 
 

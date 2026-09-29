@@ -89,8 +89,7 @@ const partner =
       .toArray();
 
     return NextResponse.json(invoices);
-  } catch (error) {
-    console.error("Partner invoices error:", error);
+  } catch {
 
     return NextResponse.json(
       {

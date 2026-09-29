@@ -21,11 +21,7 @@ export async function GET() {
     return NextResponse.json({
       authenticated: !!partnerId,
     });
-  } catch (error) {
-    console.error(
-      "PARTNER SESSION CHECK ERROR:",
-      error
-    );
+  } catch {
 
     return NextResponse.json(
       {
