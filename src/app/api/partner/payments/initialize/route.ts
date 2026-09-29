@@ -161,22 +161,7 @@ const partner =
       ? process.env.PAYSTACK_BUSINESS_PLAN
       : null;
 
-      console.log(
-  "PARTNER PAYSTACK PLAN DEBUG:",
-  {
-    plan,
-    paystackPlanCode:
-      planConfig?.paystackPlanCode,
-    starterEnv:
-  process.env.PAYSTACK_STARTER_PLAN_CODE
-    ? "SET"
-    : "MISSING",
-    businessEnv:
-      process.env.PAYSTACK_BUSINESS_PLAN
-        ? "SET"
-        : "MISSING",
-  }
-);
+      
 
     // ==========================================
     // CURRENCY
@@ -295,7 +280,7 @@ const partner =
     }
 
     // ==========================================
-    // DEBUG PAYSTACK PLAN
+    // VERIFY PAYSTACK PLAN
     // ==========================================
 
     if (paystackPlanCode) {
@@ -311,48 +296,9 @@ const partner =
             }
           );
 
-        console.log(
-          "PAYSTACK PLAN CHECK:",
-          JSON.stringify(
-            {
-              success:
-                planCheck.data?.status ?? false,
-
-              message:
-                planCheck.data?.message ?? null,
-
-              planCode:
-                planCheck.data?.data?.plan_code ?? null,
-
-              domain:
-                planCheck.data?.data?.domain ?? null,
-
-              amount:
-                planCheck.data?.data?.amount ?? null,
-
-              currency:
-                planCheck.data?.data?.currency ?? null,
-            },
-            null,
-            2
-          )
-        );
-      } catch (planError: unknown) {
-        if (axios.isAxiosError(planError)) {
-          console.error(
-            "PAYSTACK PLAN CHECK FAILED:",
-            JSON.stringify(
-              planError.response?.data ?? null,
-              null,
-              2
-            )
-          );
-        } else {
-          console.error(
-            "PAYSTACK PLAN CHECK FAILED:",
-            planError
-          );
-        }
+        
+            } catch {
+        // Plan verification is diagnostic only.
       }
     }
 
@@ -360,21 +306,7 @@ const partner =
     // INITIALIZE WITH PAYSTACK
     // ==========================================
 
-    console.log(
-  "PAYSTACK INITIALIZE REQUEST:",
-  JSON.stringify(
-    {
-      email,
-      currency,
-      reference,
-      plan: paystackPayload.plan,
-      amount: paystackPayload.amount,
-    },
-    null,
-    2
-  )
-);
-
+    
     const paystackResponse =
       await axios.post(
         "https://api.paystack.co/transaction/initialize",
@@ -390,14 +322,6 @@ const partner =
         }
       );
 
-console.log(
-  "PAYSTACK INITIALIZATION RESPONSE:",
-  JSON.stringify(
-    paystackResponse.data,
-    null,
-    2
-  )
-);
 
     const paystackData =
       paystackResponse.data?.data;
@@ -406,13 +330,10 @@ console.log(
   !paystackResponse.data?.status ||
   !paystackData?.access_code
 ) {
-  return NextResponse.json(
+    return NextResponse.json(
     {
       error:
         "Paystack failed to initialize the payment.",
-
-      paystackResponse:
-        paystackResponse.data,
     },
     {
       status: 500,
@@ -550,50 +471,12 @@ else {
   paystackData,
 });
 
-        } catch (error: unknown) {
-    console.error(
-      "PAYSTACK PARTNER INITIALIZATION ERROR:",
-      error
-    );
-
-    let errorMessage =
-      "Unknown error";
-
-    if (error instanceof Error) {
-      errorMessage =
-        error.message;
-    }
-
+                } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
-      console.error(
-        "PAYSTACK STATUS:",
-        error.response?.status
-      );
-
-      console.error(
-        "PAYSTACK RESPONSE:",
-        JSON.stringify(
-          error.response?.data,
-          null,
-          2
-        )
-      );
-
       return NextResponse.json(
         {
           error:
             "Unable to initialize partner payment.",
-
-          details:
-            errorMessage,
-
-          paystackStatus:
-            error.response?.status ??
-            null,
-
-          paystackResponse:
-            error.response?.data ??
-            null,
         },
         {
           status: 500,
@@ -605,9 +488,6 @@ else {
       {
         error:
           "Unable to initialize partner payment.",
-
-        details:
-          errorMessage,
       },
       {
         status: 500,
