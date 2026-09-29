@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
           break;
         }
 
-        console.log("✅ Payment success:", reference);
+        // Payment success handled without logging payment reference.
 
         const metadata = data.metadata || {};
 
@@ -101,10 +101,7 @@ export async function POST(req: NextRequest) {
           partnerId &&
           paymentType === "partner_subscription"
         ) {
-          console.log(
-            "✅ Partner subscription payment:",
-            partnerId
-          );
+          // Partner subscription payment handled without logging partner ID.
 
           /* ==========================================
           FIND PARTNER PAYMENT
@@ -116,10 +113,7 @@ export async function POST(req: NextRequest) {
             });
 
           if (!partnerPayment) {
-            console.warn(
-              "⚠️ Partner payment record not found:",
-              reference
-            );
+            // Partner payment record not found; handled without logging payment reference.
 
             break;
           }
@@ -129,10 +123,7 @@ export async function POST(req: NextRequest) {
           ========================================== */
 
           if (partnerPayment.status === "success") {
-            console.log(
-              "ℹ️ Partner payment already processed:",
-              reference
-            );
+            // Partner payment already processed; handled without logging payment reference.
 
             break;
           }
@@ -148,13 +139,11 @@ export async function POST(req: NextRequest) {
             });
 
           if (!partner) {
-            console.warn(
-              "⚠️ Partner not found:",
-              partnerId
-            );
+            
+  // Partner not found; handled without logging partner ID.
 
-            break;
-          }
+  break;
+}
 
           /* ==========================================
           MARK PAYMENT AS PAID
@@ -275,10 +264,7 @@ export async function POST(req: NextRequest) {
               }
             );
 
-          console.log(
-            "✅ Partner subscription activated:",
-            partnerPayment.partnerId.toString()
-          );
+          // Partner subscription activated without logging partner ID.
 
           break;
         }
@@ -366,10 +352,7 @@ export async function POST(req: NextRequest) {
           partnerId &&
           paymentType === "partner_subscription"
         ) {
-          console.log(
-            "✅ Partner subscription created/enabled:",
-            partnerId
-          );
+          // Partner subscription creation handled without logging partner ID.
 
           if (!ObjectId.isValid(partnerId)) {
             console.warn(
@@ -387,13 +370,10 @@ export async function POST(req: NextRequest) {
             });
 
           if (!partner) {
-            console.warn(
-              "⚠️ Partner not found:",
-              partnerId
-            );
+  // Partner not found; handled without logging partner ID.
 
-            break;
-          }
+  break;
+}
 
           /* ==========================================
           CALCULATE NEXT BILLING DATE
@@ -450,10 +430,7 @@ export async function POST(req: NextRequest) {
               }
             );
 
-          console.log(
-            "✅ Partner subscription activated:",
-            partnerId
-          );
+          // Partner subscription activated without logging partner ID.
 
           break;
         }
@@ -524,10 +501,7 @@ export async function POST(req: NextRequest) {
     partnerId &&
     paymentType === "partner_subscription"
   ) {
-    console.log(
-      "✅ Partner subscription renewal payment:",
-      partnerId
-    );
+    // Partner subscription renewal handled without logging partner ID.
 
     if (!ObjectId.isValid(partnerId)) {
       console.warn(
@@ -545,13 +519,10 @@ export async function POST(req: NextRequest) {
       });
 
     if (!partner) {
-      console.warn(
-        "⚠️ Partner not found:",
-        partnerId
-      );
+  // Partner not found; handled without logging partner ID.
 
-      break;
-    }
+  break;
+}
 
     /* ==========================================
     CALCULATE NEXT BILLING DATE
@@ -649,10 +620,7 @@ export async function POST(req: NextRequest) {
         }
       );
 
-    console.log(
-      "✅ Partner subscription renewed:",
-      partnerId
-    );
+    // Partner subscription renewal completed without logging partner ID.
 
     break;
   }
@@ -694,7 +662,7 @@ export async function POST(req: NextRequest) {
 }
 
       default:
-        console.log("Unhandled event:", event.event);
+  // Unhandled Paystack event ignored without logging event details.
     }
 
     return new NextResponse("OK", { status: 200 });
