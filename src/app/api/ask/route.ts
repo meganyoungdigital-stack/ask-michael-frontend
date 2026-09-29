@@ -187,19 +187,14 @@ async function getVectorContext(
 
     context = trimContext(context);
 
-    console.log("RAG RESULTS:", {
-      chunks: typedResults.length,
-      topScore: typedResults[0]?.score,
-    });
-
+    
     return {
       context,
       sources: typedResults,
     };
-  } catch (error) {
-    console.error("Vector search error:", error);
-    return { context: "", sources: [] };
-  }
+  } catch {
+  return { context: "", sources: [] };
+}
 }
 
 /* =====================================================
@@ -357,7 +352,7 @@ try {
       JSON.stringify(prediction, null, 2);
   }
 } catch {
-  console.log("Simulation skipped");
+  
 }
 
     try {
@@ -368,7 +363,7 @@ try {
 
       context = vectorResult.context || "";
     } catch {
-      console.log("Vector search skipped");
+      
     }
 
     /* ============================
@@ -443,10 +438,8 @@ simulationInsight
           );
 
           await recordUserUsage(userId);
-        } catch (err) {
-          console.error("Streaming error:", err);
-
-          controller.enqueue(
+        } catch {
+  controller.enqueue(
             encoder.encode(
               "\n\n[AI response interrupted]"
             )
@@ -464,10 +457,8 @@ simulationInsight
         Connection: "keep-alive",
       },
     });
-  } catch (error: any) {
-    console.error("ASK_API_ERROR:", error);
-
-    return NextResponse.json(
+  } catch {
+  return NextResponse.json(
       {
         error: "Internal server error",
       },
