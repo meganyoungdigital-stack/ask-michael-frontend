@@ -43,10 +43,8 @@ if (conversationId) {
     // 🔥 CRITICAL FIX — return the array directly
     return Response.json(conversations || [], { status: 200 });
 
-  } catch (error) {
-    console.error("🔥 FULL CONVERSATION ERROR:", error);
-
-    return Response.json(
+  } catch {
+  return Response.json(
       { error: "Internal server error" },
       { status: 500 }
     );
