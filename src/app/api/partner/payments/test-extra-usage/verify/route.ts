@@ -686,14 +686,6 @@ console.log(
         {
           error:
             "Unable to verify extra-usage payment.",
-
-          paystackStatus:
-            error.response?.status ??
-            null,
-
-          paystackResponse:
-            error.response?.data ??
-            null,
         },
         {
           status: 500,
@@ -711,3 +703,5 @@ console.log(
     );
   }
 }
+
+
