@@ -398,10 +398,8 @@ if (cleanText.length > 200000) {
         headers: { "Content-Type": "application/json" },
       }
     );
-  } catch (error) {
-    console.error("[KNOWLEDGE_UPLOAD_ERROR]", error);
-
-    return new Response(
+  } catch {
+  return new Response(
       JSON.stringify({
         error: "Upload failed",
       }),
