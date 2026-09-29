@@ -144,9 +144,8 @@ if (rating !== 1 && rating !== -1) {
           }
         );
       }
-    } catch (err) {
-      console.error("Cache ranking error:", err);
-    }
+    } catch {
+}
 
     /* ================= OPTIONAL: FLAG BAD RESPONSES ================= */
     if (rating < 0) {
@@ -167,10 +166,8 @@ if (rating !== 1 && rating !== -1) {
       }
     );
 
-  } catch (error) {
-    console.error("[FEEDBACK_ERROR]", error);
-
-    return new Response(
+  } catch {
+  return new Response(
       JSON.stringify({
         error: "Feedback failed",
       }),
