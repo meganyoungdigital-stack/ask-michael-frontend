@@ -142,10 +142,8 @@ Examples:
 
     return NextResponse.json({ success: true });
 
-  } catch (error) {
-    console.error("Generate title error:", error);
-
-    return NextResponse.json(
+  } catch {
+  return NextResponse.json(
       { error: "Failed to generate title" },
       { status: 500 }
     );
