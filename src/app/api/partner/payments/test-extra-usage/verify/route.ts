@@ -361,14 +361,7 @@ if (
       paidAmount !==
         expectedAmount
     ) {
-      console.error(
-        "PAYSTACK EXTRA-USAGE AMOUNT MISMATCH:",
-        {
-          reference,
-          expectedAmount,
-          paidAmount,
-        }
-      );
+      
 
       await db
         .collection(
@@ -537,25 +530,6 @@ if (
       }
     );
 
-console.log(
-  "PAYSTACK EXTRA-USAGE PAYMENT UPDATE RESULT:",
-  {
-    matchedCount:
-      paymentUpdateResult.matchedCount,
-
-    modifiedCount:
-      paymentUpdateResult.modifiedCount,
-
-    paymentId:
-      payment._id.toString(),
-
-    initializationReference:
-      payment.reference,
-
-    paystackReference:
-      paystackData.reference,
-  }
-);
 
     // ==========================================
     // MAKE SURE PAYMENT WAS SAVED
@@ -564,19 +538,7 @@ console.log(
     if (
       paymentUpdateResult.matchedCount !== 1
     ) {
-      console.error(
-        "PAYSTACK EXTRA-USAGE PAYMENT WAS NOT FOUND FOR UPDATE:",
-        {
-          paymentId:
-            payment._id.toString(),
-
-          initializationReference:
-            payment.reference,
-
-          paystackReference:
-            paystackData.reference,
-        }
-      );
+     
 
       return NextResponse.json(
         {
@@ -658,9 +620,7 @@ console.log(
         updatedBilling,
     });
 
-  } catch (error: unknown) {
-    console.error("Paystack extra-usage verification failed.");
-
+    } catch (error: unknown) {
     if (
       axios.isAxiosError(error)
     ) {
