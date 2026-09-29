@@ -17,7 +17,7 @@ export async function GET() {
 
     return NextResponse.json(conversations);
   } catch (err) {
-    console.error("Project conversations fetch error:", err);
+    // Project conversations fetch failure handled without exposing internal error details.
 
     return NextResponse.json(
       { error: "Failed to fetch projects" },
