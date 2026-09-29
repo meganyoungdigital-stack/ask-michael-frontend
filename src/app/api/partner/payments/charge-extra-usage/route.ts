@@ -389,26 +389,7 @@ const reference =
     // CHARGE PAYSTACK AUTHORIZATION
     // ==========================================
 
-    console.log(
-      "PAYSTACK EXTRA USAGE CHARGE:",
-      {
-        partnerId:
-          partner._id.toString(),
-
-        reference,
-
-        extraMessages:
-          billing.extraMessages,
-
-        extraUsageCharge,
-
-        amount,
-
-        authorizationCode:
-          "PRESENT",
-      }
-    );
-
+   
     const paystackResponse =
       await axios.post(
         "https://api.paystack.co/transaction/charge_authorization",
@@ -460,15 +441,7 @@ const reference =
     // PAYSTACK RESPONSE
     // ==========================================
 
-    console.log(
-      "PAYSTACK EXTRA USAGE RESPONSE:",
-      JSON.stringify(
-        paystackResponse.data,
-        null,
-        2
-      )
-    );
-
+    
     const paystackData =
       paystackResponse.data?.data;
 
