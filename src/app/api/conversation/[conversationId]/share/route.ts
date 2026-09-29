@@ -55,9 +55,8 @@ const { db } = await connectToDatabase();
     return NextResponse.json({
       shareUrl: `${process.env.NEXT_PUBLIC_APP_URL}/share/${shareId}`,
     });
-  } catch (error) {
-    console.error("[SHARE_ERROR]", error);
-    return NextResponse.json(
+  } catch {
+  return NextResponse.json(
       { error: "Share failed" },
       { status: 500 }
     );
