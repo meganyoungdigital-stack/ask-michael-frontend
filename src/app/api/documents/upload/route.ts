@@ -133,10 +133,9 @@ async function safeCreateEmbedding(input: string) {
     });
 
     return res.data[0].embedding;
-  } catch (err) {
-    console.error("Embedding failed for chunk:", err);
-    return null;
-  }
+  } catch {
+  return null;
+}
 }
 
 /* =========================
@@ -151,10 +150,8 @@ async function createEmbeddingsBatch(chunks: string[]) {
     });
 
     return res.data.map((d) => d.embedding);
-  } catch (err) {
-    console.error("Batch embedding failed, falling back to single:", err);
-
-    // fallback to individual processing
+  } catch {
+  // fallback to individual processing
     const results: (number[] | null)[] = [];
 
     for (const chunk of chunks) {
@@ -201,10 +198,8 @@ export async function GET() {
       .toArray();
 
     return NextResponse.json({ documents });
-  } catch (error) {
-    console.error("Document load error:", error);
-
-    return NextResponse.json(
+ } catch {
+  return NextResponse.json(
       { error: "Failed to load documents" },
       { status: 500 }
     );
@@ -377,10 +372,8 @@ if (
       success: true,
       chunksIndexed: chunkDocuments.length,
     });
-  } catch (error) {
-    console.error("Upload error:", error);
-
-    return NextResponse.json(
+  } catch {
+  return NextResponse.json(
       { error: "Upload failed" },
       { status: 500 }
     );
@@ -421,10 +414,8 @@ export async function DELETE(req: Request) {
     });
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("Delete error:", error);
-
-    return NextResponse.json(
+  } catch {
+  return NextResponse.json(
       { error: "Delete failed" },
       { status: 500 }
     );
