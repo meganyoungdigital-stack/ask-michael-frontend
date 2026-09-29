@@ -93,8 +93,7 @@ if (
         }.pdf"`,
       },
     });
-  } catch (err) {
-    console.error("PDF ERROR:", err);
-    return new Response("PDF generation failed", { status: 500 });
-  }
+  } catch {
+  return new Response("PDF generation failed", { status: 500 });
+}
 }
