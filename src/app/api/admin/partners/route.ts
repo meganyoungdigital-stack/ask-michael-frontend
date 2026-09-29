@@ -510,10 +510,7 @@ const tokenHash =
     }
   );
 
-  console.log(
-    "Existing invitation updated successfully."
-  );
-
+  
 }
 
       
