@@ -39,11 +39,7 @@ export async function POST(req: Request) {
     const secretKey =
       process.env.PAYSTACK_SECRET_KEY;
 
-    if (!secretKey) {
-      console.error(
-        "PAYSTACK_SECRET_KEY is not configured."
-      );
-
+        if (!secretKey) {
       return NextResponse.json(
         {
           error:
@@ -64,14 +60,10 @@ export async function POST(req: Request) {
         .update(rawBody)
         .digest("hex");
 
-    if (
+        if (
       signature !==
       expectedSignature
     ) {
-      console.error(
-        "Invalid Paystack webhook signature."
-      );
-
       return NextResponse.json(
         {
           error:
@@ -90,10 +82,7 @@ export async function POST(req: Request) {
     const event =
       JSON.parse(rawBody);
 
-    console.log(
-      "Paystack webhook received:",
-      event.event
-    );
+    
 
     // ==========================================
     // HANDLE SUBSCRIPTION CANCELLATION EVENTS
@@ -110,12 +99,7 @@ export async function POST(req: Request) {
         event.data?.subscription?.subscription_code ||
         null;
 
-      if (!subscriptionCode) {
-        console.error(
-          "Paystack subscription event is missing subscription code:",
-          event.event
-        );
-
+            if (!subscriptionCode) {
         return NextResponse.json(
           {
             error:
@@ -167,15 +151,10 @@ export async function POST(req: Request) {
             update
           );
 
-      if (
+            if (
         result.matchedCount ===
         0
       ) {
-        console.error(
-          "Partner not found for Paystack subscription:",
-          subscriptionCode
-        );
-
         return NextResponse.json({
           success: true,
           message:
@@ -183,11 +162,7 @@ export async function POST(req: Request) {
         });
       }
 
-      console.log(
-        `Partner subscription event processed: ${event.event}`,
-        subscriptionCode
-      );
-
+      
       return NextResponse.json({
         success: true,
         message:
@@ -264,12 +239,7 @@ export async function POST(req: Request) {
           reference,
         });
 
-    if (!payment) {
-      console.error(
-        "Partner payment not found:",
-        reference
-      );
-
+        if (!payment) {
       return NextResponse.json(
         {
           error:
@@ -331,13 +301,7 @@ export async function POST(req: Request) {
       ) ||
       expectedAmount <= 0
     ) {
-      console.error(
-        "Invalid expected payment amount:",
-        {
-          reference,
-          expectedAmount,
-        }
-      );
+      
 
       return NextResponse.json(
         {
@@ -357,14 +321,7 @@ export async function POST(req: Request) {
       paidAmount !==
         expectedAmount
     ) {
-      console.error(
-        "PAYSTACK WEBHOOK AMOUNT MISMATCH:",
-        {
-          reference,
-          expectedAmount,
-          paidAmount,
-        }
-      );
+      
 
       await db
         .collection(
@@ -413,15 +370,8 @@ export async function POST(req: Request) {
       metadataPartnerId !==
       payment.partnerId.toString()
     ) {
-      console.error(
-        "Webhook partner ID mismatch:",
-        {
-          reference,
-          metadataPartnerId,
-          paymentPartnerId:
-            payment.partnerId.toString(),
-        }
-      );
+      
+     
 
       return NextResponse.json(
         {
@@ -595,11 +545,7 @@ if (paymentUpdate.modifiedCount === 0) {
     // SUCCESS
     // ==========================================
 
-    console.log(
-      "Partner subscription activated:",
-      reference
-    );
-
+    
     return NextResponse.json({
       success: true,
       message:
@@ -607,9 +553,7 @@ if (paymentUpdate.modifiedCount === 0) {
       reference,
     });
 
-  } catch (error) {
-    console.error("Partner Paystack webhook processing failed.");
-
+    } catch (error) {
     return NextResponse.json(
       {
         error:
