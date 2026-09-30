@@ -440,14 +440,16 @@ if (
     // UPDATE PAYMENT RECORD
     // ==========================================
 
-    await db
-      .collection(
-        "partner_payments"
-      )
-      .updateOne(
-        {
-          _id: payment._id,
-        },
+    const paymentUpdate =
+  await db
+    .collection(
+      "partner_payments"
+    )
+    .updateOne(
+      {
+        _id: payment._id,
+        status: "pending",
+      },
         {
           $set: {
             status:
@@ -492,6 +494,19 @@ if (
           },
         }
       );
+
+    if (paymentUpdate.modifiedCount !== 1) {
+      return NextResponse.json(
+        {
+          success: true,
+          message:
+            "Payment has already been verified.",
+        },
+        {
+          status: 200,
+        }
+      );
+    }
 
     // ==========================================
     // CALCULATE NEXT BILLING DATE
