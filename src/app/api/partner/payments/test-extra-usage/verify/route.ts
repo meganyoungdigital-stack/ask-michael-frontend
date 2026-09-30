@@ -488,6 +488,7 @@ if (
     .updateOne(
       {
         _id: payment._id,
+        status: "pending",
       },
       {
         $set: {
@@ -536,7 +537,7 @@ if (
     // ==========================================
 
     if (
-      paymentUpdateResult.matchedCount !== 1
+      paymentUpdateResult.modifiedCount !== 1
     ) {
      
 
