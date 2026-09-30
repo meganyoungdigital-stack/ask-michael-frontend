@@ -482,7 +482,7 @@ const reference =
           error:
             "Paystack failed to charge the extra usage.",
           paystackResponse:
-            paystackResponse.data,
+            undefined,
         },
         {
           status: 500,
