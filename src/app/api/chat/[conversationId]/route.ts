@@ -5,6 +5,7 @@ import OpenAI from "openai";
 
 /* ✅ EXISTING */
 import { getMessageLimit, hasFeature } from "@/lib/tiers";
+import { ratelimit } from "@/lib/ratelimit";
 export const runtime = "nodejs";
 
 /* ================= OPENAI ================= */
@@ -127,6 +128,17 @@ export async function POST(
 
     if (!userId) {
       return new Response("Unauthorized", { status: 401 });
+    }
+
+        const rateLimitResult = await ratelimit.limit(userId);
+
+    if (!rateLimitResult.success) {
+      return new Response(
+        "Too many requests. Please wait a moment and try again.",
+        {
+          status: 429,
+        }
+      );
     }
 
     const params = await context.params;

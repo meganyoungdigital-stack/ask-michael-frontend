@@ -105,7 +105,7 @@ const admin =
 await db
 .collection("admins")
 .findOne({
-email
+ email: cleanEmail
 });
 
 
