@@ -675,13 +675,21 @@ const learningRes = await openai.responses.create({
 
 let learningText = (learningRes as any)?.output_text || "";
 
-    if (learningText && learningText.length > 50) {
+        if (
+      learningText &&
+      learningText.length > 50 &&
+      learningText.length < 5000
+    ) {
       const embedding = await createEmbedding(learningText);
 
       await db.collection("ai_learnings").insertOne({
         content: learningText,
         embedding,
         source: "ai_generated",
+        status: "unverified",
+        userId,
+        company: user?.company || null,
+        conversationId,
         confidence: 0.8,
         createdAt: new Date(),
       });
