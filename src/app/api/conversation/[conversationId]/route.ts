@@ -84,12 +84,48 @@ export async function PATCH(
 
     const body = await req.json();
 
-    const { db } = await connectToDatabase();
+if (
+  !body ||
+  typeof body !== "object" ||
+  Array.isArray(body)
+) {
+  return NextResponse.json(
+    {
+      error: "Invalid request body",
+    },
+    {
+      status: 400,
+    }
+  );
+}
 
-    const result = await db.collection("conversations").updateOne(
-      { conversationId, userId },
-      { $set: { ...body, updatedAt: new Date() } }
-    );
+const allowedFields = [
+  "title",
+  "messages",
+  "starred",
+];
+
+const updateData: Record<string, unknown> = {};
+
+for (const field of allowedFields) {
+  if (field in body) {
+    updateData[field] = body[field];
+  }
+}
+
+updateData.updatedAt = new Date();
+
+const { db } = await connectToDatabase();
+
+const result = await db.collection("conversations").updateOne(
+  {
+    conversationId,
+    userId,
+  },
+  {
+    $set: updateData,
+  }
+);
 
     if (result.matchedCount === 0) {
       return NextResponse.json(

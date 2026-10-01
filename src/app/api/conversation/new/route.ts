@@ -3,31 +3,50 @@ import { auth } from "@clerk/nextjs/server";
 import { randomUUID } from "crypto";
 
 /* ================= POST ================= */
+
 export async function POST() {
   try {
     const { userId } = await auth();
 
     if (!userId) {
       return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
+        {
+          error: "Unauthorized",
+        },
+        {
+          status: 401,
+        }
       );
     }
 
-    /* ================= CREATE ID ONLY (NO DB WRITE) ================= */
+    /*
+      Create a new conversation ID.
+      The conversation is created only when
+      the first message is saved.
+    */
+
     const conversationId = randomUUID();
 
-    // ❌ DO NOT create conversation here anymore
-    // It will be created on FIRST MESSAGE inside chat route
+    return NextResponse.json(
+      {
+        success: true,
+        conversationId,
+      },
+      {
+        status: 200,
+      }
+    );
 
-    return NextResponse.json({ conversationId });
-
-  } catch (error) {
-    // New conversation failure handled without exposing internal error details.
+  } catch {
 
     return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
+      {
+        error: "Internal Server Error",
+      },
+      {
+        status: 500,
+      }
     );
+
   }
 }

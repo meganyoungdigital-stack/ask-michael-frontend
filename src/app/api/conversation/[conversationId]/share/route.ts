@@ -19,12 +19,16 @@ export async function POST(
 
     const { conversationId } = await context.params;
 
+const cleanConversationId =
+  typeof conversationId === "string"
+    ? conversationId.trim()
+    : "";
+
 if (
-  typeof conversationId !== "string" ||
-  conversationId.length === 0 ||
-  conversationId.length > 200
+  cleanConversationId.length === 0 ||
+  cleanConversationId.length > 200
 ) {
-  return NextResponse.json(
+   return NextResponse.json(
     { error: "Invalid conversation ID" },
     { status: 400 }
   );
@@ -35,7 +39,10 @@ const { db } = await connectToDatabase();
     const shareId = randomUUID();
 
     const result = await db.collection("conversations").updateOne(
-      { conversationId, userId },
+      { 
+  conversationId: cleanConversationId,
+  userId,
+},
       {
         $set: {
           isPublic: true,

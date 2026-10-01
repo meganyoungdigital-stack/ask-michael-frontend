@@ -13,10 +13,21 @@ export async function GET() {
     const { db } = await connectToDatabase();
 
     const conversations = await db
-      .collection("conversations")
-      .find({ userId })
-      .sort({ updatedAt: -1 })
-      .toArray();
+  .collection("conversations")
+  .find(
+    { userId },
+    {
+      projection: {
+        conversationId: 1,
+        title: 1,
+        starred: 1,
+        updatedAt: 1,
+      },
+    }
+  )
+  .sort({ updatedAt: -1 })
+  .limit(100)
+  .toArray();
 
     return NextResponse.json({
       conversations: conversations.map((c: any) => ({
