@@ -40,8 +40,24 @@ export async function POST(req: Request) {
       authorization.startsWith("Bearer ")
         ? authorization.substring(7)
         : authorization;
+const trimmedApiKey = cleanApiKey.trim();
+
+if (
+  !trimmedApiKey ||
+  trimmedApiKey.length > 500
+) {
+  return NextResponse.json(
+    {
+      error: "Invalid API key",
+    },
+    {
+      status: 401,
+    }
+  );
+}
+    
         const apiKeyHash =
-  hashPartnerApiKey(cleanApiKey);
+  hashPartnerApiKey(trimmedApiKey);
 
     // ==========================================
     // CONNECT TO DATABASE
