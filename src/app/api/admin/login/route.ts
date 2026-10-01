@@ -114,10 +114,10 @@ if(!admin){
 
 return NextResponse.json(
 {
-error:"Admin not found"
+error:"Invalid email or password"
 },
 {
-status:404
+status:401
 }
 );
 
