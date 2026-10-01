@@ -110,16 +110,16 @@ if (!rateLimitResult.success) {
 
     if (!partner) {
 
-      return NextResponse.json(
-        {
-          error: "Partner account not found",
-        },
-        {
-          status: 404,
-        }
-      );
-
+  return NextResponse.json(
+    {
+      error: "Invalid email or password",
+    },
+    {
+      status: 401,
     }
+  );
+
+}
 
 
 
@@ -132,16 +132,16 @@ if (!rateLimitResult.success) {
 
     if (!passwordMatch) {
 
-      return NextResponse.json(
-        {
-          error: "Invalid password",
-        },
-        {
-          status: 401,
-        }
-      );
-
+  return NextResponse.json(
+    {
+      error: "Invalid email or password",
+    },
+    {
+      status: 401,
     }
+  );
+
+}
 
 
 

@@ -69,6 +69,15 @@ async function ensureIndexes(db: Db) {
   }
 );
 
+    await db.collection("partner_sessions").createIndex(
+      {
+        expiresAt: 1,
+      },
+      {
+        expireAfterSeconds: 0,
+      }
+    );
+
     await db.collection("conversations").createIndex({ userId: 1 });
 
     const indexes = await db.collection("conversations").indexes();

@@ -112,9 +112,17 @@ const [approvalMaxUsers, setApprovalMaxUsers] =
 const [approvalMaxMessages, setApprovalMaxMessages] =
   useState<number>(0);
 
-  function handleLogout() {
-  localStorage.removeItem("adminToken");
-  window.location.href = "/admin-login";
+  async function handleLogout() {
+
+  await fetch(
+    "/api/admin/logout",
+    {
+      method: "POST",
+    }
+  );
+
+  window.location.href =
+    "/admin-login";
 }
 
 

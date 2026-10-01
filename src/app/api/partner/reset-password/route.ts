@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import bcrypt from "bcrypt";
 import { partnerResetPasswordRatelimit } from "@/lib/ratelimit";
-
+import crypto from "crypto";
 
 
 export async function POST(req: Request){
@@ -52,6 +52,12 @@ if (
 
 const cleanToken = token.trim();
 const cleanPassword = password;
+
+const resetTokenHash =
+  crypto
+    .createHash("sha256")
+    .update(cleanToken)
+    .digest("hex");
 
 if (
   cleanToken.length === 0 ||
@@ -113,7 +119,7 @@ await db
 .collection("partners")
 .findOne({
 
-resetToken: cleanToken,
+resetTokenHash,
 
 });
 
@@ -206,7 +212,7 @@ passwordHash,
 $unset:
 {
 
-resetToken:"",
+resetTokenHash:"",
 
 resetTokenExpiry:"",
 
