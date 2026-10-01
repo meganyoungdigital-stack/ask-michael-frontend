@@ -146,10 +146,7 @@ export default function PartnerBilling() {
       const data =
         await response.json();
 
-      console.log(
-        "PAYSTACK TEST EXTRA-USAGE RESPONSE:",
-        data
-      );
+      
 
       if (!response.ok) {
         throw new Error(
@@ -197,10 +194,7 @@ export default function PartnerBilling() {
           onSuccess: function (
             paymentResponse
           ) {
-            console.log(
-              "PAYSTACK TEST PAYMENT RESPONSE:",
-              paymentResponse
-            );
+            
 
             const paymentReference =
               paymentResponse.reference ||
@@ -236,10 +230,7 @@ export default function PartnerBilling() {
                   const verifyData =
                     await verifyResponse.json();
 
-                  console.log(
-                    "PAYSTACK TEST EXTRA-USAGE VERIFICATION:",
-                    verifyData
-                  );
+                  
 
                   if (!verifyResponse.ok) {
                     throw new Error(
@@ -285,9 +276,7 @@ export default function PartnerBilling() {
           },
 
           onCancel: function () {
-            console.log(
-              "PAYSTACK TEST CHECKOUT CLOSED"
-            );
+            
 
             setPaymentLoading(false);
           },
@@ -372,10 +361,7 @@ export default function PartnerBilling() {
         paymentReference: string
       ) => {
         try {
-          console.log(
-            "VERIFYING PARTNER PAYMENT:",
-            paymentReference
-          );
+          
 
           const verifyResponse =
             await fetch(
@@ -401,10 +387,7 @@ export default function PartnerBilling() {
           const verifyData =
             await verifyResponse.json();
 
-          console.log(
-            "PARTNER PAYMENT VERIFICATION RESPONSE:",
-            verifyData
-          );
+          
 
           if (!verifyResponse.ok) {
             throw new Error(
@@ -477,9 +460,7 @@ export default function PartnerBilling() {
           },
 
           onCancel: function () {
-            console.log(
-              "PAYSTACK CHECKOUT CLOSED"
-            );
+           
 
             setPaymentLoading(false);
           },

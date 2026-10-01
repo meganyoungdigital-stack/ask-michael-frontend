@@ -155,7 +155,7 @@ export default function PricingPage() {
       },
 
       onClose: function () {
-        console.log("Payment window closed");
+        
       },
     });
 

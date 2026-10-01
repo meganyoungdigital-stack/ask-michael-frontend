@@ -50,11 +50,9 @@ export default function ChatPage() {
       isFetchingUsageRef.current = true;
 
       const res = await fetch("/api/usage");
-      const data = await res.json();
+const data = await res.json();
 
-      console.log("USAGE RESPONSE:", data);
-
-      /* ✅ HARD SAFE SET (NO FALLBACK CONFUSION) */
+/* ✅ HARD SAFE SET (NO FALLBACK CONFUSION) */
       setUsage((prev) => {
         const serverCount =
          typeof data.used === "number" ? data.used : prev.count;
@@ -88,14 +86,14 @@ export default function ChatPage() {
         const res = await fetch(`/api/chat/${conversationId}`);
         if (!res.ok) {
   const text = await res.text();
-  console.error("FETCH ERROR:", text);
+  console.error("Fetch request failed");
   throw new Error("Failed to fetch");
 }
 
         const data = await res.json();
         setMessages(data.messages || []);
       } catch (err) {
-        console.error("Fetch error:", err);
+        console.error("Fetch request error");
       } finally {
         setLoading(false);
       }
@@ -162,7 +160,7 @@ export default function ChatPage() {
       });
 if (!res.ok) {
   const errorText = await res.text();
-  console.error("API ERROR:", errorText);
+  console.error("API request failed");
   throw new Error("API request failed");
 }
       if (!res.body) {
@@ -199,7 +197,7 @@ try {
     }
   }
 } catch (streamErr) {
-  console.error("STREAM READ ERROR:", streamErr);
+  console.error("Stream read failed");
 }
 
       setSelectedFiles([]);
@@ -220,7 +218,7 @@ try {
 
           window.dispatchEvent(new Event("refreshSidebar"));
         } catch (err) {
-          console.error("Title generation failed:", err);
+          console.error("Title generation failed");
         }
       }
 
@@ -230,7 +228,7 @@ try {
       window.dispatchEvent(new Event("refreshSidebar"));
 
     } catch (err) {
-      console.error("Send error:", err);
+      console.error("Message send failed");
 
       setMessages((prev) => [
         ...prev,

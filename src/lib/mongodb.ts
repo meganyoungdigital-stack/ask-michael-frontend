@@ -167,7 +167,7 @@ async function getDb(): Promise<Db> {
       indexesInitialized = true;
     }
 
-    console.log("✅ MongoDB connected");
+    
 
     return db;
 
