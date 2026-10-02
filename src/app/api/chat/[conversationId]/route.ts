@@ -311,6 +311,24 @@ if (
   );
 }
 
+const ALLOWED_FILE_TYPES = new Set([
+  "application/pdf",
+  "text/plain",
+  "image/png",
+  "image/jpeg",
+]);
+
+if (
+  rawFiles.some(
+    (file) => !ALLOWED_FILE_TYPES.has(file.type)
+  )
+) {
+  return new Response(
+    "One or more uploaded file types are not supported",
+    { status: 400 }
+  );
+}
+
 message = rawMessage?.trim() || "";
   mode = rawMode?.trim() || "default";
   files = rawFiles as File[];
