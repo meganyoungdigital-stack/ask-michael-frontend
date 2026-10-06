@@ -55,7 +55,7 @@ if (
     }
   );
 }
-    
+
         const apiKeyHash =
   hashPartnerApiKey(trimmedApiKey);
 
@@ -230,7 +230,7 @@ if (cleanMessage.length > 20000) {
 }
 
     // ==========================================
-    // CHECK MAXIMUM MESSAGE LIMIT
+    // RESERVE PARTNER MESSAGE SLOT
     // ==========================================
 
     const currentMessages =
@@ -239,63 +239,25 @@ if (cleanMessage.length > 20000) {
     const maxMessages =
       Number(partner.maxMessages);
 
+    const usageFilter: Record<string, unknown> = {
+      _id: partner._id,
+    };
+
     if (
       Number.isFinite(maxMessages) &&
-      maxMessages > 0 &&
-      currentMessages >= maxMessages
+      maxMessages > 0
     ) {
-      return NextResponse.json(
-        {
-          error:
-            "Partner message limit has been reached.",
-          messages: currentMessages,
-          maxMessages,
-        },
-        {
-          status: 403,
-        }
-      );
+      usageFilter.$or = [
+        { messages: { $lt: maxMessages } },
+        { messages: { $exists: false } },
+      ];
     }
-
-    // ==========================================
-    // SEND MESSAGE TO OPENAI
-    // ==========================================
-
-    const completion =
-      await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-
-        messages: [
-          {
-            role: "system",
-            content:
-              "You are Ask Michael AI, an expert engineering assistant for aluminium smelting and heavy metal engineering. Provide clear, professional and useful engineering information.",
-          },
-          {
-            role: "user",
-            content: cleanMessage,
-          },
-        ],
-
-        max_tokens: 1200,
-      });
-
-    const response =
-      completion.choices?.[0]?.message
-        ?.content ||
-      "No response generated.";
-
-    // ==========================================
-    // INCREMENT PARTNER MESSAGE COUNT
-    // ==========================================
 
     const usageResult =
       await db
         .collection("partners")
         .findOneAndUpdate(
-          {
-            _id: partner._id,
-          },
+          usageFilter,
           {
             $inc: {
               messages: 1,
@@ -309,19 +271,82 @@ if (cleanMessage.length > 20000) {
           }
         );
 
+    if (!usageResult) {
+      return NextResponse.json(
+        {
+          error:
+            "Partner message limit has been reached.",
+          messages: currentMessages,
+          maxMessages,
+        },
+        {
+          status: 403,
+        }
+      );
+    }
+
     const updatedMessages =
       Number(
-        usageResult?.messages
+        usageResult.messages
       ) || currentMessages + 1;
 
-      // ==========================================
-// CALCULATE NEW EXTRA USAGE
-// ==========================================
+    // ==========================================
+    // SEND MESSAGE TO OPENAI
+    // ==========================================
 
-const includedMessages =
-  Number(
-    partner.includedMessages
-  ) || 0;
+    let completion;
+
+    try {
+      completion =
+        await openai.chat.completions.create({
+          model: "gpt-4o-mini",
+
+          messages: [
+            {
+              role: "system",
+              content:
+                "You are Ask Michael AI, an expert engineering assistant for aluminium smelting and heavy metal engineering. Provide clear, professional and useful engineering information.",
+            },
+            {
+              role: "user",
+              content: cleanMessage,
+            },
+          ],
+
+          max_tokens: 1200,
+        });
+    } catch {
+      await db.collection("partners").updateOne(
+        {
+          _id: partner._id,
+          messages: updatedMessages,
+        },
+        {
+          $inc: {
+            messages: -1,
+          },
+          $set: {
+            updatedAt: new Date(),
+          },
+        }
+      );
+
+      throw new Error("OpenAI request failed");
+    }
+
+    const response =
+      completion.choices?.[0]?.message
+        ?.content ||
+      "No response generated.";
+
+    // ==========================================
+    // CALCULATE NEW EXTRA USAGE
+    // ==========================================
+
+    const includedMessages =
+      Number(
+        partner.includedMessages
+      ) || 0;
 
 const billedExtraMessages =
   Number(
