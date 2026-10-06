@@ -342,6 +342,57 @@ if (
   );
 }
 
+for (const file of rawFiles) {
+  if (file.type === "text/plain") {
+    continue;
+  }
+
+  const bytes = new Uint8Array(await file.arrayBuffer());
+
+  if (file.type === "application/pdf") {
+    const signature = new TextDecoder().decode(bytes.slice(0, 4));
+
+    if (signature !== "%PDF") {
+      return new Response(
+        "Uploaded file content does not match its declared type",
+        { status: 400 }
+      );
+    }
+  }
+
+  if (file.type === "image/png") {
+    const pngSignature = [
+      0x89, 0x50, 0x4e, 0x47,
+      0x0d, 0x0a, 0x1a, 0x0a,
+    ];
+
+    if (
+      pngSignature.some(
+        (value, index) => bytes[index] !== value
+      )
+    ) {
+      return new Response(
+        "Uploaded file content does not match its declared type",
+        { status: 400 }
+      );
+    }
+  }
+
+  if (file.type === "image/jpeg") {
+    if (
+      bytes.length < 3 ||
+      bytes[0] !== 0xff ||
+      bytes[1] !== 0xd8 ||
+      bytes[2] !== 0xff
+    ) {
+      return new Response(
+        "Uploaded file content does not match its declared type",
+        { status: 400 }
+      );
+    }
+  }
+}
+
 message = rawMessage?.trim() || "";
   mode = rawMode?.trim() || "default";
   files = rawFiles as File[];
