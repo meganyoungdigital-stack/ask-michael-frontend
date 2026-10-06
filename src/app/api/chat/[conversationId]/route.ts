@@ -299,6 +299,7 @@ if (rawFiles.length > 5) {
 }
 
 const MAX_FILE_SIZE = 16 * 1024 * 1024;
+const MAX_TOTAL_FILE_SIZE = 32 * 1024 * 1024;
 
 if (
   rawFiles.some(
@@ -307,6 +308,18 @@ if (
 ) {
   return new Response(
     "One or more files exceed the maximum allowed size",
+    { status: 400 }
+  );
+}
+
+const totalFileSize = rawFiles.reduce(
+  (total, file) => total + file.size,
+  0
+);
+
+if (totalFileSize > MAX_TOTAL_FILE_SIZE) {
+  return new Response(
+    "Total uploaded file size exceeds the maximum allowed size",
     { status: 400 }
   );
 }
