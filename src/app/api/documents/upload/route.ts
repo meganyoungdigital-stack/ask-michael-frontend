@@ -214,8 +214,12 @@ export async function GET() {
 ========================= */
 
 export async function POST(req: NextRequest) {
+  let userId: string | null = null;
+  let documentId: ObjectId | null = null;
+
   try {
-    const { userId } = await auth();
+    const authResult = await auth();
+    userId = authResult.userId;
 
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -297,7 +301,7 @@ if (
   createdAt: new Date(),
 });
 
-    const documentId = result.insertedId;
+    documentId = result.insertedId;
 
     /* =========================
        DOWNLOAD FILE
@@ -423,7 +427,25 @@ if (
       chunksIndexed: chunkDocuments.length,
     });
   } catch {
-  return NextResponse.json(
+    if (documentId) {
+      try {
+        const { db: cleanupDb } = await connectToDatabase();
+
+        await cleanupDb.collection("documents").deleteOne({
+          _id: documentId,
+          userId,
+        });
+
+        await cleanupDb.collection("document_chunks").deleteMany({
+          documentId,
+          userId,
+        });
+      } catch {
+        // Cleanup failure must not expose internal details.
+      }
+    }
+
+    return NextResponse.json(
       { error: "Upload failed" },
       { status: 500 }
     );
