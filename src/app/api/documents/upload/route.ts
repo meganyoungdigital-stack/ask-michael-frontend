@@ -17,6 +17,9 @@ const openai = new OpenAI({
 const CHUNK_SIZE = 900;
 const CHUNK_OVERLAP = 200;
 
+const MAX_DOWNLOAD_SIZE = 16 * 1024 * 1024;
+const DOWNLOAD_TIMEOUT_MS = 30_000;
+
 /* =========================
    SSRF URL VALIDATION
 ========================= */
@@ -300,13 +303,60 @@ if (
        DOWNLOAD FILE
     ========================= */
 
-    const res = await fetch(cleanUrl);
+    const controller = new AbortController();
+    const timeout = setTimeout(
+      () => controller.abort(),
+      DOWNLOAD_TIMEOUT_MS
+    );
 
-    if (!res.ok) {
-      throw new Error("Failed to download file");
+    let buffer: Buffer;
+
+    try {
+      const res = await fetch(cleanUrl, {
+        signal: controller.signal,
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to download file");
+      }
+
+      const contentLength = res.headers.get("content-length");
+
+      if (
+        contentLength &&
+        Number.isFinite(Number(contentLength)) &&
+        Number(contentLength) > MAX_DOWNLOAD_SIZE
+      ) {
+        throw new Error("Downloaded file is too large");
+      }
+
+      if (!res.body) {
+        throw new Error("Download response has no body");
+      }
+
+      const reader = res.body.getReader();
+      const downloadedChunks: Buffer[] = [];
+      let totalSize = 0;
+
+      while (true) {
+        const { done, value } = await reader.read();
+
+        if (done) break;
+
+        totalSize += value.byteLength;
+
+        if (totalSize > MAX_DOWNLOAD_SIZE) {
+          await reader.cancel();
+          throw new Error("Downloaded file is too large");
+        }
+
+        downloadedChunks.push(Buffer.from(value));
+      }
+
+      buffer = Buffer.concat(downloadedChunks);
+    } finally {
+      clearTimeout(timeout);
     }
-
-    const buffer = Buffer.from(await res.arrayBuffer());
 
     let text = "";
 
