@@ -486,11 +486,8 @@ if (mode.length > 50) {
       for (const file of files) {
         try {
           if (file.type.startsWith("image/")) {
-            const bytes = await file.arrayBuffer();
-            const base64 = Buffer.from(bytes).toString("base64");
-
-            // Keep for future vision support, but DO NOT send to OpenAI yet
-imageInputs.push(`[IMAGE: ${file.name}]`);
+            // Keep for future vision support, but DO NOT send image data to OpenAI yet
+            imageInputs.push(`[IMAGE: ${file.name}]`);
 
             fileContext += `\n\n[IMAGE: ${file.name}]`;
           } else {
