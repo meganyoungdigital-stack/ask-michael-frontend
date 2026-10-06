@@ -6,6 +6,7 @@ import OpenAI from "openai";
 /* ✅ EXISTING */
 import { getMessageLimit, hasFeature } from "@/lib/tiers";
 import { ratelimit } from "@/lib/ratelimit";
+import { extractPdfText } from "@/lib/pdfText";
 export const runtime = "nodejs";
 
 /* ================= OPENAI ================= */
@@ -541,6 +542,18 @@ if (mode.length > 50) {
             imageInputs.push(`[IMAGE: ${file.name}]`);
 
             fileContext += `\n\n[IMAGE: ${file.name}]`;
+            } else if (file.type === "application/pdf") {
+            const bytes = Buffer.from(await file.arrayBuffer());
+            const text = await extractPdfText(bytes);
+
+            if (!text) {
+              return new Response(
+                "Uploaded PDF contains no readable text",
+                { status: 400 }
+              );
+            }
+
+            fileContext += `\n\n[FILE: ${file.name}]\n${text.slice(0, 2000)}`;
           } else {
             const text = await file.text();
             fileContext += `\n\n[FILE: ${file.name}]\n${text.slice(0, 2000)}`;
