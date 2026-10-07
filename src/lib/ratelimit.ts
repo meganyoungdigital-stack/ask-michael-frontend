@@ -80,7 +80,7 @@ partnerPaymentRatelimitInstance = new Ratelimit({
 });
 
   } catch (err) {
-    console.warn("⚠️ Redis init failed, disabling rate limit:", err);
+    console.warn("⚠️ Redis init failed, disabling rate limit.");
     redis = null;
     ratelimitInstance = null;
   }
@@ -106,7 +106,7 @@ export const partnerRatelimit = {
     try {
       return await partnerRatelimitInstance.limit(identifier);
     } catch (err) {
-      console.error("Partner rate limit error:", err);
+      console.error("Partner rate limit error.");
 
       return {
         success: true,
@@ -132,7 +132,7 @@ export const adminLoginRatelimit = {
     try {
       return await adminLoginRatelimitInstance.limit(identifier);
     } catch (err) {
-      console.error("Admin login rate limit error:", err);
+      console.error("Admin login rate limit error.");
 
       return {
         success: true,
@@ -158,7 +158,7 @@ export const partnerLoginRatelimit = {
     try {
       return await partnerLoginRatelimitInstance.limit(identifier);
     } catch (err) {
-      console.error("Partner login rate limit error:", err);
+      console.error("Partner login rate limit error.");
 
       return {
         success: true,
@@ -184,10 +184,7 @@ export const partnerForgotPasswordRatelimit = {
     try {
       return await partnerForgotPasswordRatelimitInstance.limit(identifier);
     } catch (err) {
-      console.error(
-        "Partner forgot password rate limit error:",
-        err
-      );
+      console.error("Partner forgot password rate limit error.");
 
       return {
         success: true,
@@ -213,10 +210,7 @@ export const partnerResetPasswordRatelimit = {
     try {
       return await partnerResetPasswordRatelimitInstance.limit(identifier);
     } catch (err) {
-      console.error(
-        "Partner reset password rate limit error:",
-        err
-      );
+      console.error("Partner reset password rate limit error.");
 
       return {
         success: true,
@@ -242,10 +236,7 @@ export const partnerRegistrationRatelimit = {
     try {
       return await partnerRegistrationRatelimitInstance.limit(identifier);
     } catch (err) {
-      console.error(
-        "Partner registration rate limit error:",
-        err
-      );
+      console.error("Partner registration rate limit error.");
 
       return {
         success: true,
@@ -271,10 +262,7 @@ export const partnerPaymentRatelimit = {
     try {
       return await partnerPaymentRatelimitInstance.limit(identifier);
     } catch (err) {
-      console.error(
-        "Partner payment rate limit error:",
-        err
-      );
+      console.error("Partner payment rate limit error.");
 
       return {
         success: true,
@@ -301,7 +289,7 @@ export const ratelimit = {
     try {
       return await ratelimitInstance.limit(identifier);
     } catch (err) {
-      console.error("Rate limit error:", err);
+      console.error("Rate limit error.");
 
       // ✅ Fail open (never block user if Redis fails)
       return {
