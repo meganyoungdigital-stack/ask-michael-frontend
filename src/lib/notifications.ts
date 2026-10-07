@@ -47,6 +47,6 @@ export async function sendAlertEmail({
 
     return response;
   } catch (error) {
-    console.error("❌ Email send error:", error);
+    console.error("Email send error.");
   }
 }
