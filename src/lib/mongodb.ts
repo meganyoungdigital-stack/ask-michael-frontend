@@ -154,7 +154,7 @@ async function ensureIndexes(db: Db) {
     */
 
   } catch (err) {
-    console.error("⚠️ Index creation warning:", err);
+    console.error("Index creation warning.");
   }
 }
 
@@ -182,7 +182,7 @@ async function getDb(): Promise<Db> {
     return db;
 
   } catch (error) {
-    console.error("🔥 MONGODB CONNECTION ERROR:", error);
+    console.error("MongoDB connection error.");
     throw error;
   }
 }
