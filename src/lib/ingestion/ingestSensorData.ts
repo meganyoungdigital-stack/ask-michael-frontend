@@ -27,7 +27,7 @@ export async function ingestSensorData(data: SensorData) {
 
     return { success: true };
   } catch (err) {
-    console.error("Ingestion error:", err);
+    console.error("Ingestion error.");
     return { success: false };
   }
 }
