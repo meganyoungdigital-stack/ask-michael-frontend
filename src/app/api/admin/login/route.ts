@@ -137,7 +137,7 @@ if(!match){
 
 return NextResponse.json(
 {
-error:"Invalid password"
+error:"Invalid email or password"
 },
 {
 status:401
