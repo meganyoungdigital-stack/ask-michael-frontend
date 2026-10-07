@@ -78,7 +78,7 @@ export const ourFileRouter = {
 
           
         } catch (error) {
-          console.error("PDF indexing failed:", error);
+          console.error("PDF indexing failed.");
         }
       }
 
