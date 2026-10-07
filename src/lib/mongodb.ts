@@ -68,6 +68,12 @@ async function ensureIndexes(db: Db) {
     sparse: true,
   }
 );
+
+    await db.collection("partners").createIndex(
+      { email: 1 },
+      { unique: true }
+    );
+
     await db.collection("webhook_events").createIndex(
       { eventId: 1 },
       { unique: true }
