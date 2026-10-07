@@ -191,13 +191,21 @@ const passwordHash =
 
 
 
+const updateResult =
 await db
 .collection("partners")
 .updateOne(
 
 {
 _id:
-partner._id
+partner._id,
+
+resetTokenHash,
+
+resetTokenExpiry:
+{
+  $gt: new Date(),
+},
 },
 
 {
@@ -222,7 +230,16 @@ resetTokenExpiry:"",
 
 );
 
-
+if (updateResult.modifiedCount !== 1) {
+  return NextResponse.json(
+    {
+      error: "Invalid or expired reset link",
+    },
+    {
+      status: 400,
+    }
+  );
+}
 
 
 
