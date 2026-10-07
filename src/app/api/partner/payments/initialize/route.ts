@@ -467,8 +467,6 @@ else {
   plan,
 
   currency,
-
-  paystackData,
 });
 
                 } catch (error: unknown) {
