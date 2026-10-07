@@ -28,6 +28,6 @@ export async function sendAlertEmail(alert: any) {
       `,
     });
   } catch (err) {
-    console.error("Email notification error:", err);
+    console.error("Email notification error.");
   }
 }
