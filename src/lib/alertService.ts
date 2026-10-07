@@ -65,7 +65,7 @@ if (
 
     return newAlert;
   } catch (err) {
-    console.error("Alert processing error:", err);
+    console.error("Alert processing error.");
     return null;
   }
 }
