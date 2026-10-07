@@ -1,10 +1,25 @@
 import { NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import { getUserConversations } from "@/lib/mongodb";
 
 export async function GET() {
-  const userId = "demo-user"; // replace with real auth later
+  try {
+    const { userId } = await auth();
 
-  const conversations = await getUserConversations(userId);
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
 
-  return NextResponse.json(conversations);
+    const conversations = await getUserConversations(userId);
+
+    return NextResponse.json(conversations);
+  } catch {
+    return NextResponse.json(
+      { error: "Failed to fetch projects" },
+      { status: 500 }
+    );
+  }
 }
