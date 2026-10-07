@@ -224,8 +224,6 @@ if (
 
         message: "Application submitted successfully",
 
-        emailId: data?.id,
-
       },
 
       {

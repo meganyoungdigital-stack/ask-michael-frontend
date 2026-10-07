@@ -180,6 +180,17 @@ if (
 const cleanId = id.trim();
 const cleanStatus = status.trim();
 
+if (!ObjectId.isValid(cleanId)) {
+  return NextResponse.json(
+    {
+      error: "Invalid partner application ID",
+    },
+    {
+      status: 400,
+    }
+  );
+}
+
 // Partner application update received.
 
 let selectedPlan: PartnerPlan | null = null;
