@@ -117,12 +117,20 @@ if (cleanReference.length > 200) {
     TRUST PAYSTACK METADATA (NOT FRONTEND)
     ============================ */
 
+        const paidUserId = data.metadata?.userId;
     const paidPlan = data.metadata?.plan;
 
-if (
-  typeof paidPlan !== "string" ||
-  !["free", "pro", "pro_plus"].includes(paidPlan)
-) {
+    if (typeof paidUserId !== "string" || paidUserId !== userId) {
+      return NextResponse.json(
+        { error: "Payment does not belong to the authenticated user" },
+        { status: 403 }
+      );
+    }
+
+    if (
+      typeof paidPlan !== "string" ||
+      !["free", "pro", "pro_plus"].includes(paidPlan)
+    ) {
   return NextResponse.json(
     { error: "Invalid plan metadata" },
     { status: 400 }
