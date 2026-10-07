@@ -3,6 +3,7 @@ import OpenAI from "openai";
 
 /* ✅ IMPORT YOUR RAG SYSTEM */
 import { buildDocumentContext } from "@/lib/vectorSearch";
+import { auth } from "@clerk/nextjs/server";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
@@ -29,12 +30,10 @@ const {
   temperature,
   pressure,
   vibration,
-  userId,
 } = body as {
   temperature?: unknown;
   pressure?: unknown;
   vibration?: unknown;
-  userId?: unknown;
 };
 
 if (
@@ -51,18 +50,16 @@ if (
   );
 }
 
-if (
-  typeof userId !== "string" ||
-  userId.trim().length === 0 ||
-  userId.length > 200
-) {
+const { userId } = await auth();
+
+if (!userId) {
   return NextResponse.json(
-    { error: "Invalid user ID" },
-    { status: 400 }
+    { error: "Unauthorized" },
+    { status: 401 }
   );
 }
 
-const cleanUserId = userId.trim();
+const cleanUserId = userId;
 
     /* ============================
        📚 GET DOCUMENT CONTEXT (RAG)
@@ -71,7 +68,7 @@ const cleanUserId = userId.trim();
     let documentContext = "";
 
     try {
-      if (userId) {
+      if (cleanUserId) {
         const query = `
 Industrial sensor anomaly:
 Temperature: ${temperature}

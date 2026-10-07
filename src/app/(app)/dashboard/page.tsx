@@ -170,7 +170,6 @@ export default function Dashboard() {
         },
         body: JSON.stringify({
           ...point,
-          userId: (window as any)?.Clerk?.user?.id || null,
         }),
       });
 
