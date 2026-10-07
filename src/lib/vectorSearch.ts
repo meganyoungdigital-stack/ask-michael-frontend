@@ -241,7 +241,7 @@ export async function searchDocumentChunks(
 
     return sorted.slice(0, limit);
   } catch (err) {
-    console.error("Vector search failed:", err);
+    console.error("Vector search failed.");
     return [];
   }
 }
@@ -299,7 +299,7 @@ export async function buildDocumentContext(
 
     return context;
   } catch (err) {
-    console.error("Context build error:", err);
+    console.error("Context build error.");
     return "";
   }
 }
