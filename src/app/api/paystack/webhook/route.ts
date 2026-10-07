@@ -355,11 +355,7 @@ export async function POST(req: NextRequest) {
           // Partner subscription creation handled without logging partner ID.
 
           if (!ObjectId.isValid(partnerId)) {
-            console.warn(
-              "⚠️ Invalid partner ID:",
-              partnerId
-            );
-
+            console.warn("⚠️ Invalid partner ID");
             break;
           }
 
@@ -504,10 +500,7 @@ export async function POST(req: NextRequest) {
     // Partner subscription renewal handled without logging partner ID.
 
     if (!ObjectId.isValid(partnerId)) {
-      console.warn(
-        "⚠️ Invalid partner ID:",
-        partnerId
-      );
+      console.warn("⚠️ Invalid partner ID");
 
       break;
     }
